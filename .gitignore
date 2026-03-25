@@ -1,0 +1,5 @@
+.serena/
+dist/
+node_modules/
+.ai-history.json
+.ai-session-log.md

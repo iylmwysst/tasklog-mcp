@@ -1,0 +1,56 @@
+{
+  "name": "tasklog-mcp",
+  "version": "0.2.1",
+  "type": "module",
+  "description": "MCP server for lightweight chronological task handoffs across coding sessions.",
+  "homepage": "https://github.com/iylmwysst/tasklog-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iylmwysst/tasklog-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iylmwysst/tasklog-mcp/issues"
+  },
+  "license": "MIT",
+  "bin": {
+    "tasklog-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "tasklog",
+    "logbook",
+    "agent",
+    "codex"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "test": "tsx --test src/*.test.ts",
+    "start": "node dist/index.js",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
