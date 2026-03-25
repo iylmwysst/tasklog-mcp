@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "bin": {
-    "tasklog-mcp": "./dist/index.js"
+    "tasklog-mcp": "dist/index.js"
   },
   "files": [
     "dist",
