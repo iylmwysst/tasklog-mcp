@@ -36,6 +36,10 @@ Measured on one real multi-repo workspace with the scenario-driven benchmark in 
 
 The current sample covers `15` real workflow scenarios across active work discovery plus active and done work re-entry.
 
+The included `docs/benchmark-candidates.json` manifest separates the current runnable sample from older CodeWebway cases that are worth normalizing into a broader future benchmark.
+
+In practice, the sampled work spans open-work discovery, active incident recovery, finished feature and behavior changes, documentation follow-ups, README rewrites, playbook migration work, and closed-work summary re-entry.
+
 - markdown notebook scan
 - raw JSON state scan
 - Tasklog's work-first path
@@ -61,8 +65,10 @@ This benchmark uses a real workspace and real work items, but it is still not a 
 To rerun:
 
 ```bash
-npm run bench:reentry -- --project-root /path/to/workspace --work-id <work_id>
+npm run bench:reentry -- --project-root /path/to/workspace --manifest docs/benchmark-candidates.json
 ```
+
+You can still target a specific work item with `--work-id <work_id>` when you want a narrower check.
 
 ## Quick Start
 

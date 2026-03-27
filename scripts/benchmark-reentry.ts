@@ -53,13 +53,35 @@ interface StrategyRun {
 interface CliOptions {
   projectRoot: string;
   workIds: string[];
+  manifestPath?: string;
   limit: number;
   json: boolean;
+}
+
+interface BenchmarkManifestCase {
+  source: "current_work" | "legacy_log";
+  source_id: string;
+  title: string;
+  classification: "core" | "backup" | "exclude";
+  benchmark_ready: boolean;
+  include_in_benchmark?: boolean;
+  labels?: string[];
+  notes?: string;
+  timestamp?: string;
+  normalization_needed?: string;
+}
+
+interface BenchmarkManifest {
+  version: number;
+  description?: string;
+  benchmark_now_work_ids?: string[];
+  cases?: BenchmarkManifestCase[];
 }
 
 function parseArgs(argv: string[]): CliOptions {
   const workIds: string[] = [];
   let projectRoot = process.cwd();
+  let manifestPath: string | undefined;
   let limit = 10;
   let json = false;
 
@@ -78,6 +100,14 @@ function parseArgs(argv: string[]): CliOptions {
       index += 1;
       continue;
     }
+    if (current === "--manifest") {
+      const candidatePath = argv[index + 1];
+      if (candidatePath) {
+        manifestPath = candidatePath;
+      }
+      index += 1;
+      continue;
+    }
     if (current === "--limit") {
       const parsed = Number.parseInt(argv[index + 1] ?? "", 10);
       if (Number.isFinite(parsed) && parsed > 0) {
@@ -91,7 +121,13 @@ function parseArgs(argv: string[]): CliOptions {
     }
   }
 
-  return { projectRoot: path.resolve(projectRoot), workIds, limit, json };
+  return {
+    projectRoot: path.resolve(projectRoot),
+    workIds,
+    manifestPath: manifestPath ? path.resolve(manifestPath) : undefined,
+    limit,
+    json,
+  };
 }
 
 function metricFromText(text: string): SurfaceMetrics {
@@ -119,6 +155,10 @@ function combineMetrics(metrics: SurfaceMetrics[]): SurfaceMetrics {
 
 async function readTextFile(filePath: string): Promise<string> {
   return fs.readFile(filePath, "utf8");
+}
+
+async function readJsonFile<T>(filePath: string): Promise<T> {
+  return JSON.parse(await readTextFile(filePath)) as T;
 }
 
 async function loadRawFiles(filePaths: string[]): Promise<{ text: string; metrics: SurfaceMetrics }> {
@@ -726,10 +766,30 @@ async function resolveTargetWorks(paths: LogbookPaths, requestedWorkIds: string[
   return ranked.slice(0, 1).map((item) => item.work);
 }
 
+async function loadBenchmarkManifest(manifestPath: string): Promise<BenchmarkManifest> {
+  return readJsonFile<BenchmarkManifest>(manifestPath);
+}
+
+function manifestWorkIds(manifest: BenchmarkManifest): string[] {
+  if (manifest.benchmark_now_work_ids && manifest.benchmark_now_work_ids.length > 0) {
+    return manifest.benchmark_now_work_ids;
+  }
+
+  return (manifest.cases ?? [])
+    .filter((entry) => entry.source === "current_work" && entry.benchmark_ready && entry.include_in_benchmark)
+    .map((entry) => entry.source_id);
+}
+
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   const paths = resolveLogbookPaths(options.projectRoot);
-  const works = await resolveTargetWorks(paths, options.workIds);
+  const manifest = options.manifestPath ? await loadBenchmarkManifest(options.manifestPath) : undefined;
+  const targetWorkIds = options.workIds.length > 0
+    ? options.workIds
+    : manifest
+      ? manifestWorkIds(manifest)
+      : [];
+  const works = await resolveTargetWorks(paths, targetWorkIds);
   const scenarios: Array<ReturnType<typeof summarizeScenario>> = [];
 
   const openRuns = await benchmarkOpenWorks(paths, options.limit);
@@ -747,6 +807,7 @@ async function main(): Promise<void> {
   if (options.json) {
     console.log(JSON.stringify({
       project_root: options.projectRoot,
+      manifest_path: options.manifestPath ?? null,
       works_in_scope: works.map((work) => work.title),
       open_work_limit: options.limit,
       notes: [
@@ -761,6 +822,9 @@ async function main(): Promise<void> {
   console.log(`# Tasklog Re-entry Benchmark`);
   console.log("");
   console.log(`- project_root: ${options.projectRoot}`);
+  if (options.manifestPath) {
+    console.log(`- manifest_path: ${options.manifestPath}`);
+  }
   console.log(`- works_in_scope: ${works.map((work) => work.title).join(" | ") || "(none)"}`);
   console.log(`- open_work_limit: ${options.limit}`);
   console.log(`- note: est. tokens use a rough utf8-bytes/4 heuristic; use them as relative context-size estimates, not billing-exact token counts.`);
