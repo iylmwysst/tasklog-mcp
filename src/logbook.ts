@@ -15,13 +15,16 @@ export const CHANGE_TYPES = [
   "config",
 ] as const;
 export const WORK_STATUSES = ["active", "blocked", "done"] as const;
+export const WORK_IMPACTS = ["low", "medium", "high", "critical"] as const;
 export const ACTIVE_WORK_FRESHNESS = ["fresh", "stale", "invalid"] as const;
+export const WORK_CONTEXT_MODES = ["active", "closed/raw", "closed/consolidated"] as const;
 
 const WORK_LIST_FILTERS = ["open", "active", "blocked", "done", "all"] as const;
 const WORKDOC_FILENAMES = {
   design: "design.md",
   plan: "plan.md",
   spec: "spec.md",
+  summary: "summary.md",
   notes: "notes.md",
 } as const;
 
@@ -29,7 +32,9 @@ export type AppendableLogStatus = (typeof APPENDABLE_LOG_STATUSES)[number];
 export type LogStatus = (typeof LOG_STATUSES)[number];
 export type ChangeType = (typeof CHANGE_TYPES)[number];
 export type WorkStatus = (typeof WORK_STATUSES)[number];
+export type WorkImpact = (typeof WORK_IMPACTS)[number];
 export type ActiveWorkFreshness = (typeof ACTIVE_WORK_FRESHNESS)[number];
+export type WorkContextMode = (typeof WORK_CONTEXT_MODES)[number];
 export type WorkListFilter = (typeof WORK_LIST_FILTERS)[number];
 export type WorkDocType = keyof typeof WORKDOC_FILENAMES;
 
@@ -56,6 +61,7 @@ export interface WorkRecord extends Record<string, unknown> {
   title: string;
   slug: string;
   status: WorkStatus;
+  impact?: WorkImpact;
   start_dir: string;
   scope_paths: string[];
   summary?: string;
@@ -68,6 +74,7 @@ export interface WorkArtifactAvailability extends Record<string, unknown> {
   design: boolean;
   plan: boolean;
   spec: boolean;
+  summary: boolean;
   notes: boolean;
 }
 
@@ -76,11 +83,13 @@ export interface WorkArtifactPaths extends Record<string, unknown> {
   designPath: string;
   planPath: string;
   specPath: string;
+  summaryPath: string;
   notesPath: string;
 }
 
 export interface WorkListEntry extends WorkRecord {
   artifact_availability: WorkArtifactAvailability;
+  context_mode: WorkContextMode;
   last_log_summary?: string;
   next_step_summary?: string;
   recent_log_id?: string;
@@ -90,8 +99,11 @@ export interface WorkContextSummary extends Record<string, unknown> {
   work: WorkRecord;
   artifact_paths: WorkArtifactPaths;
   artifact_availability: WorkArtifactAvailability;
+  context_mode: WorkContextMode;
   recent_logs: SessionLogEntry[];
+  recent_log_count: number;
   next_step_summary?: string;
+  summary_text?: string;
 }
 
 export interface ActiveContextRecord extends Record<string, unknown> {
@@ -113,6 +125,7 @@ export interface StartWorkInput {
   title: string;
   summary?: string;
   tags?: string[];
+  impact?: WorkImpact;
   start_dir?: string;
   scope_paths?: string[];
 }
@@ -146,6 +159,11 @@ export interface AmendLogMetadataInput {
 export interface GetRecentLogsOptions {
   work_id?: string;
   project_wide?: boolean;
+}
+
+export interface ReadWorkContextOptions {
+  include_summary?: boolean;
+  include_recent_logs?: boolean;
 }
 
 export interface CreateWorkDocResult extends Record<string, unknown> {
@@ -430,6 +448,7 @@ export async function startWork(paths: LogbookPaths, input: StartWorkInput): Pro
       title,
       slug: slugify(title),
       status: "active",
+      impact: normalizeWorkImpact(input.impact),
       start_dir: startDir,
       scope_paths: scopePaths,
       summary: normalizeOptionalText(input.summary),
@@ -527,9 +546,26 @@ export async function setWorkStatus(
   });
 }
 
+export async function setWorkImpact(
+  paths: LogbookPaths,
+  workId: string,
+  impact?: WorkImpact,
+): Promise<WorkRecord> {
+  return withMutationLock(async () => {
+    const works = await readWorkRecords(paths);
+    const work = findWorkRecord(works, workId);
+
+    work.impact = normalizeWorkImpact(impact);
+    work.updated_at = new Date().toISOString();
+    await persistWorkRecords(paths, works);
+    return work;
+  });
+}
+
 export async function readWorkContext(
   paths: LogbookPaths,
   workId?: string,
+  options: ReadWorkContextOptions = {},
 ): Promise<WorkContextSummary> {
   const [works, entries, activeContext] = await Promise.all([
     readWorkRecords(paths),
@@ -539,14 +575,28 @@ export async function readWorkContext(
   const work = resolvePreferredWork(works, activeContext, workId);
   const artifactPaths = getWorkArtifactPaths(paths, work);
   const artifactAvailability = await getArtifactAvailability(artifactPaths);
-  const recentLogs = entries.filter((entry) => entry.work_id === work.work_id).slice(-5).reverse();
+  const allRecentLogs = entries.filter((entry) => entry.work_id === work.work_id).slice(-5).reverse();
+  const contextMode = resolveWorkContextMode(work, artifactAvailability);
+  const includeRecentLogs =
+    contextMode !== "closed/consolidated" || options.include_recent_logs === true;
+  const recentLogs = includeRecentLogs ? allRecentLogs : [];
+  const summaryText = options.include_summary && artifactAvailability.summary
+    ? await readOptionalTextFile(artifactPaths.summaryPath)
+    : undefined;
+  const nextStepSummary =
+    contextMode === "closed/consolidated"
+      ? undefined
+      : allRecentLogs.find((entry) => entry.next_steps)?.next_steps;
 
   return {
     work,
     artifact_paths: artifactPaths,
     artifact_availability: artifactAvailability,
+    context_mode: contextMode,
     recent_logs: recentLogs,
-    next_step_summary: recentLogs.find((entry) => entry.next_steps)?.next_steps,
+    recent_log_count: allRecentLogs.length,
+    next_step_summary: nextStepSummary,
+    summary_text: summaryText,
   };
 }
 
@@ -568,6 +618,10 @@ export async function createWorkDoc(
       docType === "plan"
         ? normalizeTargetPaths(paths.projectRoot, input.target_paths, work.scope_paths)
         : undefined;
+
+    if (docType === "summary" && work.status !== "done") {
+      throw new Error("summary.md is only available for work items whose status is done.");
+    }
 
     if (!created && docType === "plan" && targetPaths && targetPaths.length > 0) {
       const existingTargetPaths = await readPlanTargetPaths(targetPath);
@@ -777,6 +831,7 @@ function normalizeWorkRecord(projectRoot: string, value: unknown, index: number)
     title,
     slug: normalizeOptionalText(optionalStringField(entry.slug)) ?? slugify(title),
     status: normalizeWorkStatus(optionalStringField(entry.status) ?? "active"),
+    impact: normalizeWorkImpact(optionalStringField(entry.impact) as WorkImpact | undefined),
     start_dir: startDir,
     scope_paths: normalizeScopePaths(
       projectRoot,
@@ -881,6 +936,17 @@ function buildActiveContextSummary(
   };
 }
 
+function resolveWorkContextMode(
+  work: WorkRecord,
+  artifactAvailability: WorkArtifactAvailability,
+): WorkContextMode {
+  if (work.status !== "done") {
+    return "active";
+  }
+
+  return artifactAvailability.summary ? "closed/consolidated" : "closed/raw";
+}
+
 async function buildWorkListEntry(
   paths: LogbookPaths,
   work: WorkRecord,
@@ -888,12 +954,17 @@ async function buildWorkListEntry(
 ): Promise<WorkListEntry> {
   const artifactPaths = getWorkArtifactPaths(paths, work);
   const artifactAvailability = await getArtifactAvailability(artifactPaths);
+  const contextMode = resolveWorkContextMode(work, artifactAvailability);
   const recentLog = logs.at(-1);
-  const recentNextStep = [...logs].reverse().find((entry) => entry.next_steps)?.next_steps;
+  const recentNextStep =
+    contextMode === "closed/consolidated"
+      ? undefined
+      : [...logs].reverse().find((entry) => entry.next_steps)?.next_steps;
 
   return {
     ...work,
     artifact_availability: artifactAvailability,
+    context_mode: contextMode,
     last_log_summary: recentLog?.summary,
     next_step_summary: recentNextStep,
     recent_log_id: recentLog?.id,
@@ -901,14 +972,27 @@ async function buildWorkListEntry(
 }
 
 async function getArtifactAvailability(paths: WorkArtifactPaths): Promise<WorkArtifactAvailability> {
-  const [design, plan, spec, notes] = await Promise.all([
+  const [design, plan, spec, summary, notes] = await Promise.all([
     pathExists(paths.designPath),
     pathExists(paths.planPath),
     pathExists(paths.specPath),
+    pathExists(paths.summaryPath),
     pathExists(paths.notesPath),
   ]);
 
-  return { design, plan, spec, notes };
+  return { design, plan, spec, summary, notes };
+}
+
+async function readOptionalTextFile(filePath: string): Promise<string | undefined> {
+  try {
+    return await readFile(filePath, "utf8");
+  } catch (error) {
+    if (isMissingFile(error)) {
+      return undefined;
+    }
+
+    throw error;
+  }
 }
 
 function renderMarkdown(entries: SessionLogEntry[]): string {
@@ -995,6 +1079,7 @@ function getWorkArtifactPaths(paths: LogbookPaths, work: WorkRecord): WorkArtifa
     designPath: path.join(workDir, WORKDOC_FILENAMES.design),
     planPath: path.join(workDir, WORKDOC_FILENAMES.plan),
     specPath: path.join(workDir, WORKDOC_FILENAMES.spec),
+    summaryPath: path.join(workDir, WORKDOC_FILENAMES.summary),
     notesPath: path.join(workDir, WORKDOC_FILENAMES.notes),
   };
 }
@@ -1007,6 +1092,8 @@ function getArtifactPath(paths: WorkArtifactPaths, docType: Exclude<WorkDocType,
       return paths.planPath;
     case "spec":
       return paths.specPath;
+    case "summary":
+      return paths.summaryPath;
   }
 }
 
@@ -1020,6 +1107,7 @@ function buildWorkDocContents(
     `work_id: ${toYamlScalar(work.work_id)}`,
     `title: ${toYamlScalar(work.title)}`,
     `status: ${toYamlScalar(work.status)}`,
+    ...(work.impact ? [`impact: ${toYamlScalar(work.impact)}`] : []),
     `start_dir: ${toYamlScalar(work.start_dir)}`,
     "scope_paths:",
     ...work.scope_paths.map((scopePath) => `  - ${toYamlScalar(scopePath)}`),
@@ -1083,6 +1171,28 @@ function buildWorkDocContents(
         "## Rules",
         "",
         "## Acceptance Criteria",
+        "",
+      ].join("\n");
+    case "summary":
+      return [
+        ...frontmatter,
+        "# Work Summary",
+        "",
+        "## What was this work?",
+        "",
+        "## Why was it needed?",
+        "",
+        "## What changed?",
+        "",
+        "## Key decisions and tradeoffs",
+        "",
+        "## Affected modules and flows",
+        "",
+        "## Known limitations or deferred work",
+        "",
+        "## Re-entry guidance",
+        "",
+        "## Evidence pointers",
         "",
       ].join("\n");
     case "notes":
@@ -1300,6 +1410,18 @@ function normalizeWorkStatus(status: string): WorkStatus {
   }
 
   throw new Error(`Unsupported work status: ${status}`);
+}
+
+function normalizeWorkImpact(impact: string | undefined): WorkImpact | undefined {
+  if (!impact) {
+    return undefined;
+  }
+
+  if (WORK_IMPACTS.includes(impact as WorkImpact)) {
+    return impact as WorkImpact;
+  }
+
+  throw new Error(`Unsupported work impact: ${impact}`);
 }
 
 function normalizeChangeType(changeType: string, fallback?: ChangeType): ChangeType {

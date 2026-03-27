@@ -2,49 +2,150 @@
 
 Small `stdio` MCP server for work-first task handoffs across coding sessions.
 
-Tasklog is a lightweight local continuity layer for coding agents. It is designed for one project root at a time and gives the agent a reliable way to answer:
+Tasklog gives a coding agent a lightweight local continuity layer for one `project_root` at a time. It is built to answer a narrow set of questions quickly:
 
 - What am I working on right now?
 - What work is still open?
-- Where do design notes, plans, specs, and reminders belong?
-- What changed in the last session and what should happen next?
+- Where should design notes, plans, specs, and reminders live?
+- What changed in the last session?
+- If a work is already closed, what is the right re-entry brief?
 
-The current model is intentionally work-first, not log-first.
+Tasklog is intentionally work-first, not log-first.
 
-One `project_root` can be a workspace directory that contains multiple repos. Tasklog tracks one workspace root at a time, not one git repo at a time.
+## Why It Exists
 
-## Installation
+Most session logging tools drift toward one of two extremes:
 
-### npm / npx
+- a raw chronological notebook that gets expensive to reread
+- a broad memory system that tries to remember everything
+
+Tasklog stays narrower than both.
+
+- `work` is the main unit of continuity
+- `log` is for session handoff only
+- `workdocs/` hold the durable human-facing artifacts
+- closed-work `summary.md` exists only to accelerate re-entry into that work
+
+The goal is to make session recovery cheap without turning Tasklog into a general memory layer.
+
+## Quick Start
+
+Run with `npx`:
 
 ```bash
 npx -y tasklog-mcp
 ```
 
-For a global install:
+Or install globally:
 
 ```bash
 npm install -g tasklog-mcp
 tasklog-mcp
 ```
 
-## Concept
+Add it to Codex:
 
-Tasklog separates project memory into two layers:
+```bash
+codex mcp add tasklog -- npx -y tasklog-mcp
+```
+
+By default, Tasklog uses the current working directory as `project_root`. To point it elsewhere:
+
+```bash
+npx -y tasklog-mcp --project-root /path/to/workspace
+```
+
+## Mental Model
+
+Tasklog separates continuity into two layers:
 
 - machine-facing state under `.tasklog/`
 - human-facing work artifacts under `workdocs/`
 
-The mental model is:
+The main objects are:
 
-- `work` is the primary discovery and resume unit
-- `log` is for session activity and handoff only
-- `note` is for lightweight capture
-- `design` records goals and tradeoffs
-- `plan` records implementation sequence and targeted scope
-- `spec` records exact rules or contract details
+- `work`: one coherent effort
+- `log`: one session handoff entry
+- `design.md`: goals, constraints, tradeoffs
+- `plan.md`: execution sequence and target paths
+- `spec.md`: exact behavior or contract details
+- `notes.md`: lightweight reminders
+- `summary.md`: optional re-entry brief for selected closed work
 
-This keeps the agent from over-reading chronological history just to decide which thread matters.
+In practice:
+
+- active work is driven by recent logs plus current workdocs
+- small closed work can stay raw
+- selected closed work can become summary-first
+
+## Typical Flow
+
+1. Start with `get_active_context`
+2. If needed, use `list_works` and `resume_work`
+3. Call `read_work_context`
+4. Use workdocs and logs according to intent
+
+Recommended tool choices:
+
+- start a new effort: `start_work`
+- continue an existing effort: `resume_work`
+- capture approach: `create_design_doc`
+- capture implementation steps: `create_plan_doc`
+- capture exact rules: `create_spec_doc`
+- note something down: `append_work_note`
+- record a session handoff: `append_session_log`
+
+## Closed-Work Summaries
+
+Tasklog can attach `summary.md` to selected closed work items.
+
+This summary is intentionally narrow:
+
+- it is the canonical re-entry brief for that work
+- it is not a generic retrieval layer for arbitrary project facts
+- it does not replace project docs, code search, or architecture tools
+- it does not create free-floating memory objects outside a work item
+
+For `closed/consolidated` work:
+
+- `read_work_context` is summary-first and path-first
+- `summary.md` is the default entrypoint
+- `include_summary=true` inlines the summary body only when needed
+- `include_recent_logs=true` loads raw log evidence only when needed
+
+By default, consolidated work does not inline the summary body or recent logs.
+
+## Work Records
+
+Each `work` has:
+
+- `work_id`: 6-character base62 id
+- `title`
+- `slug`
+- `status`: `active`, `blocked`, or `done`
+- optional `impact`: `low`, `medium`, `high`, or `critical`
+- `start_dir`
+- `scope_paths`
+- optional `summary`
+- optional `tags`
+- `created_at`
+- `updated_at`
+
+`impact` is work metadata. It helps decide whether a closed work deserves a canonical re-entry brief. It is not a separate memory object.
+
+## Scope Model
+
+Tasklog separates overall work scope from the narrower scope of one implementation pass:
+
+- work scope lives in `start_dir` and `scope_paths`
+- plan scope lives in `target_paths` inside `plan.md`
+
+One `project_root` can be:
+
+- a single repo
+- or a parent workspace containing multiple repos
+
+Tasklog tracks one workspace root at a time, not one git repo at a time.
 
 ## Storage Layout
 
@@ -60,234 +161,90 @@ This keeps the agent from over-reading chronological history just to decide whic
       design.md
       plan.md
       spec.md
+      summary.md
       notes.md
 ```
 
-Canonical machine-readable state lives in `.tasklog/`. Human-facing work docs live in `workdocs/`.
+Authoritative sources:
 
-For compatibility during migration:
+- `.tasklog/works.json`: machine-facing work state
+- `.tasklog/session-log.json`: machine-facing session logs
+- `workdocs/`: human-facing work artifacts
+- `active_work`: session hint only, not the source of truth
+
+Compatibility notes:
 
 - canonical log writes are mirrored to legacy `.ai-history.json`
-- canonical Markdown log writes are mirrored to legacy `.ai-session-log.md`
+- canonical markdown log writes are mirrored to legacy `.ai-session-log.md`
 - if canonical JSON does not exist yet, Tasklog can still read legacy `.ai-history.json`
-
-The server does not treat legacy Markdown as an authoritative read source.
-
-## Core Model
-
-### Work
-
-A `work` is one coherent effort inside the current project. Each work has:
-
-- `work_id`: 6-character base62 id
-- `title`
-- `slug`
-- `status`: `active`, `blocked`, or `done`
-- `start_dir`
-- `scope_paths`
-- optional `summary`
-- optional `tags`
-- `created_at`
-- `updated_at`
-
-The work id is generated by the server. Humans and agents should treat it as the stable handle for that effort.
-
-### Scope
-
-Tasklog separates overall work scope from the narrower scope of one implementation pass:
-
-- work scope lives in `start_dir` and `scope_paths`
-- plan scope lives in `target_paths` inside `plan.md`
-
-This matters for cross-repo work. One work can span multiple directories while one plan targets only a subset of them.
-
-### Workspace Root
-
-`project_root` is the workspace boundary for one Tasklog store.
-
-- It can be a single repo.
-- It can also be a parent workspace directory that contains multiple repos.
-- `scope_paths` selects which directories inside that workspace belong to the work.
-- `target_paths` narrows one implementation pass without changing the work's overall scope.
-
-### Active Context
-
-`active_work` is a session hint, not the source of truth.
-
-It exists to make common flows cheap:
-
-- start with the current work when it is still fresh
-- avoid repeating `work_id` on every call
-- attach new session logs to the active work when that is clearly correct
-
-But it is intentionally conservative:
-
-- stale active work is not trusted
-- invalid active work is not trusted
-- if work resolution is ambiguous, tools fail instead of guessing silently
-
-### Logs
-
-Session logs are deliberately narrower than work docs.
-
-Use a log to say:
-
-- what changed in this session
-- why it changed
-- what outcome it produced
-- what the next session should do, if needed
-
-Do not use logs as a general notebook. That is what work notes and docs are for.
-
-## Design Principles
-
-- Keep it small: solve handoff and note-taking pain directly instead of becoming a general memory system.
-- Keep it explicit: prefer clear work and artifact boundaries over hidden state.
-- Keep it low-drag: recording useful context should be easier than debating the workflow.
-- Keep it handoff-friendly: another session should be able to recover the right context quickly.
-- Keep it lean: avoid features that inflate context or make the tool itself harder to manage.
 
 ## Tool Surface
 
-### Work discovery
+Work discovery:
 
 - `get_active_context`
 - `list_works`
 - `start_work`
 - `resume_work`
+- `set_work_impact`
 - `set_work_status`
 - `read_work_context`
 
-### Artifact creation
+Artifact creation:
 
 - `create_design_doc`
 - `create_plan_doc`
 - `create_spec_doc`
+- `create_summary_doc`
 - `append_work_note`
 
-### Logs
+Logs:
 
 - `get_recent_logs`
 - `append_session_log`
 - `update_log_status`
 - `amend_log_metadata`
 
-### Deprecated compatibility
+Deprecated compatibility:
 
 - `get_open_threads`
 
-Use `list_works(status="open")` instead of `get_open_threads` for new agent flows.
+Prefer `list_works(status="open")` for new flows.
 
-## Recommended Workflow
+## Boundaries
 
-### Start or resume work
+Tasklog is not:
 
-1. Call `get_active_context`
-2. If there is no fresh matching work, call `list_works(status="open")`
-3. Use `start_work` or `resume_work`
-4. Call `read_work_context` before substantial implementation
+- a full journal
+- a generic memory MCP
+- a note vault for arbitrary facts
+- a replacement for project docs, code search, or architecture tools
 
-This is the normal session-to-session recovery path. A new session should pull prior context back through `get_active_context`, `list_works`, `read_work_context`, and `get_recent_logs` instead of scanning old chronological notes manually.
+Design goals:
 
-### Create artifacts by intent
-
-- Use `create_design_doc` for goals, constraints, tradeoffs, and chosen direction.
-- Use `create_plan_doc` for execution sequence, touched areas, test plan, and plan-specific `target_paths`.
-- Use `create_spec_doc` for exact behavior, schema, validation, or acceptance rules.
-- Use `append_work_note` when the user says "note this down".
-
-### Use logs for handoff
-
-Use `append_session_log` when:
-
-- files changed during the session
-- a meaningful implementation pass is ending
-- work is pausing and the next session needs a handoff
-
-Logs should summarize the session. They should not replace design, plan, spec, or notes.
-
-## Operating Rules
-
-### Authoritative State
-
-- `workdocs/` is the human-facing source of truth for `design`, `plan`, `spec`, and `notes`.
-- `.tasklog/works.json` is the machine-facing source of truth for work records.
-- `.tasklog/session-log.json` is the machine-facing source of truth for session logs.
-- `active_work` is only a session hint.
-- `target_paths` in `plan.md` is the authoritative implementation scope for that plan.
-
-### Do / Don't
-
-- Do keep one work per coherent effort.
-- Do use logs for session handoff, not for all thinking.
-- Do use notes for lightweight reminders and observations.
-- Don't create a new work for every tiny edit.
-- Don't append a log for every small change during one continuous session.
-- Don't use Tasklog as a full journal or general memory dump.
-- Don't silently widen work scope without a clear reason.
-
-### Ambiguity Rules
-
-- If `active_work` is fresh and clearly matches the user's intent, reuse it.
-- If `active_work` is stale, invalid, or mismatched, prefer `list_works` or explicit `resume_work`.
-- `append_session_log` only attaches `work_id` implicitly when `active_work` is still fresh.
-- If no work is unambiguous, do not guess silently.
-- If `plan.md` already exists, repeated `target_paths` must match the existing file or fail.
-- If the user only asks to note something, default to `append_work_note`, not `append_session_log`.
-
-## IDs, Statuses, and Scope
-
-### IDs
-
-- new work ids use a 6-character base62 alphabet
-- new log ids use the same 6-character base62 format
-- legacy ids are still readable during migration
-
-### Work status values
-
-- `active`
-- `blocked`
-- `done`
-
-### Log status values
-
-For `append_session_log`:
-
-- `WIP`
-- `Done`
-- `Blocked`
-
-For `update_log_status`:
-
-- `WIP`
-- `Done`
-- `Blocked`
-- `Superseded`
-
-### Change types
-
-- `feature`
-- `bugfix`
-- `refactor`
-- `investigation`
-- `docs`
-- `test`
-- `config`
+- keep it small
+- keep it explicit
+- keep it low-drag
+- keep it handoff-friendly
+- keep it lean
 
 ## Reliability Notes
 
-- Mutating writes are serialized within the server process so overlapping tool calls do not drop entries.
-- Session recovery is designed around reading back prior state with `get_active_context`, `list_works`, `read_work_context`, and `get_recent_logs`.
-- Storage writes are atomic per file using a temp file plus rename, not transactionally atomic across a multi-file operation.
-- All machine and document paths are constrained to stay inside the selected project root.
-- Markdown output escapes user-controlled fields so summaries, tags, and paths render as content instead of altering document structure.
-- This is a local single-process store per project root. There is no cross-process file lock yet, so multiple server processes pointing at the same root are not a supported coordination mode.
+- writes are serialized within one server process
+- writes are atomic per file using temp-file replacement
+- multi-file operations are not transactionally atomic
+- all machine and document paths stay inside the selected `project_root`
+- multiple server processes pointing at the same root are not a supported coordination mode
 
 ## Resources
 
-- `tasklog://usage` explains the work-first workflow and artifact selection rules.
-- `tasklog://schema` documents work records, session logs, and active context.
-- `tasklog://examples` contains examples for work creation, session logs, and plan targeting.
+The MCP server exposes:
+
+- `tasklog://usage`
+- `tasklog://schema`
+- `tasklog://examples`
+
+These are the detailed references for workflow rules, schemas, and examples.
 
 ## Local Development
 
@@ -298,23 +255,23 @@ npm test
 npm run build
 ```
 
-Run it against a specific project root:
+Run against a specific project root:
 
 ```bash
 node dist/index.js --project-root /Users/Lab/Desktop/WebWay/CodeWebway
 ```
 
-Or with `tsx` during development:
+Or during development:
 
 ```bash
 npm run dev -- --project-root /Users/Lab/Desktop/WebWay/CodeWebway
 ```
 
-If `--project-root` is omitted, the server uses the current working directory as the project root.
+If `--project-root` is omitted, the server uses the current working directory.
 
 ## MCP Config
 
-### Generic stdio MCP config
+Generic stdio config:
 
 ```json
 {
@@ -322,77 +279,19 @@ If `--project-root` is omitted, the server uses the current working directory as
     "tasklog": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "tasklog-mcp"
-      ],
+      "args": ["-y", "tasklog-mcp"],
       "env": {}
     }
   }
 }
 ```
 
-This uses the current workspace path by default. If you want to point somewhere else explicitly, add `--project-root <path>`.
+If you want to point somewhere else explicitly, add `--project-root <path>` to `args`.
 
-Legacy compatibility options are still supported:
+Legacy compatibility environment variables are still supported:
 
 - `LOGBOOK_PROJECT_ROOT`
 - `LOGBOOK_JSON_FILE`
 - `LOGBOOK_MARKDOWN_FILE`
 
-### Codex CLI
-
-```bash
-codex mcp add tasklog -- npx -y tasklog-mcp
-```
-
-### Claude Desktop
-
-```json
-{
-  "mcpServers": {
-    "tasklog": {
-      "command": "npx",
-      "args": ["-y", "tasklog-mcp"]
-    }
-  }
-}
-```
-
-### Cursor
-
-```json
-{
-  "mcpServers": {
-    "tasklog": {
-      "command": "npx",
-      "args": ["-y", "tasklog-mcp"]
-    }
-  }
-}
-```
-
-### Local package during development
-
-```json
-{
-  "mcpServers": {
-    "tasklog": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "/absolute/path/to/tasklog-mcp/dist/index.js"
-      ],
-      "env": {}
-    }
-  }
-}
-```
-
-## Publishing Checklist
-
-```bash
-npm test
-npm run build
-npm publish --access public
-```
+Claude Desktop and Cursor can use the same stdio command pattern.

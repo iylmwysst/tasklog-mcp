@@ -148,7 +148,12 @@ export function formatWorkListResponse(
       `- ${escapePlainTextField(work.work_id)} [${escapePlainTextField(work.status)}] ${escapePlainTextField(work.title)}`,
       `  Start: ${escapePlainTextField(work.start_dir)}`,
       `  Scope: ${work.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
+      `  Context mode: ${escapePlainTextField(work.context_mode)}`,
     );
+
+    if (work.impact) {
+      lines.push(`  Impact: ${escapePlainTextField(work.impact)}`);
+    }
 
     if (work.last_log_summary) {
       lines.push(`  Last log: ${escapePlainTextField(work.last_log_summary)}`);
@@ -159,7 +164,7 @@ export function formatWorkListResponse(
     }
 
     lines.push(
-      `  Artifacts: design=${work.artifact_availability.design} plan=${work.artifact_availability.plan} spec=${work.artifact_availability.spec} notes=${work.artifact_availability.notes}`,
+      `  Artifacts: design=${work.artifact_availability.design} plan=${work.artifact_availability.plan} spec=${work.artifact_availability.spec} summary=${work.artifact_availability.summary} notes=${work.artifact_availability.notes}`,
     );
   }
 
@@ -167,7 +172,7 @@ export function formatWorkListResponse(
 }
 
 export function formatWorkCreatedResponse(work: WorkRecord, workDir: string): string {
-  return [
+  const lines = [
     "Work started.",
     `Work ID: ${escapePlainTextField(work.work_id)}`,
     `Title: ${escapePlainTextField(work.title)}`,
@@ -175,7 +180,13 @@ export function formatWorkCreatedResponse(work: WorkRecord, workDir: string): st
     `Start dir: ${escapePlainTextField(work.start_dir)}`,
     `Scope: ${work.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
     `Work dir: ${escapePlainTextField(workDir)}`,
-  ].join("\n");
+  ];
+
+  if (work.impact) {
+    lines.splice(4, 0, `Impact: ${escapePlainTextField(work.impact)}`);
+  }
+
+  return lines.join("\n");
 }
 
 export function formatWorkStatusResponse(work: WorkRecord): string {
@@ -187,19 +198,72 @@ export function formatWorkStatusResponse(work: WorkRecord): string {
   ].join("\n");
 }
 
-export function formatWorkContextResponse(context: WorkContextSummary): string {
+export function formatWorkImpactResponse(work: WorkRecord): string {
   return [
+    "Work impact updated.",
+    `Work ID: ${escapePlainTextField(work.work_id)}`,
+    `Impact: ${escapePlainTextField(work.impact ?? "(cleared)")}`,
+    `Updated: ${escapePlainTextField(work.updated_at)}`,
+  ].join("\n");
+}
+
+export function formatWorkContextResponse(context: WorkContextSummary): string {
+  const lines = [
     `Work context: ${escapePlainTextField(context.work.work_id)} ${escapePlainTextField(context.work.title)}`,
     `Status: ${escapePlainTextField(context.work.status)}`,
+    `Context mode: ${escapePlainTextField(context.context_mode)}`,
     `Start dir: ${escapePlainTextField(context.work.start_dir)}`,
     `Scope: ${context.work.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
-    `Docs: design=${escapePlainTextField(context.artifact_paths.designPath)} plan=${escapePlainTextField(context.artifact_paths.planPath)} spec=${escapePlainTextField(context.artifact_paths.specPath)} notes=${escapePlainTextField(context.artifact_paths.notesPath)}`,
-    context.next_step_summary
-      ? `Next step: ${escapePlainTextField(context.next_step_summary)}`
-      : "Next step: (none recorded)",
-    "",
-    formatLogEntries(context.recent_logs),
-  ].join("\n");
+    `Docs: design=${escapePlainTextField(context.artifact_paths.designPath)} plan=${escapePlainTextField(context.artifact_paths.planPath)} spec=${escapePlainTextField(context.artifact_paths.specPath)} summary=${escapePlainTextField(context.artifact_paths.summaryPath)} notes=${escapePlainTextField(context.artifact_paths.notesPath)}`,
+  ];
+
+  if (context.work.impact) {
+    lines.splice(3, 0, `Impact: ${escapePlainTextField(context.work.impact)}`);
+  }
+
+  if (context.context_mode === "closed/consolidated") {
+    lines.push(
+      context.summary_text
+        ? `Re-entry brief: loaded from ${escapePlainTextField(context.artifact_paths.summaryPath)}`
+        : `Re-entry brief: ${escapePlainTextField(context.artifact_paths.summaryPath)} (use include_summary=true to inline it)`,
+    );
+  } else {
+    lines.push(
+      context.next_step_summary
+        ? `Next step: ${escapePlainTextField(context.next_step_summary)}`
+        : "Next step: (none recorded)",
+    );
+  }
+
+  if (context.summary_text) {
+    lines.push(
+      `Summary doc: present (${context.summary_text.length} chars)`,
+      "",
+      escapePlainTextField(context.summary_text),
+    );
+  }
+
+  if (context.context_mode === "closed/consolidated") {
+    if (context.recent_logs.length > 0) {
+      lines.push(
+        "",
+        `Recent logs: ${context.recent_log_count} loaded as secondary evidence.`,
+        "",
+        formatLogEntries(context.recent_logs),
+      );
+    } else {
+      lines.push(
+        "",
+        context.recent_log_count > 0
+          ? `Recent logs: ${context.recent_log_count} available as secondary evidence (use include_recent_logs=true to load them).`
+          : "Recent logs: none recorded.",
+      );
+    }
+  } else {
+    lines.push("", formatLogEntries(context.recent_logs));
+  }
+
+  return lines.join("\n");
 }
 
 export function formatWorkDocResponse(

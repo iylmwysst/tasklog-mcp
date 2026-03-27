@@ -16,6 +16,7 @@ import {
   readWorkContext,
   resolveLogbookPaths,
   resumeWork,
+  setWorkImpact,
   setWorkStatus,
   startWork,
   updateLogStatus,
@@ -622,6 +623,117 @@ test("listWorks returns compact work summaries", async () => {
 
   assert.equal(works.length, 1);
   assert.equal(works[0]?.work_id, work.work_id);
+  assert.equal(works[0]?.context_mode, "active");
   assert.equal(works[0]?.last_log_summary, "Added the first work-discovery tool.");
   assert.equal(works[0]?.next_step_summary, "Add plan and spec creation tools.");
+});
+
+test("work impact persists and can be updated explicitly", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "High impact auth contract work",
+    impact: "high",
+  });
+
+  assert.equal(work.impact, "high");
+
+  const updated = await setWorkImpact(paths, work.work_id, "critical");
+  const works = await listWorks(paths, { status: "all", limit: 10 });
+
+  assert.equal(updated.impact, "critical");
+  assert.equal(works[0]?.impact, "critical");
+});
+
+test("readWorkContext distinguishes closed raw work from consolidated work", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Closed work summary flow",
+    impact: "high",
+  });
+
+  await setWorkStatus(paths, work.work_id, "done");
+  const closedRaw = await readWorkContext(paths, work.work_id);
+
+  assert.equal(closedRaw.context_mode, "closed/raw");
+  assert.equal(closedRaw.artifact_availability.summary, false);
+  assert.equal(closedRaw.summary_text, undefined);
+});
+
+test("summary workdocs mark a done work as closed/consolidated and keep summary loading opt-in", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const activeWork = await startWork(paths, {
+    title: "Closed work summary creation",
+    impact: "critical",
+  });
+
+  await assert.rejects(
+    () =>
+      createWorkDoc(paths, "summary", {
+        work_id: activeWork.work_id,
+      }),
+    /summary\.md is only available for work items whose status is done/,
+  );
+
+  await setWorkStatus(paths, activeWork.work_id, "done");
+  await appendLogEntry(paths, {
+    summary: "Captured the final session handoff before consolidation.",
+    status: "Done",
+    change_type: "docs",
+    affected_files: ["workdocs/summary.md"],
+    work_id: activeWork.work_id,
+    next_steps: "This raw handoff should stay secondary once summary.md exists.",
+  });
+  const summaryDoc = await createWorkDoc(paths, "summary", {
+    work_id: activeWork.work_id,
+  });
+  await writeFile(
+    summaryDoc.path,
+    [
+      "---",
+      `work_id: '${activeWork.work_id}'`,
+      `title: '${activeWork.title}'`,
+      "status: 'done'",
+      "impact: 'critical'",
+      `start_dir: '${activeWork.start_dir}'`,
+      "scope_paths:",
+      `  - '${activeWork.start_dir}'`,
+      `updated_at: '${activeWork.updated_at}'`,
+      "---",
+      "",
+      "# Work Summary",
+      "",
+      "## What was this work?",
+      "",
+      "Captured a canonical re-entry brief.",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
+
+  const context = await readWorkContext(paths, activeWork.work_id);
+  const loadedContext = await readWorkContext(paths, activeWork.work_id, {
+    include_summary: true,
+  });
+  const evidenceContext = await readWorkContext(paths, activeWork.work_id, {
+    include_recent_logs: true,
+  });
+  const works = await listWorks(paths, { status: "done", limit: 10 });
+
+  assert.equal(summaryDoc.created, true);
+  assert.equal(context.context_mode, "closed/consolidated");
+  assert.equal(context.artifact_availability.summary, true);
+  assert.equal(context.artifact_paths.summaryPath, summaryDoc.path);
+  assert.equal(context.next_step_summary, undefined);
+  assert.equal(context.summary_text, undefined);
+  assert.equal(context.recent_log_count, 1);
+  assert.deepEqual(context.recent_logs, []);
+  assert.match(loadedContext.summary_text ?? "", /Captured a canonical re-entry brief/);
+  assert.equal(evidenceContext.recent_log_count, 1);
+  assert.equal(evidenceContext.recent_logs.length, 1);
+  assert.equal(works[0]?.context_mode, "closed/consolidated");
+  assert.equal(works[0]?.artifact_availability.summary, true);
+  assert.equal(works[0]?.next_step_summary, undefined);
 });

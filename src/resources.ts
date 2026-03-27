@@ -3,6 +3,7 @@ import {
   APPENDABLE_LOG_STATUSES,
   CHANGE_TYPES,
   LOG_STATUSES,
+  WORK_IMPACTS,
   WORK_STATUSES,
 } from "./logbook.js";
 
@@ -10,6 +11,7 @@ const statusBullets = APPENDABLE_LOG_STATUSES.map((status) => `- \`${status}\``)
 const lifecycleStatusBullets = LOG_STATUSES.map((status) => `- \`${status}\``).join("\n");
 const changeTypeBullets = CHANGE_TYPES.map((changeType) => `- \`${changeType}\``).join("\n");
 const workStatusBullets = WORK_STATUSES.map((status) => `- \`${status}\``).join("\n");
+const workImpactBullets = WORK_IMPACTS.map((impact) => `- \`${impact}\``).join("\n");
 const freshnessBullets = ACTIVE_WORK_FRESHNESS.map((status) => `- \`${status}\``).join("\n");
 
 export const USAGE_RESOURCE_TEXT = `# Tasklog Usage
@@ -21,7 +23,7 @@ Tasklog MCP now works best in a work-first flow.
 - \`work\` is the main unit of discovery and resume
 - \`log\` is for session activity only
 - \`note\` is for lightweight capture
-- \`design\`, \`plan\`, and \`spec\` are first-class work artifacts
+- \`design\`, \`plan\`, \`spec\`, and closed-work \`summary\` are first-class work artifacts
 - human-facing docs live under \`workdocs/\`
 - machine-facing state lives under \`.tasklog/\`
 
@@ -40,9 +42,16 @@ Tasklog MCP now works best in a work-first flow.
 - Keep it handoff-friendly: another session should be able to recover the right context quickly.
 - Keep it lean: avoid features that make context heavier or the tool itself harder to manage.
 
+## Anti-goals
+
+- closed-work \`summary.md\` exists only to accelerate re-entry into that work
+- it is not a generic retrieval layer for arbitrary project facts
+- it does not replace project docs, code search, or architecture tools
+- it does not create free-floating memory objects outside a work item
+
 ## Authoritative state
 
-- \`workdocs/\` is the human-facing source of truth for \`design\`, \`plan\`, \`spec\`, and \`notes\`
+- \`workdocs/\` is the human-facing source of truth for \`design\`, \`plan\`, \`spec\`, \`summary\`, and \`notes\`
 - \`.tasklog/works.json\` is the machine-facing source of truth for works
 - \`.tasklog/session-log.json\` is the machine-facing source of truth for logs
 - \`active_work\` is only a hint for the current session
@@ -57,6 +66,7 @@ Tasklog MCP now works best in a work-first flow.
 - user wants approach or tradeoffs -> \`create_design_doc\`
 - user wants steps or rollout -> \`create_plan_doc\`
 - user wants exact rules or contract details -> \`create_spec_doc\`
+- user wants a canonical re-entry brief for a done work -> \`create_summary_doc\`
 - session changed files and is ending -> \`append_session_log\`
 
 ## Recommended workflow
@@ -72,7 +82,7 @@ Use:
 - \`read_work_context\` before substantial implementation inside one work
 - \`get_recent_logs\` when the new session needs the latest handoff summary
 
-This is the intended session-to-session recovery path. Pull prior context back through Tasklog tools instead of treating the session log as a notebook to read top to bottom.
+This is the intended session-to-session recovery path. Pull prior context back through Tasklog tools instead of treating the session log as a notebook to read top to bottom. For consolidated closed work, prefer \`summary.md\` as the re-entry brief and treat recent raw logs as secondary evidence. By default, \`read_work_context\` does not inline the summary body or recent raw logs for consolidated work. Use \`include_summary=true\` and \`include_recent_logs=true\` only when that extra evidence is actually needed in context.
 
 ### Create artifacts by intent
 
@@ -81,7 +91,29 @@ Use:
 - \`create_design_doc\` when the user wants to reason about goals, tradeoffs, or approach
 - \`create_plan_doc\` when the user wants implementation steps
 - \`create_spec_doc\` when the user needs exact behavior or contract details
+- \`create_summary_doc\` when a closed work should have a canonical re-entry brief
 - \`append_work_note\` when the user says to note something down
+
+### Summary consolidation policy
+
+Use this policy to decide when a closed work should get \`summary.md\`.
+
+- \`raw context size\` measures reconstruction cost
+- \`impact\` measures remember-value
+- create \`summary.md\` when either axis is high enough to justify a re-entry brief
+
+Current behavior note:
+
+- this is guidance for humans and agents, not automatic consolidation
+- Tasklog stores \`impact\` and supports \`create_summary_doc\`, but it does not auto-create summaries when work becomes \`done\`
+
+Default guidance:
+
+- \`critical\` or \`high\` -> summarize by default
+- \`medium\` -> summarize when raw context is large or when the work captured an important decision, tradeoff, or contract detail
+- \`low\` -> usually leave as \`closed/raw\` unless reconstruction cost is unusually high or the user explicitly wants a summary
+
+\`impact\` may override size. Short but risky work can still deserve \`summary.md\`, especially for auth, migrations, API/schema contracts, shared infra, or policy decisions.
 
 ### Use logs for session handoff
 
@@ -116,6 +148,7 @@ The log should summarize what happened in this session. It should not replace wo
 
 - Work ids and new log ids are 6-character base62 strings
 - Work scope is tracked by \`start_dir\` and \`scope_paths\`
+- Work importance may be tracked by \`impact\`
 - Plan scope is tracked by \`target_paths\`
 - \`target_paths\` must stay within \`scope_paths\`
 - \`active_work\` is a session hint, not authoritative truth
@@ -135,6 +168,10 @@ ${lifecycleStatusBullets}
 ## Work status values
 
 ${workStatusBullets}
+
+## Work impact values
+
+${workImpactBullets}
 
 ## Change types
 
@@ -156,12 +193,14 @@ export const SCHEMA_RESOURCE_TEXT = `# Tasklog Schema
 
 \`\`\`ts
 type WorkStatus = "active" | "blocked" | "done";
+type WorkImpact = "low" | "medium" | "high" | "critical";
 
 interface WorkRecord {
   work_id: string; // 6-char base62
   title: string;
   slug: string;
   status: WorkStatus;
+  impact?: WorkImpact;
   start_dir: string;
   scope_paths: string[];
   summary?: string;
@@ -216,6 +255,7 @@ interface ActiveContext {
 - \`design.md\`
 - \`plan.md\`
 - \`spec.md\`
+- \`summary.md\`
 - \`notes.md\`
 
 ## Notes
@@ -234,6 +274,7 @@ export const EXAMPLES_RESOURCE_TEXT = `# Tasklog Examples
 {
   "title": "Secure launch handoff polish",
   "summary": "Unify the placeholder handoff experience across dashboard and terminal entry.",
+  "impact": "high",
   "start_dir": "/workspace",
   "scope_paths": ["/workspace/WebWayFleet", "/workspace/CodeWebway"],
   "tags": ["secure-launch", "ux"]

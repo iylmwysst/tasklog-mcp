@@ -19,13 +19,17 @@ import {
   LOG_STATUSES,
   readWorkContext,
   resumeWork,
+  setWorkImpact,
   setWorkStatus,
   startWork,
   type ActiveContextSummary,
   type AmendLogMetadataInput,
   type LogStatus,
   type SessionLogEntry,
+  type WorkImpact,
   type WorkStatus,
+  WORK_CONTEXT_MODES,
+  WORK_IMPACTS,
   WORK_STATUSES,
   updateLogStatus,
 } from "./logbook.js";
@@ -39,6 +43,7 @@ import {
   formatWorkContextResponse,
   formatWorkCreatedResponse,
   formatWorkDocResponse,
+  formatWorkImpactResponse,
   formatWorkListResponse,
   formatWorkStatusResponse,
 } from "./response-format.js";
@@ -218,6 +223,7 @@ function registerTools(
         title: z.string().min(1).describe("Human-readable work title."),
         summary: z.string().default("").describe("Optional short summary of the work intent."),
         tags: z.array(z.string().min(1)).default([]).describe("Optional lowercase project tags."),
+        impact: z.enum(WORK_IMPACTS).optional().describe("Optional work-level impact for later re-entry and prioritization."),
         start_dir: z.string().default("").describe("Optional directory where the work begins. Defaults to the project root."),
         scope_paths: z.array(z.string().min(1)).default([]).describe("Optional directories this work may touch. Defaults to the start directory."),
       },
@@ -227,11 +233,12 @@ function registerTools(
         artifact_paths: workArtifactPathsSchema(),
       },
     },
-    observeToolCall(logger, "start_work", async ({ title, summary, tags, start_dir, scope_paths }) => {
+    observeToolCall(logger, "start_work", async ({ title, summary, tags, impact, start_dir, scope_paths }) => {
       const work = await startWork(paths, {
         title,
         summary,
         tags,
+        impact: impact as WorkImpact | undefined,
         start_dir,
         scope_paths,
       });
@@ -300,20 +307,57 @@ function registerTools(
   );
 
   server.registerTool(
+    "set_work_impact",
+    {
+      title: "Set work impact",
+      description:
+        "Set or clear the work-level impact metadata used to judge how important this work is to remember during re-entry.",
+      inputSchema: {
+        work_id: z.string().min(1).describe("Work id to update."),
+        impact: z
+          .enum(WORK_IMPACTS)
+          .optional()
+          .describe("New work impact. Omit to clear the field."),
+      },
+      outputSchema: {
+        work: workRecordSchema(),
+      },
+    },
+    observeToolCall(logger, "set_work_impact", async ({ work_id, impact }) => {
+      const work = await setWorkImpact(paths, work_id, impact as WorkImpact | undefined);
+      return {
+        content: [{ type: "text", text: formatWorkImpactResponse(work) }],
+        structuredContent: { work },
+      };
+    }),
+  );
+
+  server.registerTool(
     "read_work_context",
     {
       title: "Read work context",
       description:
-        "Return a concise overview of one work including artifact paths, recent logs, and the latest next-step summary.",
+        "Return a concise overview of one work including artifact paths, context mode, recent logs, and optional summary loading for consolidated closed work.",
       inputSchema: {
         work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+        include_summary: z
+          .boolean()
+          .default(false)
+          .describe("When true, inline summary.md for consolidated closed work. Leave false for the cheaper default re-entry path."),
+        include_recent_logs: z
+          .boolean()
+          .default(false)
+          .describe("When true, include recent raw log evidence for consolidated closed work. Active and closed/raw work still include logs by default."),
       },
       outputSchema: {
         context: workContextSchema(),
       },
     },
-    observeToolCall(logger, "read_work_context", async ({ work_id }) => {
-      const context = await readWorkContext(paths, work_id || undefined);
+    observeToolCall(logger, "read_work_context", async ({ work_id, include_summary, include_recent_logs }) => {
+      const context = await readWorkContext(paths, work_id || undefined, {
+        include_summary,
+        include_recent_logs,
+      });
       return {
         content: [{ type: "text", text: formatWorkContextResponse(context) }],
         structuredContent: { context },
@@ -489,6 +533,26 @@ function registerTools(
   );
 
   server.registerTool(
+    "create_summary_doc",
+    {
+      title: "Create summary doc",
+      description:
+        "Create or reopen summary.md for a done work item so the closed work has a canonical re-entry brief.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+      },
+      outputSchema: workDocOutputShape(),
+    },
+    observeToolCall(logger, "create_summary_doc", async ({ work_id }) => {
+      const result = await createWorkDoc(paths, "summary", { work_id: work_id || undefined });
+      return {
+        content: [{ type: "text", text: formatWorkDocResponse("Summary doc ready", result) }],
+        structuredContent: result,
+      };
+    }),
+  );
+
+  server.registerTool(
     "append_work_note",
     {
       title: "Append work note",
@@ -644,6 +708,7 @@ function workRecordSchema() {
     title: z.string(),
     slug: z.string(),
     status: z.enum(WORK_STATUSES),
+    impact: z.enum(WORK_IMPACTS).optional(),
     start_dir: z.string(),
     scope_paths: z.array(z.string()),
     summary: z.string().optional(),
@@ -658,6 +723,7 @@ function artifactAvailabilitySchema() {
     design: z.boolean(),
     plan: z.boolean(),
     spec: z.boolean(),
+    summary: z.boolean(),
     notes: z.boolean(),
   });
 }
@@ -668,6 +734,7 @@ function workArtifactPathsSchema() {
     designPath: z.string(),
     planPath: z.string(),
     specPath: z.string(),
+    summaryPath: z.string(),
     notesPath: z.string(),
   });
 }
@@ -675,6 +742,7 @@ function workArtifactPathsSchema() {
 function workListEntrySchema() {
   return workRecordSchema().extend({
     artifact_availability: artifactAvailabilitySchema(),
+    context_mode: z.enum(WORK_CONTEXT_MODES),
     last_log_summary: z.string().optional(),
     next_step_summary: z.string().optional(),
     recent_log_id: z.string().optional(),
@@ -686,8 +754,11 @@ function workContextSchema() {
     work: workRecordSchema(),
     artifact_paths: workArtifactPathsSchema(),
     artifact_availability: artifactAvailabilitySchema(),
+    context_mode: z.enum(WORK_CONTEXT_MODES),
     recent_logs: z.array(logEntrySchema()),
+    recent_log_count: z.number().int(),
     next_step_summary: z.string().optional(),
+    summary_text: z.string().optional(),
   });
 }
 
