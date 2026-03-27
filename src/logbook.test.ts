@@ -83,6 +83,30 @@ test("startWork creates a work record and fresh active context", async () => {
   assert.equal(path.basename(context.workdocs_root), "workdocs");
 });
 
+test("startWork supports one workspace root with multiple repo scope paths", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+
+  const work = await startWork(paths, {
+    title: "Workspace-scoped task",
+    start_dir: ".",
+    scope_paths: ["CodeWebway", "WebWayFleet"],
+  });
+  const planDoc = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["WebWayFleet"],
+  });
+  const planText = await readFile(planDoc.path, "utf8");
+
+  assert.equal(work.start_dir, projectRoot);
+  assert.deepEqual(work.scope_paths, [
+    path.join(projectRoot, "CodeWebway"),
+    path.join(projectRoot, "WebWayFleet"),
+  ]);
+  assert.deepEqual(planDoc.target_paths, [path.join(projectRoot, "WebWayFleet")]);
+  assert.match(planText, /target_paths:\n  - '\/.*WebWayFleet'/);
+});
+
 test("startWork rejects multiline titles to prevent frontmatter injection", async () => {
   const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
   const paths = resolveLogbookPaths(projectRoot);
@@ -93,6 +117,21 @@ test("startWork rejects multiline titles to prevent frontmatter injection", asyn
         title: "Title with newline\nstatus: done",
       }),
     /title must stay on a single line/,
+  );
+});
+
+test("startWork rejects scope paths that escape the workspace root", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+
+  await assert.rejects(
+    () =>
+      startWork(paths, {
+        title: "Escaping scope path",
+        start_dir: ".",
+        scope_paths: ["../outside-workspace"],
+      }),
+    /scope_paths must stay within the project root/,
   );
 });
 
@@ -275,6 +314,10 @@ test("appendWorkNote creates notes and readWorkContext includes recent logs", as
     work_id: work.work_id,
     note: "Need to keep work scope light and prefer target_paths in plan docs.",
   });
+  await appendWorkNote(paths, {
+    work_id: work.work_id,
+    note: "Second note should append after the first one.",
+  });
 
   await appendLogEntry(paths, {
     summary: "Linked work-aware logging to the current active work.",
@@ -290,6 +333,10 @@ test("appendWorkNote creates notes and readWorkContext includes recent logs", as
   assert.equal(noteResult.created, true);
   assert.match(notesText, /# Notes/);
   assert.match(notesText, /target_paths in plan docs/);
+  assert.match(
+    notesText,
+    /Need to keep work scope light and prefer target_paths in plan docs\.[\s\S]*Second note should append after the first one\./,
+  );
   assert.equal(context.work.work_id, work.work_id);
   assert.equal(context.recent_logs.length, 1);
   assert.equal(context.recent_logs[0]?.work_id, work.work_id);
@@ -328,6 +375,82 @@ test("getRecentLogEntries defaults to the fresh active work", async () => {
   assert.equal(activeRecent.length, 1);
   assert.equal(activeRecent[0]?.work_id, workB.work_id);
   assert.equal(projectRecent.length, 2);
+});
+
+test("appendLogEntry does not implicitly attach work_id when active context is missing updated_at", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Missing freshness timestamp",
+  });
+
+  await writeFile(
+    paths.activeContextPath,
+    `${JSON.stringify({
+      active_work_id: work.work_id,
+      project_root: projectRoot,
+    }, null, 2)}\n`,
+    "utf8",
+  );
+
+  const entry = await appendLogEntry(paths, {
+    summary: "Recorded a handoff without an explicit work id.",
+    status: "Done",
+    change_type: "docs",
+    affected_files: ["README.md"],
+  });
+
+  assert.equal(entry.work_id, undefined);
+});
+
+test("appendLogEntry does not implicitly attach work_id when active context is stale or invalid", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const staleWork = await startWork(paths, {
+    title: "Stale active work",
+  });
+
+  await writeFile(
+    paths.activeContextPath,
+    `${JSON.stringify({
+      active_work_id: staleWork.work_id,
+      project_root: projectRoot,
+      updated_at: "2000-01-01T00:00:00.000Z",
+    }, null, 2)}\n`,
+    "utf8",
+  );
+
+  const staleEntry = await appendLogEntry(paths, {
+    summary: "Stale active context should not auto-attach.",
+    status: "Done",
+    change_type: "docs",
+    affected_files: ["README.md"],
+  });
+
+  assert.equal(staleEntry.work_id, undefined);
+
+  const invalidWork = await startWork(paths, {
+    title: "Invalid active work",
+  });
+  await setWorkStatus(paths, invalidWork.work_id, "done");
+  await writeFile(
+    paths.activeContextPath,
+    `${JSON.stringify({
+      active_work_id: invalidWork.work_id,
+      project_root: projectRoot,
+      updated_at: "2026-03-27T00:00:00.000Z",
+    }, null, 2)}\n`,
+    "utf8",
+  );
+
+  const invalidEntry = await appendLogEntry(paths, {
+    summary: "Done work in active context should not auto-attach.",
+    status: "Done",
+    change_type: "docs",
+    affected_files: ["README.md"],
+  });
+
+  assert.equal(invalidEntry.work_id, undefined);
 });
 
 test("resumeWork query lookup and work status updates clear active work on done", async () => {

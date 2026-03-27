@@ -11,6 +11,8 @@ Tasklog is a lightweight local continuity layer for coding agents. It is designe
 
 The current model is intentionally work-first, not log-first.
 
+One `project_root` can be a workspace directory that contains multiple repos. Tasklog tracks one workspace root at a time, not one git repo at a time.
+
 ## Concept
 
 Tasklog separates project memory into two layers:
@@ -83,6 +85,15 @@ Tasklog separates overall work scope from the narrower scope of one implementati
 - plan scope lives in `target_paths` inside `plan.md`
 
 This matters for cross-repo work. One work can span multiple directories while one plan targets only a subset of them.
+
+### Workspace Root
+
+`project_root` is the workspace boundary for one Tasklog store.
+
+- It can be a single repo.
+- It can also be a parent workspace directory that contains multiple repos.
+- `scope_paths` selects which directories inside that workspace belong to the work.
+- `target_paths` narrows one implementation pass without changing the work's overall scope.
 
 ### Active Context
 
@@ -161,6 +172,8 @@ Use `list_works(status="open")` instead of `get_open_threads` for new agent flow
 3. Use `start_work` or `resume_work`
 4. Call `read_work_context` before substantial implementation
 
+This is the normal session-to-session recovery path. A new session should pull prior context back through `get_active_context`, `list_works`, `read_work_context`, and `get_recent_logs` instead of scanning old chronological notes manually.
+
 ### Create artifacts by intent
 
 - Use `create_design_doc` for goals, constraints, tradeoffs, and chosen direction.
@@ -202,6 +215,7 @@ Logs should summarize the session. They should not replace design, plan, spec, o
 
 - If `active_work` is fresh and clearly matches the user's intent, reuse it.
 - If `active_work` is stale, invalid, or mismatched, prefer `list_works` or explicit `resume_work`.
+- `append_session_log` only attaches `work_id` implicitly when `active_work` is still fresh.
 - If no work is unambiguous, do not guess silently.
 - If `plan.md` already exists, repeated `target_paths` must match the existing file or fail.
 - If the user only asks to note something, default to `append_work_note`, not `append_session_log`.
@@ -248,10 +262,11 @@ For `update_log_status`:
 ## Reliability Notes
 
 - Mutating writes are serialized within the server process so overlapping tool calls do not drop entries.
-- Storage writes are atomic per file using a temp file plus rename.
+- Session recovery is designed around reading back prior state with `get_active_context`, `list_works`, `read_work_context`, and `get_recent_logs`.
+- Storage writes are atomic per file using a temp file plus rename, not transactionally atomic across a multi-file operation.
 - All machine and document paths are constrained to stay inside the selected project root.
 - Markdown output escapes user-controlled fields so summaries, tags, and paths render as content instead of altering document structure.
-- This is a local single-process store. There is no cross-process file lock yet.
+- This is a local single-process store per project root. There is no cross-process file lock yet, so multiple server processes pointing at the same root are not a supported coordination mode.
 
 ## Resources
 

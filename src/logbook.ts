@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { access, appendFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Logger } from "./logger.js";
 
@@ -276,7 +276,7 @@ export async function appendLogEntry(
       readActiveContextRecord(paths),
     ]);
     const now = new Date().toISOString();
-    const resolvedWorkId = resolveAppendWorkId(paths, works, activeContext, input.work_id, now);
+    const resolvedWorkId = resolveAppendWorkId(works, activeContext, input.work_id);
     const entry: SessionLogEntry = {
       id: buildUniqueHumanId(new Set(currentEntries.map((item) => item.id))),
       work_id: resolvedWorkId,
@@ -580,7 +580,7 @@ export async function createWorkDoc(
 
     await ensureDirectory(artifactPaths.workDir);
     if (created) {
-      await writeFile(targetPath, buildWorkDocContents(docType, work, targetPaths), "utf8");
+      await writeAtomically(targetPath, buildWorkDocContents(docType, work, targetPaths));
     }
 
     touchWorkRecord(works, work.work_id, new Date().toISOString());
@@ -609,20 +609,16 @@ export async function appendWorkNote(
     const note = normalizeSummary(input.note);
     const now = new Date().toISOString();
     const created = !(await pathExists(artifactPaths.notesPath));
+    const noteSection = `\n## ${now}\n\n${note
+      .split(/\r?\n/)
+      .map((line) => line.trimEnd())
+      .join("\n")}\n`;
 
     await ensureDirectory(artifactPaths.workDir);
-    if (created) {
-      await writeFile(artifactPaths.notesPath, buildWorkDocContents("notes", work), "utf8");
-    }
-
-    await appendFile(
-      artifactPaths.notesPath,
-      `\n## ${now}\n\n${note
-        .split(/\r?\n/)
-        .map((line) => line.trimEnd())
-        .join("\n")}\n`,
-      "utf8",
-    );
+    const existingContents = created
+      ? buildWorkDocContents("notes", work)
+      : await readFile(artifactPaths.notesPath, "utf8");
+    await writeAtomically(artifactPaths.notesPath, `${existingContents}${noteSection}`);
 
     touchWorkRecord(works, work.work_id, now);
     await persistWorkRecords(paths, works);
@@ -1181,11 +1177,9 @@ function resolvePreferredWork(
 }
 
 function resolveAppendWorkId(
-  paths: LogbookPaths,
   works: WorkRecord[],
   activeContext: ActiveContextRecord,
   explicitWorkId: string | undefined,
-  now: string,
 ): string | undefined {
   if (explicitWorkId) {
     return findWorkRecord(works, explicitWorkId.trim()).work_id;
@@ -1194,12 +1188,9 @@ function resolveAppendWorkId(
   const activeWork = activeContext.active_work_id
     ? works.find((work) => work.work_id === activeContext.active_work_id)
     : undefined;
-  const summary = buildActiveContextSummary(paths, works, {
-    ...activeContext,
-    updated_at: activeContext.updated_at ?? now,
-  });
+  const freshness = resolveActiveWorkFreshness(activeContext, activeWork);
 
-  if (summary.freshness === "fresh" && activeWork) {
+  if (freshness === "fresh" && activeWork) {
     return activeWork.work_id;
   }
 

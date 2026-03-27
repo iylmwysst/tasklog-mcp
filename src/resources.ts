@@ -25,6 +25,13 @@ Tasklog MCP now works best in a work-first flow.
 - human-facing docs live under \`workdocs/\`
 - machine-facing state lives under \`.tasklog/\`
 
+## Workspace root
+
+- \`project_root\` is the workspace boundary for one Tasklog store
+- it may be one repo or a parent directory that contains multiple repos
+- \`scope_paths\` selects which directories inside that workspace belong to the work
+- \`target_paths\` narrows one implementation pass without changing the overall work scope
+
 ## Design principles
 
 - Keep it small: solve handoff and note-taking pain directly instead of becoming a general memory system.
@@ -63,6 +70,9 @@ Use:
 - \`start_work\` for a new task
 - \`resume_work\` when the user wants to continue an existing task
 - \`read_work_context\` before substantial implementation inside one work
+- \`get_recent_logs\` when the new session needs the latest handoff summary
+
+This is the intended session-to-session recovery path. Pull prior context back through Tasklog tools instead of treating the session log as a notebook to read top to bottom.
 
 ### Create artifacts by intent
 
@@ -97,6 +107,7 @@ The log should summarize what happened in this session. It should not replace wo
 
 - If \`active_work\` is fresh and clearly matches the user's intent, reuse it
 - If \`active_work\` is stale, invalid, or mismatched, prefer \`list_works\` or explicit \`resume_work\`
+- \`append_session_log\` only attaches \`work_id\` implicitly when \`active_work\` is still fresh
 - If no work is unambiguous, do not guess silently
 - If \`plan.md\` already exists, repeated \`target_paths\` must either match the file or fail
 - If the user only asks to note something, default to \`append_work_note\`, not \`append_session_log\`
@@ -133,6 +144,12 @@ ${changeTypeBullets}
 
 - \`get_open_threads\` is kept for migration only
 - prefer \`list_works(status="open")\` for unfinished work discovery
+
+## Persistence and concurrency
+
+- writes are atomic per file, not transactionally atomic across every file touched by one operation
+- mutations are serialized inside one server process
+- multiple server processes pointing at the same \`project_root\` are not a supported coordination mode
 `;
 
 export const SCHEMA_RESOURCE_TEXT = `# Tasklog Schema
@@ -206,21 +223,24 @@ interface ActiveContext {
 - Old UUID-like log ids remain readable during migration
 - \`related_log_ids\` may still point at legacy ids
 - \`target_paths\` belongs in \`plan.md\` frontmatter, not in the work record
+- \`project_root\` may be a workspace directory containing multiple repos
 `;
 
 export const EXAMPLES_RESOURCE_TEXT = `# Tasklog Examples
 
-## Good Example: Start a New Work
+## Good Example: Start a New Workspace-Scoped Work
 
 \`\`\`json
 {
   "title": "Secure launch handoff polish",
   "summary": "Unify the placeholder handoff experience across dashboard and terminal entry.",
-  "start_dir": "/workspace/WebWayFleet",
+  "start_dir": "/workspace",
   "scope_paths": ["/workspace/WebWayFleet", "/workspace/CodeWebway"],
   "tags": ["secure-launch", "ux"]
 }
 \`\`\`
+
+This starts one work inside a shared workspace root while keeping the scope limited to two repos inside that workspace.
 
 ## Good Example: Append a Session Log
 
