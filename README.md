@@ -56,14 +56,16 @@ Full-sample summary:
 | --- | --- | ---: | ---: | ---: |
 | No continuity | Codebase/workspace scan only | `32.43%` | `n/a` | `38,638` bytes |
 | Markdown notes | Freeform note reread | `63.06%` | `n/a` | `942,822` bytes |
-| Raw JSON state | Direct state-file reconstruction | `100%` | `100%` | `1,314,527` bytes |
-| Tasklog | Work-first MCP re-entry flow | `100%` | `100%` | `79,781` bytes |
+| Raw JSON state | Direct state-file reconstruction | **`100%`** | **`100%`** | `1,314,527` bytes |
+| **Tasklog** | **Work-first MCP re-entry flow** | **`100%`** | **`100%`** | **`79,781` bytes** |
 
 Across the full sample, the no-continuity path exposed `38,638` bytes, the markdown-notes path exposed `942,822` bytes, the raw JSON path exposed `1,314,527` bytes, and the Tasklog path exposed `79,781` bytes.
 
 Using the benchmark's rough `utf8-bytes / 4` heuristic, that is about `9,661` estimated tokens for no continuity, `235,710` for markdown notes, `328,637` for raw JSON, and `19,949` for Tasklog.
 
 Across the full sample, Tasklog matched the raw JSON path on coverage and structured-answer accuracy while using about `91.54%` less context than markdown notes and `93.93%` less context than direct raw-state reconstruction.
+
+For practical re-entry, Tasklog is the lowest-context path that still stayed fully answerable across the full sample.
 
 This benchmark uses a real workspace and real work items, but it is still not a blind human study.
 
