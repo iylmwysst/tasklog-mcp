@@ -1,4 +1,5 @@
 .serena/
+.DS_Store
 dist/
 node_modules/
 .ai-history.json

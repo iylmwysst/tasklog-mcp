@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { randomBytes, randomUUID } from "node:crypto";
+import { access, appendFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Logger } from "./logger.js";
 
@@ -14,13 +14,28 @@ export const CHANGE_TYPES = [
   "test",
   "config",
 ] as const;
+export const WORK_STATUSES = ["active", "blocked", "done"] as const;
+export const ACTIVE_WORK_FRESHNESS = ["fresh", "stale", "invalid"] as const;
+
+const WORK_LIST_FILTERS = ["open", "active", "blocked", "done", "all"] as const;
+const WORKDOC_FILENAMES = {
+  design: "design.md",
+  plan: "plan.md",
+  spec: "spec.md",
+  notes: "notes.md",
+} as const;
 
 export type AppendableLogStatus = (typeof APPENDABLE_LOG_STATUSES)[number];
 export type LogStatus = (typeof LOG_STATUSES)[number];
 export type ChangeType = (typeof CHANGE_TYPES)[number];
+export type WorkStatus = (typeof WORK_STATUSES)[number];
+export type ActiveWorkFreshness = (typeof ACTIVE_WORK_FRESHNESS)[number];
+export type WorkListFilter = (typeof WORK_LIST_FILTERS)[number];
+export type WorkDocType = keyof typeof WORKDOC_FILENAMES;
 
-export interface SessionLogEntry {
+export interface SessionLogEntry extends Record<string, unknown> {
   id: string;
+  work_id?: string;
   timestamp: string;
   summary: string;
   status: LogStatus;
@@ -36,11 +51,76 @@ export interface SessionLogEntry {
   updated_at: string;
 }
 
-export interface LogbookPaths {
-  projectRoot: string;
-  jsonPath: string;
-  markdownPath: string;
-  logger?: Logger;
+export interface WorkRecord extends Record<string, unknown> {
+  work_id: string;
+  title: string;
+  slug: string;
+  status: WorkStatus;
+  start_dir: string;
+  scope_paths: string[];
+  summary?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkArtifactAvailability extends Record<string, unknown> {
+  design: boolean;
+  plan: boolean;
+  spec: boolean;
+  notes: boolean;
+}
+
+export interface WorkArtifactPaths extends Record<string, unknown> {
+  workDir: string;
+  designPath: string;
+  planPath: string;
+  specPath: string;
+  notesPath: string;
+}
+
+export interface WorkListEntry extends WorkRecord {
+  artifact_availability: WorkArtifactAvailability;
+  last_log_summary?: string;
+  next_step_summary?: string;
+  recent_log_id?: string;
+}
+
+export interface WorkContextSummary extends Record<string, unknown> {
+  work: WorkRecord;
+  artifact_paths: WorkArtifactPaths;
+  artifact_availability: WorkArtifactAvailability;
+  recent_logs: SessionLogEntry[];
+  next_step_summary?: string;
+}
+
+export interface ActiveContextRecord extends Record<string, unknown> {
+  active_work_id?: string;
+  project_root: string;
+  updated_at?: string;
+}
+
+export interface ActiveContextSummary extends ActiveContextRecord {
+  state_root: string;
+  workdocs_root: string;
+  json_path: string;
+  markdown_path: string;
+  active_work?: WorkRecord;
+  freshness?: ActiveWorkFreshness;
+}
+
+export interface StartWorkInput {
+  title: string;
+  summary?: string;
+  tags?: string[];
+  start_dir?: string;
+  scope_paths?: string[];
+}
+
+export interface ListWorksInput {
+  status?: WorkListFilter;
+  query?: string;
+  limit?: number;
 }
 
 export interface AppendSessionLogInput {
@@ -53,6 +133,7 @@ export interface AppendSessionLogInput {
   blockers?: string;
   related_log_ids?: string[];
   supersedes_log_id?: string;
+  work_id?: string;
 }
 
 export interface AmendLogMetadataInput {
@@ -62,8 +143,50 @@ export interface AmendLogMetadataInput {
   blockers?: string;
 }
 
+export interface GetRecentLogsOptions {
+  work_id?: string;
+  project_wide?: boolean;
+}
+
+export interface CreateWorkDocResult extends Record<string, unknown> {
+  work: WorkRecord;
+  path: string;
+  created: boolean;
+  target_paths?: string[];
+}
+
+export interface AppendWorkNoteResult extends Record<string, unknown> {
+  work: WorkRecord;
+  path: string;
+  created: boolean;
+}
+
+export interface LogbookPaths {
+  projectRoot: string;
+  stateRoot: string;
+  workdocsRoot: string;
+  worksPath: string;
+  activeContextPath: string;
+  jsonPath: string;
+  markdownPath: string;
+  legacyJsonPath: string;
+  legacyMarkdownPath: string;
+  logger?: Logger;
+}
+
 const DEFAULT_JSON_FILE = ".ai-history.json";
 const DEFAULT_MARKDOWN_FILE = ".ai-session-log.md";
+const DEFAULT_STATE_DIR = ".tasklog";
+const DEFAULT_WORKDOCS_DIR = "workdocs";
+const DEFAULT_WORKS_FILE = "works.json";
+const DEFAULT_ACTIVE_CONTEXT_FILE = "active-context.json";
+const DEFAULT_SESSION_JSON_FILE = "session-log.json";
+const DEFAULT_SESSION_MARKDOWN_FILE = "session-log.md";
+const ACTIVE_CONTEXT_STALE_MS = 24 * 60 * 60 * 1000;
+const BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const BASE62_ID_LENGTH = 6;
+const MAX_ID_ATTEMPTS = 64;
+
 let mutationQueue: Promise<void> = Promise.resolve();
 
 export function resolveLogbookPaths(
@@ -73,21 +196,57 @@ export function resolveLogbookPaths(
   logger?: Logger,
 ): LogbookPaths {
   const normalizedProjectRoot = path.resolve(projectRoot);
+  const stateRoot = resolveInsideProjectRoot(normalizedProjectRoot, DEFAULT_STATE_DIR, "state-dir");
+  const workdocsRoot = resolveInsideProjectRoot(
+    normalizedProjectRoot,
+    DEFAULT_WORKDOCS_DIR,
+    "workdocs-dir",
+  );
+
   return {
     projectRoot: normalizedProjectRoot,
-    jsonPath: resolveInsideProjectRoot(normalizedProjectRoot, jsonFile, "json-file"),
-    markdownPath: resolveInsideProjectRoot(normalizedProjectRoot, markdownFile, "markdown-file"),
+    stateRoot,
+    workdocsRoot,
+    worksPath: resolveInsideProjectRoot(
+      normalizedProjectRoot,
+      path.join(DEFAULT_STATE_DIR, DEFAULT_WORKS_FILE),
+      "works-file",
+    ),
+    activeContextPath: resolveInsideProjectRoot(
+      normalizedProjectRoot,
+      path.join(DEFAULT_STATE_DIR, DEFAULT_ACTIVE_CONTEXT_FILE),
+      "active-context-file",
+    ),
+    jsonPath: resolveInsideProjectRoot(
+      normalizedProjectRoot,
+      path.join(DEFAULT_STATE_DIR, DEFAULT_SESSION_JSON_FILE),
+      "session-json-file",
+    ),
+    markdownPath: resolveInsideProjectRoot(
+      normalizedProjectRoot,
+      path.join(DEFAULT_STATE_DIR, DEFAULT_SESSION_MARKDOWN_FILE),
+      "session-markdown-file",
+    ),
+    legacyJsonPath: resolveInsideProjectRoot(normalizedProjectRoot, jsonFile, "json-file"),
+    legacyMarkdownPath: resolveInsideProjectRoot(
+      normalizedProjectRoot,
+      markdownFile,
+      "markdown-file",
+    ),
     logger,
   };
 }
 
 export async function readLogEntries(paths: LogbookPaths): Promise<SessionLogEntry[]> {
   try {
-    const raw = await readFile(paths.jsonPath, "utf8");
-    const parsed = JSON.parse(raw);
+    const raw = await readPreferredLogFile(paths);
+    if (raw === undefined) {
+      return [];
+    }
 
+    const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      throw new Error(`Expected ${paths.jsonPath} to contain a JSON array.`);
+      throw new Error(`Expected the session log JSON file to contain a JSON array.`);
     }
 
     return parsed.map((entry, index) => normalizeEntry(entry, index));
@@ -99,6 +258,7 @@ export async function readLogEntries(paths: LogbookPaths): Promise<SessionLogEnt
     paths.logger?.error("logbook.read_failed", {
       project_root: paths.projectRoot,
       json_path: paths.jsonPath,
+      legacy_json_path: paths.legacyJsonPath,
       error: error instanceof Error ? error.message : String(error),
     });
     throw error;
@@ -110,10 +270,16 @@ export async function appendLogEntry(
   input: AppendSessionLogInput,
 ): Promise<SessionLogEntry> {
   return withMutationLock(async () => {
-    const currentEntries = await readLogEntries(paths);
+    const [currentEntries, works, activeContext] = await Promise.all([
+      readLogEntries(paths),
+      readWorkRecords(paths),
+      readActiveContextRecord(paths),
+    ]);
     const now = new Date().toISOString();
+    const resolvedWorkId = resolveAppendWorkId(paths, works, activeContext, input.work_id, now);
     const entry: SessionLogEntry = {
-      id: buildLogId(),
+      id: buildUniqueHumanId(new Set(currentEntries.map((item) => item.id))),
+      work_id: resolvedWorkId,
       timestamp: now,
       summary: normalizeSummary(input.summary),
       status: normalizeStatus(input.status),
@@ -135,6 +301,11 @@ export async function appendLogEntry(
     }
     nextEntries.push(entry);
 
+    if (entry.work_id) {
+      touchWorkRecord(works, entry.work_id, now, entry.summary);
+      await persistWorkRecords(paths, works);
+    }
+
     await persistEntries(paths, nextEntries);
     return entry;
   });
@@ -143,10 +314,12 @@ export async function appendLogEntry(
 export async function getRecentLogEntries(
   paths: LogbookPaths,
   limit: number,
+  options: GetRecentLogsOptions = {},
 ): Promise<SessionLogEntry[]> {
   const entries = await readLogEntries(paths);
-  const safeLimit = normalizeLimit(limit, 3, 50);
-  return entries.slice(-safeLimit).reverse();
+  const safeLimit = normalizeLimit(limit, 5, 50);
+  const filtered = await filterRecentLogs(paths, entries, options);
+  return filtered.slice(-safeLimit).reverse();
 }
 
 export async function getOpenThreadEntries(
@@ -175,7 +348,7 @@ export async function updateLogStatus(
 ): Promise<SessionLogEntry> {
   return withMutationLock(async () => {
     const entries = await readLogEntries(paths);
-    const entry = findEntry(entries, logId);
+    const entry = findLogEntry(entries, logId);
     const now = new Date().toISOString();
 
     entry.status = normalizeStatus(status);
@@ -194,7 +367,7 @@ export async function amendLogMetadata(
 ): Promise<SessionLogEntry> {
   return withMutationLock(async () => {
     const entries = await readLogEntries(paths);
-    const entry = findEntry(entries, logId);
+    const entry = findLogEntry(entries, logId);
     const now = new Date().toISOString();
 
     if (patch.affected_files !== undefined) {
@@ -221,6 +394,247 @@ export async function amendLogMetadata(
   });
 }
 
+export async function readWorkRecords(paths: LogbookPaths): Promise<WorkRecord[]> {
+  try {
+    const raw = await readFile(paths.worksPath, "utf8");
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error(`Expected ${paths.worksPath} to contain a JSON array.`);
+    }
+
+    return parsed.map((value, index) => normalizeWorkRecord(paths.projectRoot, value, index));
+  } catch (error) {
+    if (isMissingFile(error)) {
+      return [];
+    }
+
+    paths.logger?.error("workbook.read_failed", {
+      project_root: paths.projectRoot,
+      works_path: paths.worksPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+export async function startWork(paths: LogbookPaths, input: StartWorkInput): Promise<WorkRecord> {
+  return withMutationLock(async () => {
+    const works = await readWorkRecords(paths);
+    const now = new Date().toISOString();
+    const title = normalizeTitle(input.title);
+    const startDir = normalizeScopedPath(paths.projectRoot, input.start_dir, "start_dir");
+    const scopePaths = normalizeScopePaths(paths.projectRoot, input.scope_paths, startDir);
+    const work: WorkRecord = {
+      work_id: buildUniqueHumanId(new Set(works.map((item) => item.work_id))),
+      title,
+      slug: slugify(title),
+      status: "active",
+      start_dir: startDir,
+      scope_paths: scopePaths,
+      summary: normalizeOptionalText(input.summary),
+      tags: normalizeTags(input.tags),
+      created_at: now,
+      updated_at: now,
+    };
+
+    works.push(work);
+    await persistWorkRecords(paths, works);
+    await ensureDirectory(getWorkArtifactPaths(paths, work).workDir);
+    await writeActiveContextRecord(paths, {
+      active_work_id: work.work_id,
+      project_root: paths.projectRoot,
+      updated_at: now,
+    });
+
+    return work;
+  });
+}
+
+export async function listWorks(paths: LogbookPaths, input: ListWorksInput = {}): Promise<WorkListEntry[]> {
+  const [works, entries] = await Promise.all([readWorkRecords(paths), readLogEntries(paths)]);
+  const safeLimit = normalizeLimit(input.limit ?? 10, 10, 100);
+  const normalizedQuery = input.query?.trim().toLowerCase();
+
+  const filtered = works
+    .filter((work) => matchesWorkStatus(work, input.status ?? "open"))
+    .filter((work) => matchesWorkQuery(work, normalizedQuery))
+    .sort((left, right) => right.updated_at.localeCompare(left.updated_at))
+    .slice(0, safeLimit);
+
+  return Promise.all(
+    filtered.map(async (work) => buildWorkListEntry(paths, work, entries.filter((entry) => entry.work_id === work.work_id))),
+  );
+}
+
+export async function getActiveContext(paths: LogbookPaths): Promise<ActiveContextSummary> {
+  const [works, activeContext] = await Promise.all([
+    readWorkRecords(paths),
+    readActiveContextRecord(paths),
+  ]);
+
+  return buildActiveContextSummary(paths, works, activeContext);
+}
+
+export async function resumeWork(
+  paths: LogbookPaths,
+  input: { work_id?: string; query?: string },
+): Promise<ActiveContextSummary> {
+  return withMutationLock(async () => {
+    const works = await readWorkRecords(paths);
+    const work = resolveWorkReference(works, input.work_id, input.query);
+    const now = new Date().toISOString();
+
+    await writeActiveContextRecord(paths, {
+      active_work_id: work.work_id,
+      project_root: paths.projectRoot,
+      updated_at: now,
+    });
+
+    return buildActiveContextSummary(paths, works, {
+      active_work_id: work.work_id,
+      project_root: paths.projectRoot,
+      updated_at: now,
+    });
+  });
+}
+
+export async function setWorkStatus(
+  paths: LogbookPaths,
+  workId: string,
+  status: WorkStatus,
+): Promise<WorkRecord> {
+  return withMutationLock(async () => {
+    const [works, activeContext] = await Promise.all([
+      readWorkRecords(paths),
+      readActiveContextRecord(paths),
+    ]);
+    const work = findWorkRecord(works, workId);
+    const now = new Date().toISOString();
+
+    work.status = normalizeWorkStatus(status);
+    work.updated_at = now;
+    await persistWorkRecords(paths, works);
+
+    if (status === "done" && activeContext.active_work_id === workId) {
+      await writeActiveContextRecord(paths, {
+        project_root: paths.projectRoot,
+        updated_at: now,
+      });
+    }
+
+    return work;
+  });
+}
+
+export async function readWorkContext(
+  paths: LogbookPaths,
+  workId?: string,
+): Promise<WorkContextSummary> {
+  const [works, entries, activeContext] = await Promise.all([
+    readWorkRecords(paths),
+    readLogEntries(paths),
+    readActiveContextRecord(paths),
+  ]);
+  const work = resolvePreferredWork(works, activeContext, workId);
+  const artifactPaths = getWorkArtifactPaths(paths, work);
+  const artifactAvailability = await getArtifactAvailability(artifactPaths);
+  const recentLogs = entries.filter((entry) => entry.work_id === work.work_id).slice(-5).reverse();
+
+  return {
+    work,
+    artifact_paths: artifactPaths,
+    artifact_availability: artifactAvailability,
+    recent_logs: recentLogs,
+    next_step_summary: recentLogs.find((entry) => entry.next_steps)?.next_steps,
+  };
+}
+
+export async function createWorkDoc(
+  paths: LogbookPaths,
+  docType: Exclude<WorkDocType, "notes">,
+  input: { work_id?: string; target_paths?: string[] } = {},
+): Promise<CreateWorkDocResult> {
+  return withMutationLock(async () => {
+    const [works, activeContext] = await Promise.all([
+      readWorkRecords(paths),
+      readActiveContextRecord(paths),
+    ]);
+    const work = resolvePreferredWork(works, activeContext, input.work_id);
+    const artifactPaths = getWorkArtifactPaths(paths, work);
+    const targetPath = getArtifactPath(artifactPaths, docType);
+    const created = !(await pathExists(targetPath));
+    const targetPaths =
+      docType === "plan"
+        ? normalizeTargetPaths(paths.projectRoot, input.target_paths, work.scope_paths)
+        : undefined;
+
+    if (!created && docType === "plan" && targetPaths && targetPaths.length > 0) {
+      const existingTargetPaths = await readPlanTargetPaths(targetPath);
+      if (!existingTargetPaths || !samePathSet(existingTargetPaths, targetPaths)) {
+        throw new Error(
+          "plan.md already exists; refusing to report new target_paths without updating the file.",
+        );
+      }
+    }
+
+    await ensureDirectory(artifactPaths.workDir);
+    if (created) {
+      await writeFile(targetPath, buildWorkDocContents(docType, work, targetPaths), "utf8");
+    }
+
+    touchWorkRecord(works, work.work_id, new Date().toISOString());
+    await persistWorkRecords(paths, works);
+
+    return {
+      work: findWorkRecord(works, work.work_id),
+      path: targetPath,
+      created,
+      target_paths: targetPaths,
+    };
+  });
+}
+
+export async function appendWorkNote(
+  paths: LogbookPaths,
+  input: { work_id?: string; note: string },
+): Promise<AppendWorkNoteResult> {
+  return withMutationLock(async () => {
+    const [works, activeContext] = await Promise.all([
+      readWorkRecords(paths),
+      readActiveContextRecord(paths),
+    ]);
+    const work = resolvePreferredWork(works, activeContext, input.work_id);
+    const artifactPaths = getWorkArtifactPaths(paths, work);
+    const note = normalizeSummary(input.note);
+    const now = new Date().toISOString();
+    const created = !(await pathExists(artifactPaths.notesPath));
+
+    await ensureDirectory(artifactPaths.workDir);
+    if (created) {
+      await writeFile(artifactPaths.notesPath, buildWorkDocContents("notes", work), "utf8");
+    }
+
+    await appendFile(
+      artifactPaths.notesPath,
+      `\n## ${now}\n\n${note
+        .split(/\r?\n/)
+        .map((line) => line.trimEnd())
+        .join("\n")}\n`,
+      "utf8",
+    );
+
+    touchWorkRecord(works, work.work_id, now);
+    await persistWorkRecords(paths, works);
+
+    return {
+      work: findWorkRecord(works, work.work_id),
+      path: artifactPaths.notesPath,
+      created,
+    };
+  });
+}
+
 export function formatLogEntries(entries: SessionLogEntry[]): string {
   if (entries.length === 0) {
     return "No session logs found yet.";
@@ -238,6 +652,10 @@ export function formatLogEntries(entries: SessionLogEntry[]): string {
             : "(none listed)"
         }`,
       ];
+
+      if (entry.work_id) {
+        lines.push(`  Work: ${escapePlainTextField(entry.work_id)}`);
+      }
 
       if (entry.tags && entry.tags.length > 0) {
         lines.push(`  Tags: ${entry.tags.map((tag) => escapePlainTextField(tag)).join(", ")}`);
@@ -268,6 +686,43 @@ export function formatLogEntries(entries: SessionLogEntry[]): string {
     .join("\n\n");
 }
 
+async function filterRecentLogs(
+  paths: LogbookPaths,
+  entries: SessionLogEntry[],
+  options: GetRecentLogsOptions,
+): Promise<SessionLogEntry[]> {
+  if (options.work_id) {
+    return entries.filter((entry) => entry.work_id === options.work_id);
+  }
+
+  if (options.project_wide) {
+    return entries;
+  }
+
+  const [works, activeContext] = await Promise.all([
+    readWorkRecords(paths),
+    readActiveContextRecord(paths),
+  ]);
+  const summary = buildActiveContextSummary(paths, works, activeContext);
+  if (summary.freshness === "fresh" && summary.active_work_id) {
+    return entries.filter((entry) => entry.work_id === summary.active_work_id);
+  }
+
+  return entries;
+}
+
+async function readPreferredLogFile(paths: LogbookPaths): Promise<string | undefined> {
+  if (await pathExists(paths.jsonPath)) {
+    return readFile(paths.jsonPath, "utf8");
+  }
+
+  if (paths.legacyJsonPath !== paths.jsonPath && (await pathExists(paths.legacyJsonPath))) {
+    return readFile(paths.legacyJsonPath, "utf8");
+  }
+
+  return undefined;
+}
+
 function normalizeEntry(value: unknown, index: number): SessionLogEntry {
   if (!value || typeof value !== "object") {
     throw new Error("Invalid session log entry.");
@@ -281,10 +736,11 @@ function normalizeEntry(value: unknown, index: number): SessionLogEntry {
 
   return {
     id: optionalStringField(entry.id) ?? `legacy-${timestamp}-${index}`,
+    work_id: normalizeOptionalText(optionalStringField(entry.work_id)),
     timestamp,
     summary: stringField(entry.summary, "summary"),
     status: normalizeStatus(rawStatus ?? "Done"),
-    change_type: normalizeChangeType(resolveChangeType(rawChangeType, rawStatus)),
+    change_type: normalizeChangeType(resolveChangeType(rawChangeType, rawStatus), "investigation"),
     affected_files: normalizeAffectedFiles(
       Array.isArray(entry.affected_files)
         ? entry.affected_files.map((item) => stringField(item, "affected_files item"))
@@ -309,21 +765,154 @@ function normalizeEntry(value: unknown, index: number): SessionLogEntry {
   };
 }
 
+function normalizeWorkRecord(projectRoot: string, value: unknown, index: number): WorkRecord {
+  if (!value || typeof value !== "object") {
+    throw new Error("Invalid work record.");
+  }
+
+  const entry = value as Record<string, unknown>;
+  const title = stringField(entry.title, "title");
+  const startDir = normalizeScopedPath(projectRoot, optionalStringField(entry.start_dir), "start_dir");
+  const createdAt = optionalStringField(entry.created_at) ?? new Date(0).toISOString();
+  const updatedAt = optionalStringField(entry.updated_at) ?? createdAt;
+
+  return {
+    work_id: optionalStringField(entry.work_id) ?? `legacy${index.toString().padStart(4, "0")}`,
+    title,
+    slug: normalizeOptionalText(optionalStringField(entry.slug)) ?? slugify(title),
+    status: normalizeWorkStatus(optionalStringField(entry.status) ?? "active"),
+    start_dir: startDir,
+    scope_paths: normalizeScopePaths(
+      projectRoot,
+      Array.isArray(entry.scope_paths)
+        ? entry.scope_paths.map((item) => stringField(item, "scope_paths item"))
+        : [],
+      startDir,
+    ),
+    summary: normalizeOptionalText(optionalStringField(entry.summary)),
+    tags: normalizeTags(
+      Array.isArray(entry.tags) ? entry.tags.map((item) => stringField(item, "tags item")) : [],
+    ),
+    created_at: createdAt,
+    updated_at: updatedAt,
+  };
+}
+
 async function persistEntries(paths: LogbookPaths, entries: SessionLogEntry[]): Promise<void> {
   try {
     await mkdir(paths.projectRoot, { recursive: true });
-    await writeAtomically(paths.jsonPath, `${JSON.stringify(entries, null, 2)}\n`);
-    await writeAtomically(paths.markdownPath, renderMarkdown(entries));
+    await mkdir(paths.stateRoot, { recursive: true });
+    const jsonContents = `${JSON.stringify(entries, null, 2)}\n`;
+    const markdownContents = renderMarkdown(entries);
+
+    await writeAtomically(paths.jsonPath, jsonContents);
+    await writeAtomically(paths.markdownPath, markdownContents);
+
+    if (paths.legacyJsonPath !== paths.jsonPath) {
+      await writeAtomically(paths.legacyJsonPath, jsonContents);
+    }
+
+    if (paths.legacyMarkdownPath !== paths.markdownPath) {
+      await writeAtomically(paths.legacyMarkdownPath, markdownContents);
+    }
   } catch (error) {
     paths.logger?.error("logbook.persist_failed", {
       project_root: paths.projectRoot,
       json_path: paths.jsonPath,
       markdown_path: paths.markdownPath,
+      legacy_json_path: paths.legacyJsonPath,
+      legacy_markdown_path: paths.legacyMarkdownPath,
       entry_count: entries.length,
       error: error instanceof Error ? error.message : String(error),
     });
     throw error;
   }
+}
+
+async function persistWorkRecords(paths: LogbookPaths, works: WorkRecord[]): Promise<void> {
+  await mkdir(paths.stateRoot, { recursive: true });
+  await writeAtomically(paths.worksPath, `${JSON.stringify(works, null, 2)}\n`);
+}
+
+async function readActiveContextRecord(paths: LogbookPaths): Promise<ActiveContextRecord> {
+  try {
+    const raw = await readFile(paths.activeContextPath, "utf8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+
+    return {
+      active_work_id: normalizeOptionalText(optionalStringField(parsed.active_work_id)),
+      project_root: optionalStringField(parsed.project_root) ?? paths.projectRoot,
+      updated_at: normalizeOptionalText(optionalStringField(parsed.updated_at)),
+    };
+  } catch (error) {
+    if (isMissingFile(error)) {
+      return {
+        project_root: paths.projectRoot,
+      };
+    }
+
+    paths.logger?.error("active_context.read_failed", {
+      project_root: paths.projectRoot,
+      active_context_path: paths.activeContextPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+async function writeActiveContextRecord(paths: LogbookPaths, activeContext: ActiveContextRecord): Promise<void> {
+  await mkdir(paths.stateRoot, { recursive: true });
+  await writeAtomically(paths.activeContextPath, `${JSON.stringify(activeContext, null, 2)}\n`);
+}
+
+function buildActiveContextSummary(
+  paths: LogbookPaths,
+  works: WorkRecord[],
+  activeContext: ActiveContextRecord,
+): ActiveContextSummary {
+  const activeWork = activeContext.active_work_id
+    ? works.find((work) => work.work_id === activeContext.active_work_id)
+    : undefined;
+
+  return {
+    ...activeContext,
+    state_root: paths.stateRoot,
+    workdocs_root: paths.workdocsRoot,
+    json_path: paths.jsonPath,
+    markdown_path: paths.markdownPath,
+    active_work: activeWork,
+    freshness: resolveActiveWorkFreshness(activeContext, activeWork),
+  };
+}
+
+async function buildWorkListEntry(
+  paths: LogbookPaths,
+  work: WorkRecord,
+  logs: SessionLogEntry[],
+): Promise<WorkListEntry> {
+  const artifactPaths = getWorkArtifactPaths(paths, work);
+  const artifactAvailability = await getArtifactAvailability(artifactPaths);
+  const recentLog = logs.at(-1);
+  const recentNextStep = [...logs].reverse().find((entry) => entry.next_steps)?.next_steps;
+
+  return {
+    ...work,
+    artifact_availability: artifactAvailability,
+    last_log_summary: recentLog?.summary,
+    next_step_summary: recentNextStep,
+    recent_log_id: recentLog?.id,
+  };
+}
+
+async function getArtifactAvailability(paths: WorkArtifactPaths): Promise<WorkArtifactAvailability> {
+  const [design, plan, spec, notes] = await Promise.all([
+    pathExists(paths.designPath),
+    pathExists(paths.planPath),
+    pathExists(paths.specPath),
+    pathExists(paths.notesPath),
+  ]);
+
+  return { design, plan, spec, notes };
 }
 
 function renderMarkdown(entries: SessionLogEntry[]): string {
@@ -342,6 +931,13 @@ function renderMarkdown(entries: SessionLogEntry[]): string {
             `## ${entry.timestamp} · ${entry.status} · ${entry.change_type}`,
             "",
             `**ID**: ${escapeMarkdownInline(entry.id)}`,
+          ];
+
+          if (entry.work_id) {
+            section.push(`**Work**: ${escapeMarkdownInline(entry.work_id)}`);
+          }
+
+          section.push(
             "",
             ...renderQuotedText(entry.summary),
             "",
@@ -350,7 +946,7 @@ function renderMarkdown(entries: SessionLogEntry[]): string {
             ...(entry.affected_files.length > 0
               ? entry.affected_files.map((filePath) => `- ${escapeMarkdownInline(filePath)}`)
               : ["- (none listed)"]),
-          ];
+          );
 
           if (entry.tags && entry.tags.length > 0) {
             section.push("", "**Tags**", "", ...entry.tags.map((tag) => `- ${escapeMarkdownInline(tag)}`));
@@ -391,6 +987,117 @@ function renderMarkdown(entries: SessionLogEntry[]): string {
   return [...header, ...body].join("\n");
 }
 
+function getWorkArtifactPaths(paths: LogbookPaths, work: WorkRecord): WorkArtifactPaths {
+  const workDir = resolveInsideProjectRoot(
+    paths.projectRoot,
+    path.join(DEFAULT_WORKDOCS_DIR, `${work.work_id}-${work.slug}`),
+    "workdocs-entry",
+  );
+
+  return {
+    workDir,
+    designPath: path.join(workDir, WORKDOC_FILENAMES.design),
+    planPath: path.join(workDir, WORKDOC_FILENAMES.plan),
+    specPath: path.join(workDir, WORKDOC_FILENAMES.spec),
+    notesPath: path.join(workDir, WORKDOC_FILENAMES.notes),
+  };
+}
+
+function getArtifactPath(paths: WorkArtifactPaths, docType: Exclude<WorkDocType, "notes">): string {
+  switch (docType) {
+    case "design":
+      return paths.designPath;
+    case "plan":
+      return paths.planPath;
+    case "spec":
+      return paths.specPath;
+  }
+}
+
+function buildWorkDocContents(
+  docType: WorkDocType,
+  work: WorkRecord,
+  targetPaths?: string[],
+): string {
+  const frontmatter = [
+    "---",
+    `work_id: ${toYamlScalar(work.work_id)}`,
+    `title: ${toYamlScalar(work.title)}`,
+    `status: ${toYamlScalar(work.status)}`,
+    `start_dir: ${toYamlScalar(work.start_dir)}`,
+    "scope_paths:",
+    ...work.scope_paths.map((scopePath) => `  - ${toYamlScalar(scopePath)}`),
+    ...(docType === "plan"
+      ? [
+          "target_paths:",
+          ...(targetPaths ?? work.scope_paths).map(
+            (targetPath) => `  - ${toYamlScalar(targetPath)}`,
+          ),
+        ]
+      : []),
+    `updated_at: ${toYamlScalar(work.updated_at)}`,
+    "---",
+    "",
+  ];
+
+  switch (docType) {
+    case "design":
+      return [
+        ...frontmatter,
+        "# Design",
+        "",
+        "## Problem",
+        "",
+        "## Goals",
+        "",
+        "## Constraints",
+        "",
+        "## Tradeoffs",
+        "",
+        "## Chosen Approach",
+        "",
+      ].join("\n");
+    case "plan":
+      return [
+        ...frontmatter,
+        "# Implementation Plan",
+        "",
+        "## Scope",
+        "",
+        "## Steps",
+        "",
+        "## Files and Areas",
+        "",
+        "## Testing",
+        "",
+        "## Rollout",
+        "",
+      ].join("\n");
+    case "spec":
+      return [
+        ...frontmatter,
+        "# Spec",
+        "",
+        "## Behavior",
+        "",
+        "## Inputs",
+        "",
+        "## Outputs",
+        "",
+        "## Rules",
+        "",
+        "## Acceptance Criteria",
+        "",
+      ].join("\n");
+    case "notes":
+      return [
+        ...frontmatter,
+        "# Notes",
+        "",
+      ].join("\n");
+  }
+}
+
 function markSuperseded(entries: SessionLogEntry[], logId: string, now: string): void {
   const previousEntry = entries.find((entry) => entry.id === logId);
   if (!previousEntry) {
@@ -402,7 +1109,7 @@ function markSuperseded(entries: SessionLogEntry[], logId: string, now: string):
   previousEntry.updated_at = now;
 }
 
-function findEntry(entries: SessionLogEntry[], logId: string): SessionLogEntry {
+function findLogEntry(entries: SessionLogEntry[], logId: string): SessionLogEntry {
   const entry = entries.find((item) => item.id === logId);
   if (!entry) {
     throw new Error(`Log entry not found: ${logId}`);
@@ -411,16 +1118,136 @@ function findEntry(entries: SessionLogEntry[], logId: string): SessionLogEntry {
   return entry;
 }
 
-function resolveChangeType(rawChangeType: string | undefined, rawStatus: string | undefined): ChangeType {
+function findWorkRecord(works: WorkRecord[], workId: string): WorkRecord {
+  const work = works.find((item) => item.work_id === workId);
+  if (!work) {
+    throw new Error(`Work not found: ${workId}`);
+  }
+
+  return work;
+}
+
+function resolveWorkReference(works: WorkRecord[], workId?: string, query?: string): WorkRecord {
+  if (workId) {
+    return findWorkRecord(works, workId.trim());
+  }
+
+  const normalizedQuery = query?.trim().toLowerCase();
+  if (!normalizedQuery) {
+    throw new Error("A work_id or query is required.");
+  }
+
+  const matches = works.filter((work) => matchesWorkQuery(work, normalizedQuery));
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  if (matches.length === 0) {
+    throw new Error(`No work matched query: ${query}`);
+  }
+
+  throw new Error(
+    `Query matched multiple works: ${matches
+      .slice(0, 5)
+      .map((work) => `${work.work_id}:${work.slug}`)
+      .join(", ")}`,
+  );
+}
+
+function resolvePreferredWork(
+  works: WorkRecord[],
+  activeContext: ActiveContextRecord,
+  workId?: string,
+): WorkRecord {
+  if (workId) {
+    return findWorkRecord(works, workId);
+  }
+
+  const activeWork = activeContext.active_work_id
+    ? works.find((work) => work.work_id === activeContext.active_work_id)
+    : undefined;
+  const freshness = resolveActiveWorkFreshness(activeContext, activeWork);
+
+  if (activeWork && freshness === "fresh") {
+    return activeWork;
+  }
+
+  const openWorks = works.filter((work) => work.status === "active" || work.status === "blocked");
+  if (openWorks.length === 1) {
+    return openWorks[0];
+  }
+
+  throw new Error("No work_id was provided and no unambiguous active work could be resolved.");
+}
+
+function resolveAppendWorkId(
+  paths: LogbookPaths,
+  works: WorkRecord[],
+  activeContext: ActiveContextRecord,
+  explicitWorkId: string | undefined,
+  now: string,
+): string | undefined {
+  if (explicitWorkId) {
+    return findWorkRecord(works, explicitWorkId.trim()).work_id;
+  }
+
+  const activeWork = activeContext.active_work_id
+    ? works.find((work) => work.work_id === activeContext.active_work_id)
+    : undefined;
+  const summary = buildActiveContextSummary(paths, works, {
+    ...activeContext,
+    updated_at: activeContext.updated_at ?? now,
+  });
+
+  if (summary.freshness === "fresh" && activeWork) {
+    return activeWork.work_id;
+  }
+
+  return undefined;
+}
+
+function resolveActiveWorkFreshness(
+  activeContext: ActiveContextRecord,
+  activeWork: WorkRecord | undefined,
+): ActiveWorkFreshness | undefined {
+  if (!activeContext.active_work_id) {
+    return undefined;
+  }
+
+  if (!activeWork || activeWork.status === "done") {
+    return "invalid";
+  }
+
+  if (!activeContext.updated_at) {
+    return "stale";
+  }
+
+  const updatedAt = Date.parse(activeContext.updated_at);
+  if (!Number.isFinite(updatedAt)) {
+    return "stale";
+  }
+
+  return Date.now() - updatedAt > ACTIVE_CONTEXT_STALE_MS ? "stale" : "fresh";
+}
+
+function resolveChangeType(rawChangeType: string | undefined, rawStatus: string | undefined): string {
   if (rawChangeType) {
-    return rawChangeType as ChangeType;
+    return rawChangeType;
   }
 
   if (rawStatus && CHANGE_TYPES.includes(rawStatus.toLowerCase() as ChangeType)) {
-    return rawStatus.toLowerCase() as ChangeType;
+    return rawStatus.toLowerCase();
   }
 
   return "investigation";
+}
+
+function touchWorkRecord(works: WorkRecord[], workId: string, now: string, summary?: string): void {
+  const work = findWorkRecord(works, workId);
+  work.updated_at = now;
+  if (!work.summary && summary) {
+    work.summary = summary;
+  }
 }
 
 function normalizeSummary(summary: string): string {
@@ -430,6 +1257,15 @@ function normalizeSummary(summary: string): string {
   }
 
   return trimmed;
+}
+
+function normalizeTitle(title: string): string {
+  const normalized = normalizeSummary(title);
+  if (/[\r\n]/.test(normalized)) {
+    throw new Error("title must stay on a single line.");
+  }
+
+  return normalized;
 }
 
 function normalizeAffectedFiles(affectedFiles: string[]): string[] {
@@ -467,9 +1303,21 @@ function normalizeStatus(status: string): LogStatus {
   throw new Error(`Unsupported status: ${status}`);
 }
 
-function normalizeChangeType(changeType: string): ChangeType {
+function normalizeWorkStatus(status: string): WorkStatus {
+  if (WORK_STATUSES.includes(status as WorkStatus)) {
+    return status as WorkStatus;
+  }
+
+  throw new Error(`Unsupported work status: ${status}`);
+}
+
+function normalizeChangeType(changeType: string, fallback?: ChangeType): ChangeType {
   if (CHANGE_TYPES.includes(changeType as ChangeType)) {
     return changeType as ChangeType;
+  }
+
+  if (fallback) {
+    return fallback;
   }
 
   throw new Error(`Unsupported change_type: ${changeType}`);
@@ -491,6 +1339,136 @@ function normalizeRevision(value: unknown): number {
   return 1;
 }
 
+function normalizeScopedPath(projectRoot: string, value: string | undefined, label: string): string {
+  const candidate = value?.trim() ? value.trim() : ".";
+  return resolvePathWithinRoot(projectRoot, candidate, label);
+}
+
+function normalizeScopePaths(
+  projectRoot: string,
+  scopePaths: string[] | undefined,
+  startDir: string,
+): string[] {
+  const rawScopePaths = scopePaths && scopePaths.length > 0 ? scopePaths : [startDir];
+  const normalized = [
+    ...new Set(rawScopePaths.map((scopePath) => resolvePathWithinRoot(projectRoot, scopePath, "scope_paths"))),
+  ];
+
+  return normalized.length > 0 ? normalized : [startDir];
+}
+
+function normalizeTargetPaths(
+  projectRoot: string,
+  targetPaths: string[] | undefined,
+  scopePaths: string[],
+): string[] {
+  if (!targetPaths || targetPaths.length === 0) {
+    return [...scopePaths];
+  }
+
+  const normalized = normalizeScopePaths(projectRoot, targetPaths, scopePaths[0] ?? projectRoot);
+  for (const targetPath of normalized) {
+    if (!scopePaths.some((scopePath) => isPathWithinScope(targetPath, scopePath))) {
+      throw new Error(`target_paths must stay within the work scope.`);
+    }
+  }
+
+  return normalized;
+}
+
+async function readPlanTargetPaths(planPath: string): Promise<string[] | undefined> {
+  const contents = await readFile(planPath, "utf8");
+  const lines = contents.split(/\r?\n/);
+  const targetPaths: string[] = [];
+  let inFrontmatter = false;
+  let collecting = false;
+
+  for (const line of lines) {
+    if (line === "---") {
+      if (!inFrontmatter) {
+        inFrontmatter = true;
+        continue;
+      }
+      break;
+    }
+
+    if (!inFrontmatter) {
+      continue;
+    }
+
+    if (line === "target_paths:") {
+      collecting = true;
+      continue;
+    }
+
+    if (collecting) {
+      if (line.startsWith("  - ")) {
+        targetPaths.push(parseYamlScalar(line.slice(4)));
+        continue;
+      }
+
+      break;
+    }
+  }
+
+  return targetPaths.length > 0 ? targetPaths : undefined;
+}
+
+function parseYamlScalar(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+    return trimmed.slice(1, -1).replace(/''/g, "'");
+  }
+
+  return trimmed;
+}
+
+function samePathSet(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const leftSet = new Set(left);
+  return right.every((item) => leftSet.has(item));
+}
+
+function isPathWithinScope(candidatePath: string, scopePath: string): boolean {
+  const relative = path.relative(scopePath, candidatePath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function matchesWorkStatus(work: WorkRecord, filter: WorkListFilter): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "open":
+      return work.status === "active" || work.status === "blocked";
+    default:
+      return work.status === filter;
+  }
+}
+
+function matchesWorkQuery(work: WorkRecord, query: string | undefined): boolean {
+  if (!query) {
+    return true;
+  }
+
+  const haystack = [
+    work.work_id,
+    work.title,
+    work.slug,
+    work.summary,
+    work.start_dir,
+    ...work.scope_paths,
+    ...(work.tags ?? []),
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+
+  return haystack.includes(query);
+}
+
 function stringField(value: unknown, fieldName: string): string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string.`);
@@ -503,8 +1481,36 @@ function optionalStringField(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-function buildLogId(): string {
-  return `log-${randomUUID()}`;
+function slugify(value: string): string {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || "work";
+}
+
+function buildUniqueHumanId(existingIds: Set<string>): string {
+  for (let attempt = 0; attempt < MAX_ID_ATTEMPTS; attempt += 1) {
+    const candidate = buildHumanId();
+    if (!existingIds.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Failed to allocate a unique short id.");
+}
+
+function buildHumanId(): string {
+  const bytes = randomBytes(BASE62_ID_LENGTH);
+  let id = "";
+
+  for (let index = 0; index < BASE62_ID_LENGTH; index += 1) {
+    id += BASE62_ALPHABET[bytes[index] % BASE62_ALPHABET.length];
+  }
+
+  return id;
 }
 
 function withMutationLock<T>(task: () => Promise<T>): Promise<T> {
@@ -529,6 +1535,17 @@ async function writeAtomically(targetPath: string, contents: string): Promise<vo
   }
 }
 
+function resolvePathWithinRoot(projectRoot: string, candidatePath: string, label: string): string {
+  const candidate = path.resolve(projectRoot, candidatePath);
+  const relative = path.relative(projectRoot, candidate);
+
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`${label} must stay within the project root.`);
+  }
+
+  return candidate;
+}
+
 function resolveInsideProjectRoot(projectRoot: string, relativeFilePath: string, label: string): string {
   const candidate = path.resolve(projectRoot, relativeFilePath);
   const relative = path.relative(projectRoot, candidate);
@@ -538,6 +1555,32 @@ function resolveInsideProjectRoot(projectRoot: string, relativeFilePath: string,
   }
 
   return candidate;
+}
+
+async function ensureDirectory(directoryPath: string): Promise<void> {
+  await mkdir(directoryPath, { recursive: true });
+}
+
+async function pathExists(targetPath: string): Promise<boolean> {
+  try {
+    await access(targetPath);
+    return true;
+  } catch (error) {
+    if (isMissingFile(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+function isMissingFile(error: unknown): boolean {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: string }).code === "ENOENT",
+  );
 }
 
 function renderQuotedText(text: string): string[] {
@@ -555,18 +1598,24 @@ function escapeMarkdownInline(value: string): string {
   return value.replace(/([\\`*_{}\[\]()#+!|>])/g, "\\$1");
 }
 
-function escapePlainTextField(value: string): string {
+function toYamlScalar(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+export function escapePlainTextField(value: string): string {
   return value
     .replace(/\r/g, "")
     .replace(/\n/g, "\\n")
     .replace(/\t/g, "\\t");
 }
 
-function isMissingFile(error: unknown): boolean {
-  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
-}
-
 export const defaults = {
   DEFAULT_JSON_FILE,
   DEFAULT_MARKDOWN_FILE,
+  DEFAULT_STATE_DIR,
+  DEFAULT_WORKDOCS_DIR,
+  DEFAULT_WORKS_FILE,
+  DEFAULT_ACTIVE_CONTEXT_FILE,
+  DEFAULT_SESSION_JSON_FILE,
+  DEFAULT_SESSION_MARKDOWN_FILE,
 };

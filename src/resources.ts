@@ -1,88 +1,157 @@
 import {
+  ACTIVE_WORK_FRESHNESS,
   APPENDABLE_LOG_STATUSES,
   CHANGE_TYPES,
   LOG_STATUSES,
+  WORK_STATUSES,
 } from "./logbook.js";
 
 const statusBullets = APPENDABLE_LOG_STATUSES.map((status) => `- \`${status}\``).join("\n");
 const lifecycleStatusBullets = LOG_STATUSES.map((status) => `- \`${status}\``).join("\n");
 const changeTypeBullets = CHANGE_TYPES.map((changeType) => `- \`${changeType}\``).join("\n");
+const workStatusBullets = WORK_STATUSES.map((status) => `- \`${status}\``).join("\n");
+const freshnessBullets = ACTIVE_WORK_FRESHNESS.map((status) => `- \`${status}\``).join("\n");
 
-export const USAGE_RESOURCE_TEXT = `# Logbook Usage
+export const USAGE_RESOURCE_TEXT = `# Tasklog Usage
 
-This MCP exists to keep a chronological project log that helps an AI recover context, hand work off between sessions, and narrow likely causes when something breaks.
+Tasklog MCP now works best in a work-first flow.
 
-## Trigger rules
+## Mental model
 
-These rules are intent-based, not phrase-based. They apply regardless of the user's language or exact wording.
+- \`work\` is the main unit of discovery and resume
+- \`log\` is for session activity only
+- \`note\` is for lightweight capture
+- \`design\`, \`plan\`, and \`spec\` are first-class work artifacts
+- human-facing docs live under \`workdocs/\`
+- machine-facing state lives under \`.tasklog/\`
 
-### Read before proceeding
+## Design principles
 
-Read the logbook before doing substantial work when the user expresses intent to:
+- Keep it small: solve handoff and note-taking pain directly instead of becoming a general memory system.
+- Keep it explicit: prefer clear work and artifact boundaries over hidden state.
+- Keep it low-drag: it should be easier to jot something down than to debate the workflow.
+- Keep it handoff-friendly: another session should be able to recover the right context quickly.
+- Keep it lean: avoid features that make context heavier or the tool itself harder to manage.
 
-- continue prior work
-- recover previous context
-- inspect unfinished work
-- ask what was done earlier
-- debug a regression that may be related to recent edits
+## Authoritative state
+
+- \`workdocs/\` is the human-facing source of truth for \`design\`, \`plan\`, \`spec\`, and \`notes\`
+- \`.tasklog/works.json\` is the machine-facing source of truth for works
+- \`.tasklog/session-log.json\` is the machine-facing source of truth for logs
+- \`active_work\` is only a hint for the current session
+- \`target_paths\` in \`plan.md\` is the authoritative implementation scope for that plan
+
+## Intent matrix
+
+- user asks what is open -> \`get_active_context\`, then \`list_works(status="open")\`
+- user wants to continue prior work -> \`get_active_context\`, then \`resume_work\` if needed, then \`read_work_context\`
+- user starts a new effort -> \`start_work\`
+- user says note this down -> \`append_work_note\`
+- user wants approach or tradeoffs -> \`create_design_doc\`
+- user wants steps or rollout -> \`create_plan_doc\`
+- user wants exact rules or contract details -> \`create_spec_doc\`
+- session changed files and is ending -> \`append_session_log\`
+
+## Recommended workflow
+
+### Start or resume work
 
 Use:
 
-- \`get_recent_logs(limit=5)\` for recent context recovery
-- \`get_recent_logs(limit=5)\` plus \`get_open_threads(limit=5)\` when the user wants to resume unfinished work or asks what is still open
+- \`get_active_context\` at the start of a session
+- \`list_works(status="open")\` when the user asks what is still open
+- \`start_work\` for a new task
+- \`resume_work\` when the user wants to continue an existing task
+- \`read_work_context\` before substantial implementation inside one work
 
-### Write before closing work
+### Create artifacts by intent
 
-If the session changed one or more files, the work is not considered done until a log entry has been written.
+Use:
+
+- \`create_design_doc\` when the user wants to reason about goals, tradeoffs, or approach
+- \`create_plan_doc\` when the user wants implementation steps
+- \`create_spec_doc\` when the user needs exact behavior or contract details
+- \`append_work_note\` when the user says to note something down
+
+### Use logs for session handoff
 
 Use \`append_session_log\` when:
 
-- a meaningful task or fix is finished
-- the session is about to end
-- work is stopping mid-task and the next step should be preserved
-- high-risk areas were changed and future debugging would benefit from a handoff entry
+- files changed during the session
+- a meaningful fix or implementation pass is ending
+- work is pausing and the next session needs a handoff
 
-## Required field behavior
+The log should summarize what happened in this session. It should not replace work docs.
 
-- If the work is unfinished, use \`status = "WIP"\` and provide \`next_steps\`
-- If progress is blocked, use \`status = "Blocked"\` and provide \`blockers\`
-- If the work is complete within the intended scope, use \`status = "Done"\`
+## Do / Don't
 
-## Writing rules
+- Do keep one work per coherent effort
+- Do use logs for session handoff, not for all thinking
+- Do use notes for lightweight reminders and observations
+- Don't create a new work for every tiny edit
+- Don't append a log for every small change in one continuous session
+- Don't use Tasklog as a full journal or general memory dump
+- Don't silently widen work scope without a clear reason
 
-- \`summary\` must explain both what changed and why or what outcome it produced
-- \`affected_files\` should list only files that were actually edited
-- \`status\` is about current progress, not the type of work
-- \`change_type\` describes the kind of work that was done
-- \`tags\` are optional, project-specific, lowercase, and short
-- \`next_steps\` should tell the next session where to continue
-- \`blockers\` should only be used for real external or unresolved constraints
+## Ambiguity rules
 
-## Status values for append_session_log
+- If \`active_work\` is fresh and clearly matches the user's intent, reuse it
+- If \`active_work\` is stale, invalid, or mismatched, prefer \`list_works\` or explicit \`resume_work\`
+- If no work is unambiguous, do not guess silently
+- If \`plan.md\` already exists, repeated \`target_paths\` must either match the file or fail
+- If the user only asks to note something, default to \`append_work_note\`, not \`append_session_log\`
+
+## Work and scope rules
+
+- Work ids and new log ids are 6-character base62 strings
+- Work scope is tracked by \`start_dir\` and \`scope_paths\`
+- Plan scope is tracked by \`target_paths\`
+- \`target_paths\` must stay within \`scope_paths\`
+- \`active_work\` is a session hint, not authoritative truth
+
+## Active context freshness
+
+${freshnessBullets}
+
+## Log status values for append_session_log
 
 ${statusBullets}
 
-## Status values for update_log_status
+## Lifecycle status values for update_log_status
 
 ${lifecycleStatusBullets}
+
+## Work status values
+
+${workStatusBullets}
 
 ## Change types
 
 ${changeTypeBullets}
 
-## Do not do this
+## Deprecated behavior
 
-- Do not write vague summaries like \`updated code\` or \`fixed stuff\`
-- Do not paste raw diffs into the summary
-- Do not list files that were only inspected
-- Do not create a new log for every tiny edit
-- Do not rewrite old summaries when the work evolves; append a follow-up log instead
+- \`get_open_threads\` is kept for migration only
+- prefer \`list_works(status="open")\` for unfinished work discovery
 `;
 
-export const SCHEMA_RESOURCE_TEXT = `# Logbook Schema
+export const SCHEMA_RESOURCE_TEXT = `# Tasklog Schema
 
 \`\`\`ts
-type LogStatus = "WIP" | "Done" | "Blocked" | "Superseded";
+type WorkStatus = "active" | "blocked" | "done";
+
+interface WorkRecord {
+  work_id: string; // 6-char base62
+  title: string;
+  slug: string;
+  status: WorkStatus;
+  start_dir: string;
+  scope_paths: string[];
+  summary?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+}
 
 type ChangeType =
   | "feature"
@@ -93,8 +162,11 @@ type ChangeType =
   | "test"
   | "config";
 
+type LogStatus = "WIP" | "Done" | "Blocked" | "Superseded";
+
 interface SessionLogEntry {
-  id: string;
+  id: string; // 6-char base62 for new entries
+  work_id?: string;
   timestamp: string;
   summary: string;
   status: LogStatus;
@@ -109,52 +181,76 @@ interface SessionLogEntry {
   created_at: string;
   updated_at: string;
 }
+
+interface ActiveContext {
+  active_work_id?: string;
+  project_root: string;
+  updated_at?: string;
+}
 \`\`\`
+
+## Storage roots
+
+- \`.tasklog/\` stores machine-facing JSON state
+- \`workdocs/\` stores human-facing work artifacts
+
+## Artifact files
+
+- \`design.md\`
+- \`plan.md\`
+- \`spec.md\`
+- \`notes.md\`
 
 ## Notes
 
-- \`summary\` should usually be one or two sentences
-- \`tags\` are freeform and project-defined
-- \`revision\` increases when metadata or status is amended
-- \`supersedes_log_id\` lets a new log take over an older thread without deleting history
+- Old UUID-like log ids remain readable during migration
+- \`related_log_ids\` may still point at legacy ids
+- \`target_paths\` belongs in \`plan.md\` frontmatter, not in the work record
 `;
 
-export const EXAMPLES_RESOURCE_TEXT = `# Logbook Examples
+export const EXAMPLES_RESOURCE_TEXT = `# Tasklog Examples
 
-## Good Example: Finished Refactor
+## Good Example: Start a New Work
 
 \`\`\`json
 {
-  "summary": "Refactored session refresh handling so expired tokens fail closed instead of reopening the dashboard loop.",
+  "title": "Secure launch handoff polish",
+  "summary": "Unify the placeholder handoff experience across dashboard and terminal entry.",
+  "start_dir": "/workspace/WebWayFleet",
+  "scope_paths": ["/workspace/WebWayFleet", "/workspace/CodeWebway"],
+  "tags": ["secure-launch", "ux"]
+}
+\`\`\`
+
+## Good Example: Append a Session Log
+
+\`\`\`json
+{
+  "summary": "Implemented work-aware context recovery and added active-work freshness checks before implicit log attachment.",
   "status": "Done",
-  "change_type": "refactor",
-  "affected_files": ["src/auth.ts", "src/router.ts", "src/session.ts"],
-  "tags": ["session-refresh", "routing"],
-  "blockers": ""
+  "change_type": "feature",
+  "affected_files": ["src/logbook.ts", "src/index.ts"],
+  "work_id": "a91K2x",
+  "tags": ["work-first", "context"]
 }
 \`\`\`
 
-This example is fully done within its intended scope, so it does not carry a handoff step.
-
-## Good Example: Investigation In Progress
+## Good Example: Create a Plan Doc With Target Paths
 
 \`\`\`json
 {
-  "summary": "Started investigating intermittent PTY disconnects after host-login approval. Confirmed the issue happens after reconnect, but the exact event ordering is still unclear.",
-  "status": "WIP",
-  "change_type": "investigation",
-  "affected_files": ["src/server.rs", "src/session.rs"],
-  "tags": ["pty-session", "host-login"],
-  "next_steps": "Trace reconnect flow around websocket reattachment and approval state propagation.",
-  "blockers": ""
+  "work_id": "a91K2x",
+  "target_paths": ["/workspace/CodeWebway"]
 }
 \`\`\`
+
+This is valid when the work scope includes multiple paths but the current implementation pass touches only one of them.
 
 ## Bad Example
 
 \`\`\`json
 {
-  "summary": "Updated auth",
+  "summary": "updated code",
   "status": "Done",
   "change_type": "bugfix",
   "affected_files": ["src/auth.ts"]
@@ -164,6 +260,6 @@ This example is fully done within its intended scope, so it does not carry a han
 Why it is bad:
 
 - The summary does not say what changed
-- The summary does not say what outcome was achieved
-- There is no next step even though the change might need follow-up
+- The summary does not say what outcome was produced
+- It omits work context in a work-first flow when one should exist
 `;

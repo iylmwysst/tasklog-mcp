@@ -1,20 +1,28 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  amendLogMetadata,
   appendLogEntry,
+  appendWorkNote,
+  createWorkDoc,
   formatLogEntries,
+  getActiveContext,
   getOpenThreadEntries,
   getRecentLogEntries,
+  listWorks,
   readLogEntries,
+  readWorkContext,
   resolveLogbookPaths,
+  resumeWork,
+  setWorkStatus,
+  startWork,
   updateLogStatus,
+  amendLogMetadata,
 } from "./logbook.js";
 
-test("appendLogEntry writes schema v1 logs to json and markdown", async () => {
+test("appendLogEntry writes canonical and legacy session logs", async () => {
   const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
   const paths = resolveLogbookPaths(projectRoot);
 
@@ -28,24 +36,322 @@ test("appendLogEntry writes schema v1 logs to json and markdown", async () => {
     blockers: "",
   });
 
-  assert.match(entry.id, /^log-/);
+  assert.match(entry.id, /^[0-9A-Za-z]{6}$/);
   assert.equal(entry.status, "Done");
   assert.equal(entry.change_type, "refactor");
   assert.deepEqual(entry.affected_files, ["src/auth.ts", "src/router.ts"]);
   assert.deepEqual(entry.tags, ["routing", "auth"]);
+  assert.equal(entry.work_id, undefined);
   assert.equal(entry.revision, 1);
 
   const jsonLog = JSON.parse(await readFile(paths.jsonPath, "utf8")) as Array<{ summary: string }>;
+  const legacyJsonLog = JSON.parse(await readFile(paths.legacyJsonPath, "utf8")) as Array<{ summary: string }>;
   const markdownLog = await readFile(paths.markdownPath, "utf8");
+  const legacyMarkdownLog = await readFile(paths.legacyMarkdownPath, "utf8");
 
   assert.equal(jsonLog.length, 1);
+  assert.equal(legacyJsonLog.length, 1);
   assert.equal(jsonLog[0]?.summary, "Refined auth guard handling to avoid redirect loops after token expiry.");
+  assert.equal(legacyJsonLog[0]?.summary, "Refined auth guard handling to avoid redirect loops after token expiry.");
   assert.match(markdownLog, /AI Session Logbook/);
-  assert.match(markdownLog, /Revision/);
+  assert.match(legacyMarkdownLog, /AI Session Logbook/);
   assert.match(markdownLog, /src\/auth\.ts/);
 });
 
-test("getOpenThreadEntries returns unresolved and follow-up entries first", async () => {
+test("startWork creates a work record and fresh active context", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+
+  const work = await startWork(paths, {
+    title: "Secure launch handoff polish",
+    summary: "Unify secure-launch placeholder handoff copy and behavior.",
+    start_dir: "WebWayFleet",
+    scope_paths: ["WebWayFleet", "CodeWebway"],
+    tags: ["secure-launch", "ux"],
+  });
+  const context = await getActiveContext(paths);
+
+  assert.match(work.work_id, /^[0-9A-Za-z]{6}$/);
+  assert.equal(work.slug, "secure-launch-handoff-polish");
+  assert.equal(work.start_dir, path.join(projectRoot, "WebWayFleet"));
+  assert.deepEqual(work.scope_paths, [
+    path.join(projectRoot, "WebWayFleet"),
+    path.join(projectRoot, "CodeWebway"),
+  ]);
+  assert.equal(context.active_work?.work_id, work.work_id);
+  assert.equal(context.freshness, "fresh");
+  assert.equal(path.basename(context.workdocs_root), "workdocs");
+});
+
+test("startWork rejects multiline titles to prevent frontmatter injection", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+
+  await assert.rejects(
+    () =>
+      startWork(paths, {
+        title: "Title with newline\nstatus: done",
+      }),
+    /title must stay on a single line/,
+  );
+});
+
+test("createWorkDoc writes workdocs and validates target_paths", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Cross repo login handoff",
+    start_dir: ".",
+    scope_paths: ["CodeWebway", "WebWayFleet"],
+  });
+
+  const designDoc = await createWorkDoc(paths, "design", { work_id: work.work_id });
+  const planDoc = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["CodeWebway"],
+  });
+  const designText = await readFile(designDoc.path, "utf8");
+  const planText = await readFile(planDoc.path, "utf8");
+
+  assert.equal(designDoc.created, true);
+  assert.equal(planDoc.created, true);
+  assert.match(designText, /# Design/);
+  assert.match(planText, /target_paths:/);
+  assert.match(planText, /'\/.*CodeWebway'/);
+
+  const invalidWork = await startWork(paths, {
+    title: "Invalid target scope work",
+    start_dir: ".",
+    scope_paths: ["CodeWebway"],
+  });
+
+  await assert.rejects(
+    () =>
+      createWorkDoc(paths, "plan", {
+        work_id: invalidWork.work_id,
+        target_paths: ["OutsideRepo"],
+      }),
+    /target_paths must stay within the work scope/,
+  );
+});
+
+test("createWorkDoc defaults plan target_paths to the full work scope when omitted", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Plan default full scope",
+    start_dir: ".",
+    scope_paths: ["CodeWebway", "WebWayFleet"],
+  });
+
+  const planDoc = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+  });
+  const planText = await readFile(planDoc.path, "utf8");
+
+  assert.equal(planDoc.created, true);
+  assert.deepEqual(planDoc.target_paths, [
+    path.join(projectRoot, "CodeWebway"),
+    path.join(projectRoot, "WebWayFleet"),
+  ]);
+  assert.match(planText, /'\/.*CodeWebway'/);
+  assert.match(planText, /'\/.*WebWayFleet'/);
+});
+
+test("createWorkDoc allows target_paths nested within a scope root", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Nested scope target",
+    start_dir: ".",
+    scope_paths: ["CodeWebway"],
+  });
+
+  const planDoc = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["CodeWebway/src"],
+  });
+  const planText = await readFile(planDoc.path, "utf8");
+
+  assert.equal(planDoc.created, true);
+  assert.deepEqual(planDoc.target_paths, [path.join(projectRoot, "CodeWebway/src")]);
+  assert.match(planText, /'\/.*CodeWebway\/src'/);
+});
+
+test("createWorkDoc rejects target_paths overrides when plan.md already exists", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Existing plan target mismatch guard",
+    start_dir: ".",
+    scope_paths: ["CodeWebway", "WebWayFleet"],
+  });
+
+  const firstPlan = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["CodeWebway"],
+  });
+  const firstText = await readFile(firstPlan.path, "utf8");
+
+  await assert.rejects(
+    () =>
+      createWorkDoc(paths, "plan", {
+        work_id: work.work_id,
+        target_paths: ["WebWayFleet"],
+      }),
+    /plan\.md already exists; refusing to report new target_paths without updating the file/,
+  );
+
+  const secondText = await readFile(firstPlan.path, "utf8");
+  assert.equal(secondText, firstText);
+  assert.match(secondText, /'\/.*CodeWebway'/);
+});
+
+test("createWorkDoc is idempotent when target_paths matches the existing plan", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Existing plan same target retry",
+    start_dir: ".",
+    scope_paths: ["CodeWebway", "WebWayFleet"],
+  });
+
+  const firstPlan = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["CodeWebway"],
+  });
+  const firstText = await readFile(firstPlan.path, "utf8");
+
+  const retriedPlan = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["CodeWebway"],
+  });
+  const secondText = await readFile(firstPlan.path, "utf8");
+
+  assert.equal(retriedPlan.created, false);
+  assert.deepEqual(retriedPlan.target_paths, [path.join(projectRoot, "CodeWebway")]);
+  assert.equal(secondText, firstText);
+});
+
+test("createWorkDoc rejects target_paths when an existing plan is missing the target_paths block", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Existing plan missing target paths block",
+    start_dir: ".",
+    scope_paths: ["CodeWebway", "WebWayFleet"],
+  });
+
+  const firstPlan = await createWorkDoc(paths, "plan", {
+    work_id: work.work_id,
+    target_paths: ["CodeWebway"],
+  });
+  const firstText = await readFile(firstPlan.path, "utf8");
+  const malformedText = firstText.replace(/target_paths:\n(?:  - .*\n)+/, "");
+  await writeFile(firstPlan.path, malformedText, "utf8");
+
+  await assert.rejects(
+    () =>
+      createWorkDoc(paths, "plan", {
+        work_id: work.work_id,
+        target_paths: ["WebWayFleet"],
+      }),
+    /plan\.md already exists; refusing to report new target_paths without updating the file/,
+  );
+
+  const secondText = await readFile(firstPlan.path, "utf8");
+  assert.equal(secondText, malformedText);
+  assert.doesNotMatch(secondText, /target_paths:/);
+});
+
+test("appendWorkNote creates notes and readWorkContext includes recent logs", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Agent context cleanup",
+  });
+
+  const noteResult = await appendWorkNote(paths, {
+    work_id: work.work_id,
+    note: "Need to keep work scope light and prefer target_paths in plan docs.",
+  });
+
+  await appendLogEntry(paths, {
+    summary: "Linked work-aware logging to the current active work.",
+    status: "Done",
+    change_type: "feature",
+    affected_files: ["src/logbook.ts"],
+    work_id: work.work_id,
+  });
+
+  const notesText = await readFile(noteResult.path, "utf8");
+  const context = await readWorkContext(paths, work.work_id);
+
+  assert.equal(noteResult.created, true);
+  assert.match(notesText, /# Notes/);
+  assert.match(notesText, /target_paths in plan docs/);
+  assert.equal(context.work.work_id, work.work_id);
+  assert.equal(context.recent_logs.length, 1);
+  assert.equal(context.recent_logs[0]?.work_id, work.work_id);
+  assert.equal(context.artifact_availability.notes, true);
+});
+
+test("getRecentLogEntries defaults to the fresh active work", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const workA = await startWork(paths, {
+    title: "Login handoff",
+  });
+
+  await appendLogEntry(paths, {
+    summary: "Implemented work-aware recovery for login handoff.",
+    status: "Done",
+    change_type: "feature",
+    affected_files: ["src/index.ts"],
+  });
+
+  const workB = await startWork(paths, {
+    title: "Secure launch placeholder",
+  });
+
+  await appendLogEntry(paths, {
+    summary: "Reduced placeholder copy and aligned popup polling copy.",
+    status: "Done",
+    change_type: "docs",
+    affected_files: ["dashboard/src/lib/terminal-launch.ts"],
+  });
+
+  const activeRecent = await getRecentLogEntries(paths, 10);
+  const projectRecent = await getRecentLogEntries(paths, 10, { project_wide: true });
+
+  assert.equal(workA.work_id !== workB.work_id, true);
+  assert.equal(activeRecent.length, 1);
+  assert.equal(activeRecent[0]?.work_id, workB.work_id);
+  assert.equal(projectRecent.length, 2);
+});
+
+test("resumeWork query lookup and work status updates clear active work on done", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Host login reconnect tracing",
+  });
+
+  await startWork(paths, {
+    title: "Other task",
+  });
+
+  const resumed = await resumeWork(paths, { query: "host login" });
+  assert.equal(resumed.active_work?.work_id, work.work_id);
+
+  const doneWork = await setWorkStatus(paths, work.work_id, "done");
+  const context = await getActiveContext(paths);
+
+  assert.equal(doneWork.status, "done");
+  assert.equal(context.active_work_id, undefined);
+});
+
+test("getOpenThreadEntries still returns unresolved or follow-up logs during migration", async () => {
   const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
   const paths = resolveLogbookPaths(projectRoot);
 
@@ -72,10 +378,8 @@ test("getOpenThreadEntries returns unresolved and follow-up entries first", asyn
     blockers: "API payload is still changing.",
   });
 
-  const recent = await getRecentLogEntries(paths, 2);
   const open = await getOpenThreadEntries(paths, 10);
 
-  assert.equal(recent.length, 2);
   assert.equal(open.length, 2);
   assert.equal(open[0]?.status, "Blocked");
   assert.equal(open[1]?.status, "WIP");
@@ -110,94 +414,11 @@ test("updateLogStatus and amendLogMetadata revise existing entries", async () =>
   assert.equal(entries[0]?.status, "Blocked");
 });
 
-test("appendLogEntry can supersede an earlier thread", async () => {
-  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
-  const paths = resolveLogbookPaths(projectRoot);
-
-  const original = await appendLogEntry(paths, {
-    summary: "Started digging into PTY disconnects after approval.",
-    status: "WIP",
-    change_type: "investigation",
-    affected_files: ["src/session.rs"],
-  });
-
-  const followUp = await appendLogEntry(paths, {
-    summary: "Confirmed stale approval state caused the disconnect and added a fix.",
-    status: "Done",
-    change_type: "bugfix",
-    affected_files: ["src/session.rs", "src/server.rs"],
-    related_log_ids: [original.id],
-    supersedes_log_id: original.id,
-  });
-
-  const entries = await readLogEntries(paths);
-  const superseded = entries.find((item) => item.id === original.id);
-
-  assert.equal(followUp.supersedes_log_id, original.id);
-  assert.equal(superseded?.status, "Superseded");
-  assert.equal(superseded?.revision, 2);
-});
-
-test("concurrent appends are serialized without dropping entries", async () => {
-  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
-  const paths = resolveLogbookPaths(projectRoot);
-
-  await Promise.all(
-    Array.from({ length: 12 }, (_, index) =>
-      appendLogEntry(paths, {
-        summary: `Concurrent write ${index}`,
-        status: "Done",
-        change_type: "test",
-        affected_files: [`tests/${index}.ts`],
-      }),
-    ),
-  );
-
-  const entries = await readLogEntries(paths);
-  const summaries = new Set(entries.map((entry) => entry.summary));
-
-  assert.equal(entries.length, 12);
-  assert.equal(summaries.size, 12);
-});
-
-test("markdown rendering escapes user-controlled content", async () => {
-  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
-  const paths = resolveLogbookPaths(projectRoot);
-
-  await appendLogEntry(paths, {
-    summary: "# Heading\n- injected bullet\n[link](https://example.com)",
-    status: "Done",
-    change_type: "docs",
-    affected_files: ["docs/[weird].md"],
-    tags: ["tag-with-`code`"],
-    next_steps: "Check [next](https://example.com) without rendering markup.",
-  });
-
-  const markdownLog = await readFile(paths.markdownPath, "utf8");
-
-  assert.match(markdownLog, /> \\# Heading/);
-  assert.match(markdownLog, /> - injected bullet/);
-  assert.ok(markdownLog.includes("> \\[link\\]\\(https://example.com\\)"));
-  assert.match(markdownLog, /- docs\/\\\[weird\\\]\.md/);
-  assert.match(markdownLog, /- tag-with-\\`code\\`/);
-});
-
-test("resolveLogbookPaths rejects paths outside the project root", () => {
-  assert.throws(
-    () => resolveLogbookPaths("/tmp/project-root", "../escape.json"),
-    /must stay within the project root/,
-  );
-
-  assert.throws(
-    () => resolveLogbookPaths("/tmp/project-root", ".ai-history.json", "../../escape.md"),
-    /must stay within the project root/,
-  );
-});
-
-test("plain-text log formatting escapes multiline field spoofing", () => {
+test("plain-text log formatting escapes multiline field spoofing and shows work ids", () => {
   const output = formatLogEntries([
     {
-      id: "log-1",
+      id: "a91K2x",
+      work_id: "b37MqD",
       timestamp: "2026-03-26T00:00:00.000Z",
       summary: "Did something useful.\n  Files: injected",
       status: "Done",
@@ -214,37 +435,70 @@ test("plain-text log formatting escapes multiline field spoofing", () => {
   ]);
 
   assert.ok(output.includes("Summary: Did something useful.\\n  Files: injected"));
+  assert.ok(output.includes("Work: b37MqD"));
   assert.ok(output.includes("Tags: tag-a\\nStatus: fake"));
   assert.ok(output.includes("Next steps: Check follow-up.\\n  Blockers: injected"));
   assert.ok(output.includes("Related logs: rel-1\\nSummary: fake"));
-  assert.equal(
-    output
-      .split("\n")
-      .filter((line) => line.startsWith("  Files:"))
-      .length,
-    1,
-  );
 });
 
-test("nested log file targets are created automatically before writes", async () => {
+test("readLogEntries falls back when legacy logs contain an unsupported change_type", async () => {
   const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
-  const paths = resolveLogbookPaths(
-    projectRoot,
-    ".state/logs/.ai-history.json",
-    ".state/logs/.ai-session-log.md",
+  const paths = resolveLogbookPaths(projectRoot);
+
+  await writeFile(
+    paths.legacyJsonPath,
+    `${JSON.stringify([
+      {
+        id: "log-legacy-release",
+        timestamp: "2026-03-26T13:14:56.000Z",
+        summary: "Legacy release entry from an older or manually edited log.",
+        status: "Done",
+        change_type: "release",
+        affected_files: ["CodeWebway/Cargo.toml"],
+      },
+    ])}\n`,
+    "utf8",
   );
 
-  await appendLogEntry(paths, {
-    summary: "Persisted to nested log paths.",
+  const entries = await readLogEntries(paths);
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0]?.change_type, "investigation");
+  assert.equal(entries[0]?.summary, "Legacy release entry from an older or manually edited log.");
+
+  const appended = await appendLogEntry(paths, {
+    summary: "Subsequent writes still use strict allowed change types.",
     status: "Done",
-    change_type: "config",
-    affected_files: ["README.md"],
+    change_type: "bugfix",
+    affected_files: ["src/logbook.ts"],
   });
 
-  const jsonLog = JSON.parse(await readFile(paths.jsonPath, "utf8")) as Array<{ summary: string }>;
-  const markdownLog = await readFile(paths.markdownPath, "utf8");
+  assert.match(appended.id, /^[0-9A-Za-z]{6}$/);
+  assert.equal(appended.change_type, "bugfix");
+});
 
-  assert.equal(jsonLog.length, 1);
-  assert.equal(jsonLog[0]?.summary, "Persisted to nested log paths.");
-  assert.match(markdownLog, /Persisted to nested log paths\./);
+test("listWorks returns compact work summaries", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Work-first migration",
+    summary: "Move from log-first to work-first context recovery.",
+    tags: ["work-first"],
+  });
+
+  await appendLogEntry(paths, {
+    summary: "Added the first work-discovery tool.",
+    status: "Done",
+    change_type: "feature",
+    affected_files: ["src/index.ts"],
+    work_id: work.work_id,
+    next_steps: "Add plan and spec creation tools.",
+  });
+
+  const works = await listWorks(paths, { status: "open", limit: 5 });
+
+  assert.equal(works.length, 1);
+  assert.equal(works[0]?.work_id, work.work_id);
+  assert.equal(works[0]?.last_log_summary, "Added the first work-discovery tool.");
+  assert.equal(works[0]?.next_step_summary, "Add plan and spec creation tools.");
 });

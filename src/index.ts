@@ -7,22 +7,40 @@ import { readServerConfig } from "./config.js";
 import {
   amendLogMetadata,
   appendLogEntry,
+  appendWorkNote,
   APPENDABLE_LOG_STATUSES,
+  ACTIVE_WORK_FRESHNESS,
   CHANGE_TYPES,
+  createWorkDoc,
+  getActiveContext,
   getOpenThreadEntries,
   getRecentLogEntries,
+  listWorks,
   LOG_STATUSES,
+  readWorkContext,
+  resumeWork,
+  setWorkStatus,
+  startWork,
+  type ActiveContextSummary,
   type AmendLogMetadataInput,
   type LogStatus,
   type SessionLogEntry,
+  type WorkStatus,
+  WORK_STATUSES,
   updateLogStatus,
 } from "./logbook.js";
 import { createLogger, serializeError, type Logger } from "./logger.js";
 import {
+  formatActiveContextResponse,
   formatAppendResponse,
   formatMetadataAmendResponse,
   formatReadResponse,
   formatStatusUpdateResponse,
+  formatWorkContextResponse,
+  formatWorkCreatedResponse,
+  formatWorkDocResponse,
+  formatWorkListResponse,
+  formatWorkStatusResponse,
 } from "./response-format.js";
 import {
   EXAMPLES_RESOURCE_TEXT,
@@ -31,6 +49,7 @@ import {
 } from "./resources.js";
 
 const logger = createLogger();
+const WORK_LIST_FILTERS = ["open", "active", "blocked", "done", "all"] as const;
 
 process.on("uncaughtException", (error) => {
   logger.error("process.uncaught_exception", serializeError(error));
@@ -62,6 +81,8 @@ async function main(): Promise<void> {
     project_root: config.paths.projectRoot,
     json_path: config.paths.jsonPath,
     markdown_path: config.paths.markdownPath,
+    workdocs_root: config.paths.workdocsRoot,
+    state_root: config.paths.stateRoot,
   });
 
   const transport = new StdioServerTransport();
@@ -69,7 +90,7 @@ async function main(): Promise<void> {
 
   logger.info("server.ready", {
     project_root: config.paths.projectRoot,
-    tools: 5,
+    tools: 15,
     resources: 3,
   });
 }
@@ -79,8 +100,8 @@ function registerResources(server: McpServer): void {
     "tasklog-usage",
     "tasklog://usage",
     {
-      title: "Logbook usage guide",
-      description: "Rules for when and how an AI should read or write project log entries.",
+      title: "Tasklog usage guide",
+      description: "Rules for the work-first Tasklog workflow and artifact selection.",
       mimeType: "text/markdown",
     },
     async (uri) => ({
@@ -92,8 +113,8 @@ function registerResources(server: McpServer): void {
     "tasklog-schema",
     "tasklog://schema",
     {
-      title: "Logbook schema",
-      description: "Current data model for stored log entries.",
+      title: "Tasklog schema",
+      description: "Current data model for work records, session logs, and active context.",
       mimeType: "text/markdown",
     },
     async (uri) => ({
@@ -105,8 +126,8 @@ function registerResources(server: McpServer): void {
     "tasklog-examples",
     "tasklog://examples",
     {
-      title: "Logbook examples",
-      description: "Examples of strong and weak log entries for this MCP.",
+      title: "Tasklog examples",
+      description: "Examples for work-first logs, works, and artifact creation.",
       mimeType: "text/markdown",
     },
     async (uri) => ({
@@ -115,15 +136,201 @@ function registerResources(server: McpServer): void {
   );
 }
 
-function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogEntries>[0], logger: Logger): void {
+function registerTools(
+  server: McpServer,
+  paths: Parameters<typeof getRecentLogEntries>[0],
+  logger: Logger,
+): void {
+  server.registerTool(
+    "get_active_context",
+    {
+      title: "Get active context",
+      description:
+        "Return the inferred project roots, canonical log paths, workdocs root, and current active work state for this session.",
+      inputSchema: {},
+      outputSchema: activeContextShape(),
+    },
+    observeToolCall(logger, "get_active_context", async () => {
+      const summary = await getActiveContext(paths);
+      return {
+        content: [{ type: "text", text: formatActiveContextResponse(summary) }],
+        structuredContent: summary,
+      };
+    }),
+  );
+
+  server.registerTool(
+    "list_works",
+    {
+      title: "List works",
+      description:
+        "List work items for the current project. Prefer this over open-thread log discovery when the user asks what is still open.",
+      inputSchema: {
+        status: z
+          .enum(WORK_LIST_FILTERS)
+          .default("open")
+          .describe("Which work statuses to include."),
+        query: z.string().default("").describe("Optional text search across title, scope, summary, and tags."),
+        limit: z.number().int().min(1).max(100).default(10).describe("Maximum number of works to return."),
+      },
+      outputSchema: {
+        project_root: z.string(),
+        workdocs_root: z.string(),
+        count: z.number().int(),
+        works: z.array(workListEntrySchema()),
+      },
+    },
+    observeToolCall(logger, "list_works", async ({ status, query, limit }) => {
+      const summary = await getActiveContext(paths);
+      const works = await listWorks(paths, {
+        status,
+        query,
+        limit,
+      });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: formatWorkListResponse(works, {
+              project_root: summary.project_root,
+              workdocs_root: summary.workdocs_root,
+            }),
+          },
+        ],
+        structuredContent: {
+          project_root: summary.project_root,
+          workdocs_root: summary.workdocs_root,
+          count: works.length,
+          works,
+        },
+      };
+    }),
+  );
+
+  server.registerTool(
+    "start_work",
+    {
+      title: "Start work",
+      description:
+        "Create a new work, generate a short work id, persist work metadata, and mark it as the active work for this session.",
+      inputSchema: {
+        title: z.string().min(1).describe("Human-readable work title."),
+        summary: z.string().default("").describe("Optional short summary of the work intent."),
+        tags: z.array(z.string().min(1)).default([]).describe("Optional lowercase project tags."),
+        start_dir: z.string().default("").describe("Optional directory where the work begins. Defaults to the project root."),
+        scope_paths: z.array(z.string().min(1)).default([]).describe("Optional directories this work may touch. Defaults to the start directory."),
+      },
+      outputSchema: {
+        project_root: z.string(),
+        work: workRecordSchema(),
+        artifact_paths: workArtifactPathsSchema(),
+      },
+    },
+    observeToolCall(logger, "start_work", async ({ title, summary, tags, start_dir, scope_paths }) => {
+      const work = await startWork(paths, {
+        title,
+        summary,
+        tags,
+        start_dir,
+        scope_paths,
+      });
+      const context = await readWorkContext(paths, work.work_id);
+
+      return {
+        content: [{ type: "text", text: formatWorkCreatedResponse(work, context.artifact_paths.workDir) }],
+        structuredContent: {
+          project_root: paths.projectRoot,
+          work,
+          artifact_paths: context.artifact_paths,
+        },
+      };
+    }),
+  );
+
+  server.registerTool(
+    "resume_work",
+    {
+      title: "Resume work",
+      description:
+        "Set the active work for this session by work id or query. Use this before reading work context or writing work-scoped logs.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Exact work id to resume."),
+        query: z.string().default("").describe("Optional text query if the work id is not known."),
+      },
+      outputSchema: activeContextShape(),
+    },
+    observeToolCall(logger, "resume_work", async ({ work_id, query }) => {
+      if (!work_id && !query) {
+        throw new Error("resume_work requires either work_id or query.");
+      }
+
+      const summary = await resumeWork(paths, {
+        work_id: work_id || undefined,
+        query: query || undefined,
+      });
+
+      return {
+        content: [{ type: "text", text: formatActiveContextResponse(summary) }],
+        structuredContent: summary,
+      };
+    }),
+  );
+
+  server.registerTool(
+    "set_work_status",
+    {
+      title: "Set work status",
+      description: "Update the lifecycle status of a work item.",
+      inputSchema: {
+        work_id: z.string().min(1).describe("Work id to update."),
+        status: z.enum(WORK_STATUSES).describe("New work status."),
+      },
+      outputSchema: {
+        work: workRecordSchema(),
+      },
+    },
+    observeToolCall(logger, "set_work_status", async ({ work_id, status }) => {
+      const work = await setWorkStatus(paths, work_id, status as WorkStatus);
+      return {
+        content: [{ type: "text", text: formatWorkStatusResponse(work) }],
+        structuredContent: { work },
+      };
+    }),
+  );
+
+  server.registerTool(
+    "read_work_context",
+    {
+      title: "Read work context",
+      description:
+        "Return a concise overview of one work including artifact paths, recent logs, and the latest next-step summary.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+      },
+      outputSchema: {
+        context: workContextSchema(),
+      },
+    },
+    observeToolCall(logger, "read_work_context", async ({ work_id }) => {
+      const context = await readWorkContext(paths, work_id || undefined);
+      return {
+        content: [{ type: "text", text: formatWorkContextResponse(context) }],
+        structuredContent: { context },
+      };
+    }),
+  );
+
   server.registerTool(
     "get_recent_logs",
     {
       title: "Get recent session logs",
       description:
-        "Read the most recent project session summaries before continuing work. Use this when the user intends to recover prior context, continue earlier work, or debug a recent regression.",
+        "Read recent session summaries. Defaults to the active work when one is fresh; otherwise falls back to project-wide history.",
       inputSchema: {
         limit: z.number().int().min(1).max(50).default(5).describe("How many recent log entries to return."),
+        work_id: z.string().default("").describe("Optional explicit work id filter."),
+        project_wide: z.boolean().default(false).describe("When true, ignore the active work and read project-wide history."),
       },
       outputSchema: {
         project_root: z.string(),
@@ -133,8 +340,11 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
         entries: z.array(logEntrySchema()),
       },
     },
-    observeToolCall(logger, "get_recent_logs", async ({ limit }) => {
-      const entries = await getRecentLogEntries(paths, limit);
+    observeToolCall(logger, "get_recent_logs", async ({ limit, work_id, project_wide }) => {
+      const entries = await getRecentLogEntries(paths, limit, {
+        work_id: work_id || undefined,
+        project_wide,
+      });
       return {
         content: [{ type: "text", text: formatReadResponse("Recent logs", entries, paths) }],
         structuredContent: {
@@ -153,7 +363,7 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
     {
       title: "Append a project session log",
       description:
-        "Append a new log entry. Summary should capture intent and outcome. List only files actually edited. If files changed in this session, work is not done until a log entry is written.",
+        "Append a new session activity log. The tool will attach a work id automatically when the active work is fresh, or accept an explicit work id.",
       inputSchema: {
         summary: z.string().min(1).describe("One or two sentences describing what changed and why or what outcome it produced."),
         status: z.enum(APPENDABLE_LOG_STATUSES).describe("Progress state for this newly appended entry."),
@@ -162,8 +372,9 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
         tags: z.array(z.string().min(1)).default([]).describe("Optional project-specific tags, ideally lowercase and concise."),
         next_steps: z.string().default("").describe("Optional note describing what the next session should do."),
         blockers: z.string().default("").describe("Optional note describing why work cannot currently proceed."),
-        related_log_ids: z.array(z.string().min(1)).default([]).describe("Optional IDs of earlier log entries this work relates to."),
-        supersedes_log_id: z.string().default("").describe("Optional older log ID this new entry takes over."),
+        related_log_ids: z.array(z.string().min(1)).default([]).describe("Optional IDs of earlier entries this work relates to."),
+        supersedes_log_id: z.string().default("").describe("Optional older entry this new entry takes over."),
+        work_id: z.string().default("").describe("Optional explicit work id for this session log."),
       },
       outputSchema: {
         project_root: z.string(),
@@ -172,8 +383,10 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
         entry: logEntrySchema(),
       },
     },
-    observeToolCall(logger, "append_session_log", async ({ summary, status, change_type, affected_files, tags, next_steps, blockers, related_log_ids, supersedes_log_id }) => {
-      const entry = await appendLogEntry(paths, {
+    observeToolCall(
+      logger,
+      "append_session_log",
+      async ({
         summary,
         status,
         change_type,
@@ -183,16 +396,122 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
         blockers,
         related_log_ids,
         supersedes_log_id,
-      });
+        work_id,
+      }) => {
+        const entry = await appendLogEntry(paths, {
+          summary,
+          status,
+          change_type,
+          affected_files,
+          tags,
+          next_steps,
+          blockers,
+          related_log_ids,
+          supersedes_log_id,
+          work_id: work_id || undefined,
+        });
 
+        return {
+          content: [{ type: "text", text: formatAppendResponse(entry, paths) }],
+          structuredContent: {
+            project_root: paths.projectRoot,
+            json_path: paths.jsonPath,
+            markdown_path: paths.markdownPath,
+            entry,
+          },
+        };
+      },
+    ),
+  );
+
+  server.registerTool(
+    "create_design_doc",
+    {
+      title: "Create design doc",
+      description:
+        "Create or reopen design.md for the active work using the standard workdoc template.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+      },
+      outputSchema: workDocOutputShape(),
+    },
+    observeToolCall(logger, "create_design_doc", async ({ work_id }) => {
+      const result = await createWorkDoc(paths, "design", { work_id: work_id || undefined });
       return {
-        content: [{ type: "text", text: formatAppendResponse(entry, paths) }],
-        structuredContent: {
-          project_root: paths.projectRoot,
-          json_path: paths.jsonPath,
-          markdown_path: paths.markdownPath,
-          entry,
-        },
+        content: [{ type: "text", text: formatWorkDocResponse("Design doc ready", result) }],
+        structuredContent: result,
+      };
+    }),
+  );
+
+  server.registerTool(
+    "create_plan_doc",
+    {
+      title: "Create plan doc",
+      description:
+        "Create or reopen plan.md for the active work. target_paths may narrow the implementation pass to a subset of the work scope.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+        target_paths: z.array(z.string().min(1)).default([]).describe("Optional subset of the work scope for this implementation pass."),
+      },
+      outputSchema: workDocOutputShape(),
+    },
+    observeToolCall(logger, "create_plan_doc", async ({ work_id, target_paths }) => {
+      const result = await createWorkDoc(paths, "plan", {
+        work_id: work_id || undefined,
+        target_paths,
+      });
+      return {
+        content: [{ type: "text", text: formatWorkDocResponse("Plan doc ready", result) }],
+        structuredContent: result,
+      };
+    }),
+  );
+
+  server.registerTool(
+    "create_spec_doc",
+    {
+      title: "Create spec doc",
+      description:
+        "Create or reopen spec.md for the active work using the standard workdoc template.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+      },
+      outputSchema: workDocOutputShape(),
+    },
+    observeToolCall(logger, "create_spec_doc", async ({ work_id }) => {
+      const result = await createWorkDoc(paths, "spec", { work_id: work_id || undefined });
+      return {
+        content: [{ type: "text", text: formatWorkDocResponse("Spec doc ready", result) }],
+        structuredContent: result,
+      };
+    }),
+  );
+
+  server.registerTool(
+    "append_work_note",
+    {
+      title: "Append work note",
+      description:
+        "Append a lightweight note to notes.md for the active work. Use this when the user says to note something down.",
+      inputSchema: {
+        work_id: z.string().default("").describe("Optional explicit work id. Defaults to the active work when unambiguous."),
+        note: z.string().min(1).describe("Note text to append."),
+      },
+      outputSchema: {
+        work: workRecordSchema(),
+        path: z.string(),
+        created: z.boolean(),
+      },
+    },
+    observeToolCall(logger, "append_work_note", async ({ work_id, note }) => {
+      const result = await appendWorkNote(paths, {
+        work_id: work_id || undefined,
+        note,
+      });
+      return {
+        content: [{ type: "text", text: formatWorkDocResponse("Work note appended", result) }],
+        structuredContent: result,
       };
     }),
   );
@@ -202,7 +521,7 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
     {
       title: "Get open threads",
       description:
-        "Return unresolved or follow-up-worthy log entries. Use this when the user intends to resume unfinished work or asks what is still open.",
+        "Deprecated compatibility surface. Returns unresolved or follow-up-worthy log entries, but prefer list_works(status=\"open\") for work-first discovery.",
       inputSchema: {
         limit: z.number().int().min(1).max(50).default(10).describe("How many open threads to return."),
       },
@@ -269,35 +588,40 @@ function registerTools(server: McpServer, paths: Parameters<typeof getRecentLogE
         entry: logEntrySchema(),
       },
     },
-    observeToolCall(logger, "amend_log_metadata", async ({ log_id, affected_files, tags, next_steps, blockers }) => {
-      const patch: AmendLogMetadataInput = {
-        affected_files,
-        tags,
-        next_steps,
-        blockers,
-      };
+    observeToolCall(
+      logger,
+      "amend_log_metadata",
+      async ({ log_id, affected_files, tags, next_steps, blockers }) => {
+        const patch: AmendLogMetadataInput = {
+          affected_files,
+          tags,
+          next_steps,
+          blockers,
+        };
 
-      if (
-        affected_files === undefined &&
-        tags === undefined &&
-        next_steps === undefined &&
-        blockers === undefined
-      ) {
-        throw new Error("amend_log_metadata requires at least one metadata field to change.");
-      }
+        if (
+          affected_files === undefined &&
+          tags === undefined &&
+          next_steps === undefined &&
+          blockers === undefined
+        ) {
+          throw new Error("amend_log_metadata requires at least one metadata field to change.");
+        }
 
-      const entry = await amendLogMetadata(paths, log_id, patch);
-      return {
-        content: [{ type: "text", text: formatMetadataAmendResponse(entry) }],
-        structuredContent: { entry },
-      };
-    }),
+        const entry = await amendLogMetadata(paths, log_id, patch);
+        return {
+          content: [{ type: "text", text: formatMetadataAmendResponse(entry) }],
+          structuredContent: { entry },
+        };
+      },
+    ),
   );
 }
 
 function logEntrySchema() {
   return z.object({
     id: z.string(),
+    work_id: z.string().optional(),
     timestamp: z.string(),
     summary: z.string(),
     status: z.enum(LOG_STATUSES),
@@ -312,6 +636,82 @@ function logEntrySchema() {
     created_at: z.string(),
     updated_at: z.string(),
   });
+}
+
+function workRecordSchema() {
+  return z.object({
+    work_id: z.string(),
+    title: z.string(),
+    slug: z.string(),
+    status: z.enum(WORK_STATUSES),
+    start_dir: z.string(),
+    scope_paths: z.array(z.string()),
+    summary: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+    created_at: z.string(),
+    updated_at: z.string(),
+  });
+}
+
+function artifactAvailabilitySchema() {
+  return z.object({
+    design: z.boolean(),
+    plan: z.boolean(),
+    spec: z.boolean(),
+    notes: z.boolean(),
+  });
+}
+
+function workArtifactPathsSchema() {
+  return z.object({
+    workDir: z.string(),
+    designPath: z.string(),
+    planPath: z.string(),
+    specPath: z.string(),
+    notesPath: z.string(),
+  });
+}
+
+function workListEntrySchema() {
+  return workRecordSchema().extend({
+    artifact_availability: artifactAvailabilitySchema(),
+    last_log_summary: z.string().optional(),
+    next_step_summary: z.string().optional(),
+    recent_log_id: z.string().optional(),
+  });
+}
+
+function workContextSchema() {
+  return z.object({
+    work: workRecordSchema(),
+    artifact_paths: workArtifactPathsSchema(),
+    artifact_availability: artifactAvailabilitySchema(),
+    recent_logs: z.array(logEntrySchema()),
+    next_step_summary: z.string().optional(),
+  });
+}
+
+function activeContextShape() {
+  return {
+    active_work_id: z.string().optional(),
+    project_root: z.string(),
+    updated_at: z.string().optional(),
+    state_root: z.string(),
+    workdocs_root: z.string(),
+    json_path: z.string(),
+    markdown_path: z.string(),
+    active_work: workRecordSchema().optional(),
+    freshness: z.enum(ACTIVE_WORK_FRESHNESS).optional(),
+  };
+}
+
+function workDocOutputShape() {
+  return {
+    work: workRecordSchema(),
+    path: z.string(),
+    created: z.boolean(),
+    target_paths: z.array(z.string()).optional(),
+  };
 }
 
 function observeToolCall<Args extends Record<string, unknown>, Result>(
@@ -366,6 +766,7 @@ function summarizeToolResult(result: unknown): Record<string, unknown> {
   const structured = candidate.structuredContent as Record<string, unknown>;
   return {
     has_entry: typeof structured.entry === "object" && structured.entry !== null,
+    has_work: typeof structured.work === "object" && structured.work !== null,
     count: typeof structured.count === "number" ? structured.count : undefined,
   };
 }

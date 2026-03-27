@@ -14,16 +14,21 @@ test("readServerConfig defaults projectRoot to the current working directory", a
     const config = readServerConfig([], {});
     const normalizedProjectRoot = await realpath(projectRoot);
     assert.equal(await realpath(config.paths.projectRoot), normalizedProjectRoot);
-    assert.equal(await realpath(path.dirname(config.paths.jsonPath)), normalizedProjectRoot);
-    assert.equal(await realpath(path.dirname(config.paths.markdownPath)), normalizedProjectRoot);
-    assert.equal(path.basename(config.paths.jsonPath), ".ai-history.json");
-    assert.equal(path.basename(config.paths.markdownPath), ".ai-session-log.md");
+    assert.equal(path.dirname(config.paths.jsonPath), path.join(normalizedProjectRoot, ".tasklog"));
+    assert.equal(path.dirname(config.paths.markdownPath), path.join(normalizedProjectRoot, ".tasklog"));
+    assert.equal(path.dirname(config.paths.worksPath), path.join(normalizedProjectRoot, ".tasklog"));
+    assert.equal(path.dirname(config.paths.activeContextPath), path.join(normalizedProjectRoot, ".tasklog"));
+    assert.equal(path.basename(config.paths.jsonPath), "session-log.json");
+    assert.equal(path.basename(config.paths.markdownPath), "session-log.md");
+    assert.equal(path.basename(config.paths.legacyJsonPath), ".ai-history.json");
+    assert.equal(path.basename(config.paths.legacyMarkdownPath), ".ai-session-log.md");
+    assert.equal(path.basename(config.paths.workdocsRoot), "workdocs");
   } finally {
     process.chdir(previousCwd);
   }
 });
 
-test("readServerConfig lets args override env defaults", () => {
+test("readServerConfig keeps legacy overrides while canonical paths stay under .tasklog", () => {
   const config = readServerConfig(
     [
       "--project-root",
@@ -41,8 +46,11 @@ test("readServerConfig lets args override env defaults", () => {
   );
 
   assert.equal(config.paths.projectRoot, "/tmp/logbook-project");
-  assert.equal(config.paths.jsonPath, "/tmp/logbook-project/.state/logs.json");
-  assert.equal(config.paths.markdownPath, "/tmp/logbook-project/.state/logs.md");
+  assert.equal(config.paths.jsonPath, "/tmp/logbook-project/.tasklog/session-log.json");
+  assert.equal(config.paths.markdownPath, "/tmp/logbook-project/.tasklog/session-log.md");
+  assert.equal(config.paths.legacyJsonPath, "/tmp/logbook-project/.state/logs.json");
+  assert.equal(config.paths.legacyMarkdownPath, "/tmp/logbook-project/.state/logs.md");
+  assert.equal(config.paths.workdocsRoot, "/tmp/logbook-project/workdocs");
 });
 
 test("readServerConfig rejects file targets that escape the project root", () => {
