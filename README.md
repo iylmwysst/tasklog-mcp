@@ -36,29 +36,30 @@ Measured on one real multi-repo workspace with the scenario-driven benchmark in 
 
 The current sample covers `15` real workflow scenarios across active work discovery plus active and done work re-entry.
 
-The included `docs/benchmark-candidates.json` manifest separates the current runnable sample from older CodeWebway cases that are worth normalizing into a broader future benchmark.
-
 In practice, the sampled work spans open-work discovery, active incident recovery, finished feature and behavior changes, documentation follow-ups, README rewrites, playbook migration work, and closed-work summary re-entry.
 
-- markdown notebook scan
-- raw JSON state scan
-- Tasklog's work-first path
+The benchmark compares four resume paths:
+
+- `no continuity`: inspect only workspace/codebase context and git state, with no `.tasklog` or `workdocs/`
+- `markdown notebook scan`: reread the session notebook/log markdown directly
+- `raw JSON state scan`: read `.tasklog/active-context.json`, `.tasklog/works.json`, and `.tasklog/session-log.json` directly and reconstruct the answer without the higher-level MCP flow
+- `Tasklog path`: use the work-first MCP tools such as `get_active_context`, `list_works`, `resume_work`, and `read_work_context`
 
 The benchmark grades two things:
 
 - `coverage`: whether the payload contains the evidence needed to answer a real resume question
 - `structured-answer accuracy`: whether a reconstructed answer matches ground truth field-by-field
 
-Summary:
+Full-sample summary:
 
-| Scenario Group | Sample Size | Tasklog vs Raw JSON | Context Reduction |
-| --- | ---: | --- | --- |
-| Open work discovery | 1 | matched `100%` structured-answer accuracy | `86.74%` less context |
-| Resume active work | 5 | matched `100%` structured-answer accuracy | `92.72%` less context on average |
-| Resume done work | 9 | matched `100%` structured-answer accuracy | `94.91%` less context on average |
-| Full sample | 15 | matched `100%` structured-answer accuracy | `93.64%` less context on average |
+| Resume Path | What It Simulates | Coverage | Structured-Answer Accuracy | Total Context Surface |
+| --- | --- | ---: | ---: | ---: |
+| No continuity | Codebase/workspace scan only | `32.43%` | `n/a` | `40,229` bytes |
+| Markdown notes | Freeform note reread | `63.06%` | `n/a` | `932,292` bytes |
+| Raw JSON state | Direct state-file reconstruction | `100%` | `100%` | `1,301,642` bytes |
+| Tasklog | Work-first MCP re-entry flow | `100%` | `100%` | `79,745` bytes |
 
-Across the full sample, the raw JSON path exposed `1,253,177` bytes while the Tasklog path exposed `79,705` bytes.
+Across the full sample, Tasklog matched the raw JSON path on coverage and structured-answer accuracy while using about `91.45%` less context than markdown notes and `93.87%` less context than direct raw-state reconstruction.
 
 This benchmark uses a real workspace and real work items, but it is still not a blind human study.
 
@@ -68,7 +69,7 @@ To rerun:
 npm run bench:reentry -- --project-root /path/to/workspace --manifest docs/benchmark-candidates.json
 ```
 
-You can still target a specific work item with `--work-id <work_id>` when you want a narrower check.
+You can still use one or more `--work-id <work_id>` flags when you want a narrower check.
 
 ## Quick Start
 

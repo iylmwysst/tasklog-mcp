@@ -1,5 +1,7 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
 
 import {
   getActiveContext,
@@ -17,6 +19,18 @@ import {
 
 const ARTIFACT_FILES = ["design.md", "plan.md", "spec.md", "summary.md", "notes.md"] as const;
 const OPEN_WORK_PREVIEW_COUNT = 3;
+const NO_CONTINUITY_SKIP_NAMES = new Set([
+  ".git",
+  ".tasklog",
+  "workdocs",
+  "node_modules",
+  "target",
+  "dist",
+  ".next",
+  ".turbo",
+  "coverage",
+]);
+const execFile = promisify(execFileCallback);
 
 interface SurfaceMetrics {
   files: number;
@@ -151,6 +165,167 @@ function combineMetrics(metrics: SurfaceMetrics[]): SurfaceMetrics {
     }),
     { files: 0, bytes: 0, lines: 0, estTokens: 0 },
   );
+}
+
+async function pathExists(targetPath: string): Promise<boolean> {
+  try {
+    await fs.access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function findRepoRoot(startPath: string, projectRoot: string): Promise<string | null> {
+  let currentPath = path.resolve(startPath);
+  const rootPath = path.parse(currentPath).root;
+  const projectBoundary = path.resolve(projectRoot);
+
+  while (true) {
+    if (await pathExists(path.join(currentPath, ".git"))) {
+      return currentPath;
+    }
+    if (currentPath === rootPath || currentPath === projectBoundary) {
+      break;
+    }
+    currentPath = path.dirname(currentPath);
+  }
+
+  if (await pathExists(path.join(projectBoundary, ".git"))) {
+    return projectBoundary;
+  }
+  return null;
+}
+
+async function gitStatusShort(repoRoot: string): Promise<string> {
+  try {
+    const { stdout } = await execFile("git", ["-C", repoRoot, "status", "--short"], {
+      maxBuffer: 1024 * 1024,
+    });
+    const trimmed = stdout.trim();
+    return trimmed.length > 0 ? trimmed : "(clean)";
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return `(git status unavailable: ${message})`;
+  }
+}
+
+async function optionalExcerpt(filePath: string, maxChars = 800): Promise<string | null> {
+  try {
+    const content = await readTextFile(filePath);
+    return content.slice(0, maxChars);
+  } catch {
+    return null;
+  }
+}
+
+async function sampleDirectoryTree(dirPath: string, depth: number, maxEntries: number): Promise<string[]> {
+  const results: string[] = [];
+  const seen = new Set<string>();
+
+  async function walk(currentPath: string, currentDepth: number): Promise<void> {
+    if (results.length >= maxEntries) {
+      return;
+    }
+
+    let entries;
+    try {
+      entries = await fs.readdir(currentPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    entries.sort((left, right) => left.name.localeCompare(right.name));
+
+    for (const entry of entries) {
+      if (results.length >= maxEntries) {
+        return;
+      }
+      if (NO_CONTINUITY_SKIP_NAMES.has(entry.name)) {
+        continue;
+      }
+      const absolutePath = path.join(currentPath, entry.name);
+      const relativePath = path.relative(dirPath, absolutePath) || entry.name;
+      if (seen.has(relativePath)) {
+        continue;
+      }
+      seen.add(relativePath);
+      results.push(`${entry.isDirectory() ? "dir" : "file"}:${relativePath}`);
+      if (entry.isDirectory() && currentDepth < depth) {
+        await walk(absolutePath, currentDepth + 1);
+      }
+    }
+  }
+
+  await walk(dirPath, 0);
+  return results;
+}
+
+async function noContinuityWorkspaceText(projectRoot: string): Promise<string> {
+  const topEntries = await fs.readdir(projectRoot, { withFileTypes: true });
+  const repoCandidates = topEntries
+    .filter((entry) => entry.isDirectory() && !NO_CONTINUITY_SKIP_NAMES.has(entry.name))
+    .map((entry) => path.join(projectRoot, entry.name));
+
+  const reposWithGit = (
+    await Promise.all(repoCandidates.map(async (candidate) => {
+      const gitDir = path.join(candidate, ".git");
+      return (await pathExists(gitDir)) ? candidate : null;
+    }))
+  ).filter((candidate): candidate is string => candidate !== null);
+
+  const repoSections = await Promise.all(reposWithGit.map(async (repoRoot) => {
+    const status = await gitStatusShort(repoRoot);
+    const tree = await sampleDirectoryTree(repoRoot, 1, 20);
+    return [
+      `REPO: ${repoRoot}`,
+      `GIT_STATUS_SHORT:\n${status}`,
+      `TREE_SAMPLE:\n${tree.join("\n")}`,
+    ].join("\n");
+  }));
+
+  return [
+    `PROJECT_ROOT: ${projectRoot}`,
+    `TOP_LEVEL_ENTRIES:\n${topEntries
+      .filter((entry) => !NO_CONTINUITY_SKIP_NAMES.has(entry.name))
+      .map((entry) => `${entry.isDirectory() ? "dir" : "file"}:${entry.name}`)
+      .join("\n")}`,
+    ...repoSections,
+  ].join("\n\n");
+}
+
+async function noContinuityWorkText(projectRoot: string, work: WorkRecord): Promise<string> {
+  const sections = await Promise.all(work.scope_paths.map(async (scopePath) => {
+    const repoRoot = await findRepoRoot(scopePath, projectRoot);
+    const tree = await sampleDirectoryTree(scopePath, 2, 30);
+    const status = repoRoot ? await gitStatusShort(repoRoot) : "(no git repo found)";
+    const manifestPaths = repoRoot
+      ? [
+        path.join(repoRoot, "Cargo.toml"),
+        path.join(repoRoot, "package.json"),
+        path.join(repoRoot, "README.md"),
+      ]
+      : [];
+    const manifestExcerpts = (
+      await Promise.all(manifestPaths.map(async (manifestPath) => {
+        const excerpt = await optionalExcerpt(manifestPath);
+        if (!excerpt) {
+          return null;
+        }
+        return `FILE: ${manifestPath}\n${excerpt}`;
+      }))
+    ).filter((entry): entry is string => entry !== null);
+
+    return [
+      `SCOPE_PATH: ${scopePath}`,
+      `REPO_ROOT: ${repoRoot ?? "(none)"}`,
+      `GIT_STATUS_SHORT:\n${status}`,
+      `TREE_SAMPLE:\n${tree.join("\n")}`,
+      ...(manifestExcerpts.length > 0 ? [`MANIFEST_EXCERPTS:\n${manifestExcerpts.join("\n\n")}`] : []),
+    ].join("\n");
+  }));
+
+  return sections.join("\n\n");
 }
 
 async function readTextFile(filePath: string): Promise<string> {
@@ -424,6 +599,15 @@ async function buildOpenWorkDiscoveryChecks(paths: LogbookPaths, limit: number):
 async function benchmarkOpenWorks(paths: LogbookPaths, limit: number): Promise<StrategyRun[]> {
   const { checks, answer: expectedAnswer } = await buildOpenWorkDiscoveryChecks(paths, limit);
 
+  const noContinuity = await timed(async () => {
+    const text = await noContinuityWorkspaceText(paths.projectRoot);
+    return {
+      text,
+      checks,
+      extra: { toolCalls: 0 },
+    };
+  });
+
   const notebook = await timed(async () => {
     const loaded = await loadRawFiles([paths.markdownPath]);
     return {
@@ -467,11 +651,12 @@ async function benchmarkOpenWorks(paths: LogbookPaths, limit: number): Promise<S
     };
   });
 
+  noContinuity.strategy = "no_continuity_workspace_scan";
   notebook.strategy = "markdown_notebook_scan";
   jsonScan.strategy = "json_state_scan";
   tasklog.strategy = "tasklog_get_active_plus_list_works";
 
-  return [notebook, jsonScan, tasklog];
+  return [noContinuity, notebook, jsonScan, tasklog];
 }
 
 async function withActiveContextRestored<T>(paths: LogbookPaths, fn: () => Promise<T>): Promise<T> {
@@ -571,6 +756,15 @@ async function benchmarkWorkReentry(paths: LogbookPaths, work: WorkRecord): Prom
   const logsForWork = logs.filter((entry) => entry.work_id === work.work_id);
   const { checks, answer: expectedAnswer } = await buildWorkReentryGroundTruth(paths, work);
 
+  const noContinuity = await timed(async () => {
+    const text = await noContinuityWorkText(paths.projectRoot, work);
+    return {
+      text,
+      checks,
+      extra: { workLogCount: 0, artifactFileCount: 0, toolCalls: 0 },
+    };
+  });
+
   const notebook = await timed(async () => {
     const loaded = await loadRawFiles(notebookPaths);
     return {
@@ -624,11 +818,12 @@ async function benchmarkWorkReentry(paths: LogbookPaths, work: WorkRecord): Prom
     };
   }));
 
+  noContinuity.strategy = "no_continuity_scope_scan";
   notebook.strategy = "markdown_notebook_scan";
   jsonScan.strategy = "json_state_scan";
   tasklog.strategy = "tasklog_resume_plus_read_work_context";
 
-  return [notebook, jsonScan, tasklog];
+  return [noContinuity, notebook, jsonScan, tasklog];
 }
 
 function formatNumber(value: number): string {
@@ -669,8 +864,10 @@ function scenarioReductionPercent(baseline: StrategyRun, candidate: StrategyRun)
 }
 
 function summarizeScenario(title: string, prompt: string, runs: StrategyRun[]) {
-  const baseline = runs[0];
-  const tasklogRun = runs.at(-1);
+  const tasklogRun = runs.find((run) => run.strategy.startsWith("tasklog_"));
+  const noContinuityRun = runs.find((run) => run.strategy.startsWith("no_continuity_"));
+  const notebookRun = runs.find((run) => run.strategy === "markdown_notebook_scan");
+  const jsonRun = runs.find((run) => run.strategy === "json_state_scan");
   return {
     title,
     prompt,
@@ -687,8 +884,14 @@ function summarizeScenario(title: string, prompt: string, runs: StrategyRun[]) {
       wall_ms: run.elapsedMs,
       notes: run.extra ?? {},
     })),
-    tasklog_vs_baseline_reduction_percent: baseline && tasklogRun
-      ? scenarioReductionPercent(baseline, tasklogRun)
+    tasklog_vs_no_continuity_reduction_percent: noContinuityRun && tasklogRun
+      ? scenarioReductionPercent(noContinuityRun, tasklogRun)
+      : null,
+    tasklog_vs_markdown_reduction_percent: notebookRun && tasklogRun
+      ? scenarioReductionPercent(notebookRun, tasklogRun)
+      : null,
+    tasklog_vs_json_reduction_percent: jsonRun && tasklogRun
+      ? scenarioReductionPercent(jsonRun, tasklogRun)
       : null,
   };
 }
@@ -709,12 +912,20 @@ function printScenario(title: string, prompt: string, runs: StrategyRun[]): void
     );
   }
 
-  const baseline = runs[0];
-  const tasklogRun = runs.at(-1);
+  const noContinuityRun = runs.find((run) => run.strategy.startsWith("no_continuity_"));
+  const notebookRun = runs.find((run) => run.strategy === "markdown_notebook_scan");
+  const jsonRun = runs.find((run) => run.strategy === "json_state_scan");
+  const tasklogRun = runs.find((run) => run.strategy.startsWith("tasklog_"));
   const strongestCoverage = bestCoverage(runs);
   const strongestAccuracy = bestAccuracy(runs);
-  if (baseline && tasklogRun) {
-    console.log(`\n- ${describeReduction(baseline, tasklogRun)}`);
+  if (noContinuityRun && tasklogRun) {
+    console.log(`\n- ${describeReduction(noContinuityRun, tasklogRun)}`);
+    if (notebookRun) {
+      console.log(`- ${describeReduction(notebookRun, tasklogRun)}`);
+    }
+    if (jsonRun) {
+      console.log(`- ${describeReduction(jsonRun, tasklogRun)}`);
+    }
     if (coveragePercent(tasklogRun) === strongestCoverage) {
       console.log(`- tasklog path reached the top coverage in this scenario while using ${tasklogRun.metrics.files} surface file(s).`);
     } else {
