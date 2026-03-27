@@ -52,7 +52,7 @@ The benchmark grades two things:
 
 Full-sample summary:
 
-| Resume Path | What It Simulates | Coverage | Structured-Answer Accuracy | Total Context Surface |
+| Resume Path | What It Simulates | Coverage | Structured-Answer Accuracy | Re-entry Context Surface |
 | --- | --- | ---: | ---: | ---: |
 | No continuity | Codebase/workspace scan only | `32.43%` | `n/a` | `38,638` bytes |
 | Markdown notes | Freeform note reread | `63.06%` | `n/a` | `942,822` bytes |
@@ -66,6 +66,8 @@ Using the benchmark's rough `utf8-bytes / 4` heuristic, that is about `9,661` es
 Across the full sample, Tasklog matched the raw JSON path on coverage and structured-answer accuracy while using about `91.54%` less context than markdown notes and `93.93%` less context than direct raw-state reconstruction.
 
 For practical re-entry, Tasklog is the lowest-context path that still stayed fully answerable across the full sample.
+
+This benchmark measures the payload exposed for re-entry, not total end-to-end model token usage.
 
 This benchmark uses a real workspace and real work items, but it is still not a blind human study.
 
