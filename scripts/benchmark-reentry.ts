@@ -699,7 +699,7 @@ async function main(): Promise<void> {
   console.log(`# Tasklog Re-entry Benchmark`);
   console.log("");
   console.log(`- project_root: ${options.projectRoot}`);
-  console.log(`- works_in_scope: ${works.map((work) => `${work.work_id}:${work.slug}`).join(", ") || "(none)"}`);
+  console.log(`- works_in_scope: ${works.map((work) => work.title).join(" | ") || "(none)"}`);
   console.log(`- open_work_limit: ${options.limit}`);
   console.log(`- note: est. tokens use a rough utf8-bytes/4 heuristic; use them as relative context-size estimates, not billing-exact token counts.`);
   console.log(`- note: coverage checks answerability by looking for concrete evidence needed to resume the work, not by running an LLM over the payload.`);
@@ -714,7 +714,7 @@ async function main(): Promise<void> {
   for (const work of works) {
     const runs = await benchmarkWorkReentry(paths, work);
     printScenario(
-      `Work Re-entry (${work.work_id} / ${work.title})`,
+      `Work Re-entry (${work.title})`,
       `I am resuming this in-progress system task. What is the work, what is its status and scope, and what should I do next?`,
       runs,
     );

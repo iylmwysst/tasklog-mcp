@@ -34,6 +34,14 @@ The goal is to make session recovery cheap without turning Tasklog into a genera
 
 Measured on one real multi-repo workspace with the scenario-driven benchmark in `scripts/benchmark-reentry.ts`.
 
+The current sample covers `5` real workflow scenarios:
+
+- open work discovery after returning to a workspace
+- resume active work with log-only history
+- resume active work with notes
+- resume closed work with log-only history
+- resume closed work with work artifacts
+
 The benchmark compares three retrieval paths:
 
 - markdown notebook scan
@@ -45,19 +53,14 @@ It grades each path on two axes:
 - `coverage`: whether the payload contains the evidence needed to answer a real resume question
 - `structured-answer accuracy`: whether a reconstructed answer matches ground truth field-by-field
 
-Current scenarios and results:
+Current aggregate results:
 
-| Scenario | Best non-Tasklog path | Tasklog path | Result |
-| --- | --- | --- | --- |
-| Open work discovery | Raw JSON scan: `100%` answer accuracy, `80,296` bytes | `get_active_context` + `list_works`: `100%` answer accuracy, `11,091` bytes | Same answer quality with `86.19%` less context |
-| Resume active work (`he5q7a`) | Raw JSON scan: `100%` answer accuracy, `80,111` bytes | `resume_work` + `read_work_context`: `100%` answer accuracy, `6,335` bytes | Same answer quality with `92.09%` less context |
-| Resume closed work with artifacts (`lImttL`) | Raw JSON scan: `100%` answer accuracy, `86,337` bytes | `resume_work` + `read_work_context`: `100%` answer accuracy, `4,893` bytes | Same answer quality with `94.33%` less context |
+- across all `5` sampled scenarios, Tasklog matched raw JSON reconstruction on `100%` structured-answer accuracy
+- compared with raw JSON reconstruction, Tasklog reduced context surface by `92.58%` on average across the sampled scenarios
+- across the full sample, the raw JSON path exposed `418,507` bytes while the Tasklog path exposed `30,923` bytes
+- compared with markdown notebook scans, Tasklog reduced context surface by roughly `81-95%` depending on the scenario
 
-Takeaway:
-
-- on this real workspace, Tasklog matched raw-state reconstruction accuracy
-- Tasklog reduced re-entry context surface by roughly `86-94%`
-- the current benchmark measures retrieval and reconstruction quality, not a blind human study
+This benchmark measures retrieval and reconstruction quality on a real workspace. It is stronger than a toy example, but it is not a blind human study.
 
 To rerun:
 
