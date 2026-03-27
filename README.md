@@ -34,33 +34,29 @@ The goal is to make session recovery cheap without turning Tasklog into a genera
 
 Measured on one real multi-repo workspace with the scenario-driven benchmark in `scripts/benchmark-reentry.ts`.
 
-The current sample covers `5` real workflow scenarios:
-
-- open work discovery after returning to a workspace
-- resume active work with log-only history
-- resume active work with notes
-- resume closed work with log-only history
-- resume closed work with work artifacts
-
-The benchmark compares three retrieval paths:
+The current sample covers `5` real workflow scenarios and compares:
 
 - markdown notebook scan
 - raw JSON state scan
 - Tasklog's work-first path
 
-It grades each path on two axes:
+The benchmark grades two things:
 
 - `coverage`: whether the payload contains the evidence needed to answer a real resume question
 - `structured-answer accuracy`: whether a reconstructed answer matches ground truth field-by-field
 
-Current aggregate results:
+Summary:
 
-- across all `5` sampled scenarios, Tasklog matched raw JSON reconstruction on `100%` structured-answer accuracy
-- compared with raw JSON reconstruction, Tasklog reduced context surface by `92.58%` on average across the sampled scenarios
-- across the full sample, the raw JSON path exposed `418,507` bytes while the Tasklog path exposed `30,923` bytes
-- compared with markdown notebook scans, Tasklog reduced context surface by roughly `81-95%` depending on the scenario
+| Scenario Group | Sample Size | Tasklog vs Raw JSON | Context Reduction |
+| --- | ---: | --- | --- |
+| Open work discovery | 1 | matched `100%` structured-answer accuracy | `86.68%` less context |
+| Resume active work | 2 | matched `100%` structured-answer accuracy | `93.15%` less context on average |
+| Resume closed work | 2 | matched `100%` structured-answer accuracy | `94.97%` less context on average |
+| Full sample | 5 | matched `100%` structured-answer accuracy | `92.58%` less context on average |
 
-This benchmark measures retrieval and reconstruction quality on a real workspace. It is stronger than a toy example, but it is not a blind human study.
+Across the full sample, the raw JSON path exposed `418,507` bytes while the Tasklog path exposed `30,923` bytes.
+
+This benchmark uses a real workspace and real work items, but it is still not a blind human study.
 
 To rerun:
 
