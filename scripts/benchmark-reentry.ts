@@ -54,12 +54,14 @@ interface CliOptions {
   projectRoot: string;
   workIds: string[];
   limit: number;
+  json: boolean;
 }
 
 function parseArgs(argv: string[]): CliOptions {
   const workIds: string[] = [];
   let projectRoot = process.cwd();
   let limit = 10;
+  let json = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const current = argv[index];
@@ -82,10 +84,14 @@ function parseArgs(argv: string[]): CliOptions {
         limit = parsed;
       }
       index += 1;
+      continue;
+    }
+    if (current === "--json") {
+      json = true;
     }
   }
 
-  return { projectRoot: path.resolve(projectRoot), workIds, limit };
+  return { projectRoot: path.resolve(projectRoot), workIds, limit, json };
 }
 
 function metricFromText(text: string): SurfaceMetrics {
@@ -618,6 +624,35 @@ function bestAccuracy(runs: StrategyRun[]): number | null {
   return Math.max(...accuracies);
 }
 
+function scenarioReductionPercent(baseline: StrategyRun, candidate: StrategyRun): number {
+  return ((baseline.metrics.bytes - candidate.metrics.bytes) / baseline.metrics.bytes) * 100;
+}
+
+function summarizeScenario(title: string, prompt: string, runs: StrategyRun[]) {
+  const baseline = runs[0];
+  const tasklogRun = runs.at(-1);
+  return {
+    title,
+    prompt,
+    runs: runs.map((run) => ({
+      strategy: run.strategy,
+      checks_passed: passedChecks(run),
+      checks_total: run.checks.length,
+      coverage_percent: coveragePercent(run),
+      answer_accuracy_percent: answerAccuracyPercent(run),
+      surface_files: run.metrics.files,
+      surface_bytes: run.metrics.bytes,
+      surface_lines: run.metrics.lines,
+      est_tokens: run.metrics.estTokens,
+      wall_ms: run.elapsedMs,
+      notes: run.extra ?? {},
+    })),
+    tasklog_vs_baseline_reduction_percent: baseline && tasklogRun
+      ? scenarioReductionPercent(baseline, tasklogRun)
+      : null,
+  };
+}
+
 function printScenario(title: string, prompt: string, runs: StrategyRun[]): void {
   console.log(`\n## ${title}\n`);
   console.log(`Prompt: ${prompt}\n`);
@@ -695,6 +730,33 @@ async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   const paths = resolveLogbookPaths(options.projectRoot);
   const works = await resolveTargetWorks(paths, options.workIds);
+  const scenarios: Array<ReturnType<typeof summarizeScenario>> = [];
+
+  const openRuns = await benchmarkOpenWorks(paths, options.limit);
+  const openTitle = "Open Work Discovery";
+  const openPrompt = "I just came back to this workspace. What is still open, what am I actively working on, and what should I look at first?";
+  scenarios.push(summarizeScenario(openTitle, openPrompt, openRuns));
+
+  for (const work of works) {
+    const runs = await benchmarkWorkReentry(paths, work);
+    const title = `Work Re-entry (${work.title})`;
+    const prompt = "I am resuming this in-progress system task. What is the work, what is its status and scope, and what should I do next?";
+    scenarios.push(summarizeScenario(title, prompt, runs));
+  }
+
+  if (options.json) {
+    console.log(JSON.stringify({
+      project_root: options.projectRoot,
+      works_in_scope: works.map((work) => work.title),
+      open_work_limit: options.limit,
+      notes: [
+        "est. tokens use a rough utf8-bytes/4 heuristic; use them as relative context-size estimates, not billing-exact token counts.",
+        "coverage checks answerability by looking for concrete evidence needed to resume the work, not by running an LLM over the payload.",
+      ],
+      scenarios,
+    }, null, 2));
+    return;
+  }
 
   console.log(`# Tasklog Re-entry Benchmark`);
   console.log("");
@@ -704,10 +766,9 @@ async function main(): Promise<void> {
   console.log(`- note: est. tokens use a rough utf8-bytes/4 heuristic; use them as relative context-size estimates, not billing-exact token counts.`);
   console.log(`- note: coverage checks answerability by looking for concrete evidence needed to resume the work, not by running an LLM over the payload.`);
 
-  const openRuns = await benchmarkOpenWorks(paths, options.limit);
   printScenario(
-    "Open Work Discovery",
-    "I just came back to this workspace. What is still open, what am I actively working on, and what should I look at first?",
+    openTitle,
+    openPrompt,
     openRuns,
   );
 

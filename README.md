@@ -34,7 +34,7 @@ The goal is to make session recovery cheap without turning Tasklog into a genera
 
 Measured on one real multi-repo workspace with the scenario-driven benchmark in `scripts/benchmark-reentry.ts`.
 
-The current sample covers `5` real workflow scenarios and compares:
+The current sample covers `15` real workflow scenarios across active work discovery plus active and done work re-entry.
 
 - markdown notebook scan
 - raw JSON state scan
@@ -49,12 +49,12 @@ Summary:
 
 | Scenario Group | Sample Size | Tasklog vs Raw JSON | Context Reduction |
 | --- | ---: | --- | --- |
-| Open work discovery | 1 | matched `100%` structured-answer accuracy | `86.68%` less context |
-| Resume active work | 2 | matched `100%` structured-answer accuracy | `93.15%` less context on average |
-| Resume closed work | 2 | matched `100%` structured-answer accuracy | `94.97%` less context on average |
-| Full sample | 5 | matched `100%` structured-answer accuracy | `92.58%` less context on average |
+| Open work discovery | 1 | matched `100%` structured-answer accuracy | `86.74%` less context |
+| Resume active work | 5 | matched `100%` structured-answer accuracy | `92.72%` less context on average |
+| Resume done work | 9 | matched `100%` structured-answer accuracy | `94.91%` less context on average |
+| Full sample | 15 | matched `100%` structured-answer accuracy | `93.64%` less context on average |
 
-Across the full sample, the raw JSON path exposed `418,507` bytes while the Tasklog path exposed `30,923` bytes.
+Across the full sample, the raw JSON path exposed `1,253,177` bytes while the Tasklog path exposed `79,705` bytes.
 
 This benchmark uses a real workspace and real work items, but it is still not a blind human study.
 
