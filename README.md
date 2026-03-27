@@ -13,6 +13,21 @@ The current model is intentionally work-first, not log-first.
 
 One `project_root` can be a workspace directory that contains multiple repos. Tasklog tracks one workspace root at a time, not one git repo at a time.
 
+## Installation
+
+### npm / npx
+
+```bash
+npx -y tasklog-mcp
+```
+
+For a global install:
+
+```bash
+npm install -g tasklog-mcp
+tasklog-mcp
+```
+
 ## Concept
 
 Tasklog separates project memory into two layers:
@@ -273,21 +288,6 @@ For `update_log_status`:
 - `tasklog://usage` explains the work-first workflow and artifact selection rules.
 - `tasklog://schema` documents work records, session logs, and active context.
 - `tasklog://examples` contains examples for work creation, session logs, and plan targeting.
-
-## Installation
-
-### npm / npx
-
-```bash
-npx -y tasklog-mcp
-```
-
-For a global install:
-
-```bash
-npm install -g tasklog-mcp
-tasklog-mcp
-```
 
 ## Local Development
 
