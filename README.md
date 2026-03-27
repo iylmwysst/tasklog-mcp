@@ -2,7 +2,9 @@
 
 Small `stdio` MCP server for work-first task handoffs across coding sessions.
 
-Tasklog gives a coding agent a lightweight local continuity layer for one `project_root` at a time. It is built to answer a narrow set of questions quickly:
+Tasklog gives a coding agent a lightweight local continuity layer for one `project_root` at a time. It is built for the gap between "I vaguely remember what I was doing" and "I want the agent back on the right work without rereading a pile of logs."
+
+It answers a narrow set of questions quickly:
 
 - What am I working on right now?
 - What work is still open?
@@ -27,6 +29,41 @@ Tasklog stays narrower than both.
 - closed-work `summary.md` exists only to accelerate re-entry into that work
 
 The goal is to make session recovery cheap without turning Tasklog into a general memory layer.
+
+## Benchmark
+
+Measured on one real multi-repo workspace with the scenario-driven benchmark in `scripts/benchmark-reentry.ts`.
+
+The benchmark compares three retrieval paths:
+
+- markdown notebook scan
+- raw JSON state scan
+- Tasklog's work-first path
+
+It grades each path on two axes:
+
+- `coverage`: whether the payload contains the evidence needed to answer a real resume question
+- `structured-answer accuracy`: whether a reconstructed answer matches ground truth field-by-field
+
+Current scenarios and results:
+
+| Scenario | Best non-Tasklog path | Tasklog path | Result |
+| --- | --- | --- | --- |
+| Open work discovery | Raw JSON scan: `100%` answer accuracy, `80,296` bytes | `get_active_context` + `list_works`: `100%` answer accuracy, `11,091` bytes | Same answer quality with `86.19%` less context |
+| Resume active work (`he5q7a`) | Raw JSON scan: `100%` answer accuracy, `80,111` bytes | `resume_work` + `read_work_context`: `100%` answer accuracy, `6,335` bytes | Same answer quality with `92.09%` less context |
+| Resume closed work with artifacts (`lImttL`) | Raw JSON scan: `100%` answer accuracy, `86,337` bytes | `resume_work` + `read_work_context`: `100%` answer accuracy, `4,893` bytes | Same answer quality with `94.33%` less context |
+
+Takeaway:
+
+- on this real workspace, Tasklog matched raw-state reconstruction accuracy
+- Tasklog reduced re-entry context surface by roughly `86-94%`
+- the current benchmark measures retrieval and reconstruction quality, not a blind human study
+
+To rerun:
+
+```bash
+npm run bench:reentry -- --project-root /path/to/workspace --work-id <work_id>
+```
 
 ## Quick Start
 
@@ -55,6 +92,39 @@ By default, Tasklog uses the current working directory as `project_root`. To poi
 npx -y tasklog-mcp --project-root /path/to/workspace
 ```
 
+## Real Workflow Use Cases
+
+Tasklog is most useful when sessions move fast and continuity breaks often.
+
+Common cases:
+
+- you come back to a workspace and want the agent to list what is still open before choosing the next task
+- you exited a session abruptly and need to clean up stale `active` work items before resuming
+- you know roughly what you were working on, but want the agent to recover scope, next steps, and artifacts without rereading long logs
+- you finished a risky or expensive change and want a narrow re-entry brief for that one work later
+
+This makes Tasklog a better fit for fast-moving solo work, agent-assisted iteration, and "vibe coding" style workflows than for broad knowledge management.
+
+## Resume Workflow
+
+```mermaid
+flowchart LR
+    A[Start a new session] --> B[See what is still open]
+    B --> C[Choose the right work]
+    C --> D[Load scope, notes, and next steps]
+    D --> E[Do the work]
+    E --> F[Leave a clean handoff]
+```
+
+This is the typical resume flow Tasklog is trying to make cheap: recover the right work, re-enter it with minimal context, then leave behind a clean handoff for the next session.
+
+Typical tools behind this flow:
+
+- `get_active_context`
+- `list_works` or `resume_work`
+- `read_work_context`
+- `append_work_note`, `append_session_log`, `set_work_status`
+
 ## Mental Model
 
 Tasklog separates continuity into two layers:
@@ -81,7 +151,7 @@ In practice:
 ## Typical Flow
 
 1. Start with `get_active_context`
-2. If needed, use `list_works` and `resume_work`
+2. If needed, use `list_works(status="open")` and `resume_work`
 3. Call `read_work_context`
 4. Use workdocs and logs according to intent
 
@@ -219,6 +289,7 @@ Tasklog is not:
 - a generic memory MCP
 - a note vault for arbitrary facts
 - a replacement for project docs, code search, or architecture tools
+- a guarantee that every interrupted session leaves perfect active-work state behind
 
 Design goals:
 
@@ -227,6 +298,14 @@ Design goals:
 - keep it low-drag
 - keep it handoff-friendly
 - keep it lean
+
+## Current Friction
+
+Tasklog is intentionally small, so some cleanup still stays explicit.
+
+- if a session ends abruptly, a work item may still be marked `active` until the next session closes or updates it
+- that is usually cheap to fix with `list_works` plus `set_work_status`, but it is still manual state cleanup today
+- if your workflow needs automatic long-term memory, semantic retrieval, or project-wide reasoning, pair Tasklog with docs, code search, and architecture tools instead of stretching Tasklog beyond its scope
 
 ## Reliability Notes
 
