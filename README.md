@@ -1,27 +1,38 @@
 # Tasklog MCP
 
-Small `stdio` MCP server for work-first task handoffs across coding sessions.
+Small `stdio` MCP server for work-first continuity across coding sessions.
 
-Tasklog gives a coding agent a lightweight local continuity layer for one `project_root` at a time. It is built for the gap between "I vaguely remember what I was doing" and "I want the agent back on the right work without rereading a pile of logs."
+Without a continuity layer, session recovery usually turns into ad hoc recap work: tell the agent to write a summary, remember which `.md` file it went into, find that file again next session, ask the agent to reread it, then hope it reconstructs the right scope from a mix of stale notes and raw logs.
+
+Tasklog turns that into a repeatable workflow. It gives one coding workspace a lightweight local system for tracking current work, session handoffs, next steps, and the small set of artifacts that matter when you need to resume quickly.
 
 It answers a narrow set of questions quickly:
 
 - What am I working on right now?
 - What work is still open?
-- Where should design notes, plans, specs, and reminders live?
 - What changed in the last session?
+- Where should plans, specs, and reminders live?
 - If a work is already closed, what is the right re-entry brief?
 
-Tasklog is intentionally work-first, not log-first.
+Tasklog is intentionally work-first, not log-first and not a general memory layer.
 
 ## Why It Exists
 
-Most session logging tools drift toward one of two extremes:
+Most AI-assisted workflows still handle continuity manually.
+
+In practice that usually means some mix of:
+
+- asking the agent to dump a one-off summary into a markdown file
+- remembering where that file was written
+- rereading long logs because no work boundary was captured cleanly
+- reconstructing next steps from scratch after an interruption
+
+Most session logging tools then drift toward one of two extremes:
 
 - a raw chronological notebook that gets expensive to reread
 - a broad memory system that tries to remember everything
 
-Tasklog stays narrower than both.
+Tasklog stays narrower than both and tries to make continuity part of the normal work loop instead of an extra recap chore.
 
 - `work` is the main unit of continuity
 - `log` is for session handoff only
@@ -29,55 +40,6 @@ Tasklog stays narrower than both.
 - closed-work `summary.md` exists only to accelerate re-entry into that work
 
 The goal is to make session recovery cheap without turning Tasklog into a general memory layer.
-
-## Benchmark
-
-Measured on one real multi-repo workspace with the scenario-driven benchmark in `scripts/benchmark-reentry.ts`.
-
-The current sample covers `15` real workflow scenarios across active work discovery plus active and done work re-entry.
-
-In practice, the sampled work spans open-work discovery, active incident recovery, finished feature and behavior changes, documentation follow-ups, README rewrites, playbook migration work, and closed-work summary re-entry.
-
-The benchmark compares four resume paths:
-
-- `no continuity`: inspect only workspace/codebase context and git state, with no `.tasklog` or `workdocs/`
-- `markdown notebook scan`: reread the session notebook/log markdown directly
-- `raw JSON state scan`: read `.tasklog/active-context.json`, `.tasklog/works.json`, and `.tasklog/session-log.json` directly and reconstruct the answer without the higher-level MCP flow
-- `Tasklog path`: use the work-first MCP tools such as `get_active_context`, `list_works`, `resume_work`, and `read_work_context`
-
-The benchmark grades two things:
-
-- `coverage`: whether the payload contains the evidence needed to answer a real resume question
-- `structured-answer accuracy`: whether a reconstructed answer matches ground truth field-by-field
-
-Full-sample summary:
-
-| Resume Path | What It Simulates | Coverage | Structured-Answer Accuracy | Re-entry Context Surface |
-| --- | --- | ---: | ---: | ---: |
-| No continuity | Codebase/workspace scan only | `32.43%` | `n/a` | `38,638` bytes |
-| Markdown notes | Freeform note reread | `63.06%` | `n/a` | `942,822` bytes |
-| Raw JSON state | Direct state-file reconstruction | **`100%`** | **`100%`** | `1,314,527` bytes |
-| **Tasklog** | **Work-first MCP re-entry flow** | **`100%`** | **`100%`** | **`79,781` bytes** |
-
-Across the full sample, the no-continuity path exposed `38,638` bytes, the markdown-notes path exposed `942,822` bytes, the raw JSON path exposed `1,314,527` bytes, and the Tasklog path exposed `79,781` bytes.
-
-Using the benchmark's rough `utf8-bytes / 4` heuristic, that is about `9,661` estimated tokens for no continuity, `235,710` for markdown notes, `328,637` for raw JSON, and `19,949` for Tasklog.
-
-Across the full sample, Tasklog matched the raw JSON path on coverage and structured-answer accuracy while using about `91.54%` less context than markdown notes and `93.93%` less context than direct raw-state reconstruction.
-
-For practical re-entry, Tasklog is the lowest-context path that still stayed fully answerable across the full sample.
-
-This benchmark measures the payload exposed for re-entry, not total end-to-end model token usage.
-
-This benchmark uses a real workspace and real work items, but it is still not a blind human study.
-
-To rerun:
-
-```bash
-npm run bench:reentry -- --project-root /path/to/workspace --manifest docs/benchmark-candidates.json
-```
-
-You can still use one or more `--work-id <work_id>` flags when you want a narrower check.
 
 ## Quick Start
 
@@ -178,6 +140,47 @@ Recommended tool choices:
 - capture exact rules: `create_spec_doc`
 - note something down: `append_work_note`
 - record a session handoff: `append_session_log`
+
+## Benchmark
+
+Tasklog's workflow claim is supported by a scenario-driven re-entry benchmark in `scripts/benchmark-reentry.ts`.
+
+Measured on one real multi-repo workspace, the current sample covers `15` workflow scenarios across active work discovery plus active and done work re-entry.
+
+The benchmark compares four resume paths:
+
+- `no continuity`: inspect only workspace/codebase context and git state, with no `.tasklog` or `workdocs/`
+- `markdown notebook scan`: reread the session notebook/log markdown directly
+- `raw JSON state scan`: read `.tasklog/active-context.json`, `.tasklog/works.json`, and `.tasklog/session-log.json` directly and reconstruct the answer without the higher-level MCP flow
+- `Tasklog path`: use the work-first MCP tools such as `get_active_context`, `list_works`, `resume_work`, and `read_work_context`
+
+The benchmark grades two things:
+
+- `coverage`: whether the payload contains the evidence needed to answer a real resume question
+- `structured-answer accuracy`: whether a reconstructed answer matches ground truth field-by-field
+
+Full-sample summary:
+
+| Resume Path | What It Simulates | Coverage | Structured-Answer Accuracy | Re-entry Context Surface |
+| --- | --- | ---: | ---: | ---: |
+| No continuity | Codebase/workspace scan only | `32.43%` | `n/a` | `38,638` bytes |
+| Markdown notes | Freeform note reread | `63.06%` | `n/a` | `942,822` bytes |
+| Raw JSON state | Direct state-file reconstruction | **`100%`** | **`100%`** | `1,314,527` bytes |
+| **Tasklog** | **Work-first MCP re-entry flow** | **`100%`** | **`100%`** | **`79,781` bytes** |
+
+Across the full sample, Tasklog matched the raw JSON path on coverage and structured-answer accuracy while using about `91.54%` less context than markdown notes and `93.93%` less context than direct raw-state reconstruction.
+
+For practical re-entry, Tasklog is the lowest-context path that still stayed fully answerable across the full sample.
+
+This benchmark measures the payload exposed for re-entry, not total end-to-end model token usage. It uses a real workspace and real work items, but it is still not a blind human study.
+
+To rerun:
+
+```bash
+npm run bench:reentry -- --project-root /path/to/workspace --manifest docs/benchmark-candidates.json
+```
+
+You can still use one or more `--work-id <work_id>` flags when you want a narrower check.
 
 ## Closed-Work Summaries
 
