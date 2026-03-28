@@ -1,6 +1,6 @@
 {
   "name": "tasklog-mcp",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "description": "MCP server for lightweight work-first task handoffs across coding sessions.",
   "homepage": "https://github.com/iylmwysst/tasklog-mcp#readme",

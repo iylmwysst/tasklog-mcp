@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   formatActiveContextResponse,
   formatAppendResponse,
+  formatCompactWorkContextResponse,
   formatMetadataAmendResponse,
   formatReadResponse,
   formatWorkDocResponse,
@@ -237,4 +238,45 @@ test("formatWorkContextResponse renders summary-aware context fields", () => {
   assert.ok(output.includes("Recent logs: 1 available as secondary evidence (use include_recent_logs=true to load them)."));
   assert.ok(!output.includes("Next step:"));
   assert.ok(!output.includes("Summary: Safe summary"));
+});
+
+test("formatCompactWorkContextResponse keeps compact output focused on the re-entry brief", () => {
+  const output = formatCompactWorkContextResponse({
+    work: makeWork({ status: "done", impact: "critical" }),
+    artifact_paths: {
+      workDir: "/tmp/project/workdocs/b37MqD-secure-launch-handoff",
+      designPath: "/tmp/project/workdocs/b37MqD-secure-launch-handoff/design.md",
+      planPath: "/tmp/project/workdocs/b37MqD-secure-launch-handoff/plan.md",
+      specPath: "/tmp/project/workdocs/b37MqD-secure-launch-handoff/spec.md",
+      summaryPath: "/tmp/project/workdocs/b37MqD-secure-launch-handoff/summary.md",
+      notesPath: "/tmp/project/workdocs/b37MqD-secure-launch-handoff/notes.md",
+    },
+    artifact_availability: {
+      design: true,
+      plan: true,
+      spec: true,
+      summary: true,
+      notes: true,
+    },
+    context_mode: "closed/consolidated",
+    recent_logs: [],
+    recent_log_count: 2,
+    summary_text: undefined,
+    reentry_brief: {
+      title: "Secure launch handoff",
+      status: "done",
+      scope_paths: ["/tmp/project/WebWayFleet"],
+      latest_log_summary: "Captured the final handoff.",
+      next_step_summary: "",
+      artifact_files: ["summary.md", "notes.md"],
+    },
+  });
+
+  assert.ok(output.includes("Compact work context: b37MqD Secure launch handoff"));
+  assert.ok(output.includes("Impact: critical"));
+  assert.ok(output.includes("Latest log: Captured the final handoff."));
+  assert.ok(output.includes("Summary doc: available (use include_summary=true to inline it)"));
+  assert.ok(output.includes("Recent logs: 2 available as secondary evidence."));
+  assert.ok(!output.includes("Docs: design="));
+  assert.ok(!output.includes("/tmp/project/workdocs/b37MqD-secure-launch-handoff/design.md"));
 });

@@ -628,6 +628,107 @@ test("listWorks returns compact work summaries", async () => {
   assert.equal(works[0]?.next_step_summary, "Add plan and spec creation tools.");
 });
 
+test("listWorks supports exact tag and impact filters for lightweight triage", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const criticalOps = await startWork(paths, {
+    title: "Restore agent heartbeat",
+    impact: "critical",
+    tags: ["ops", "incident"],
+  });
+  const highOps = await startWork(paths, {
+    title: "Document ops fallback",
+    impact: "high",
+    tags: ["ops"],
+  });
+  await startWork(paths, {
+    title: "Refresh docs examples",
+    impact: "low",
+    tags: ["docs"],
+  });
+
+  await setWorkStatus(paths, highOps.work_id, "done");
+
+  const openCritical = await listWorks(paths, {
+    status: "open",
+    impact: "critical",
+    limit: 10,
+  });
+  const opsTagged = await listWorks(paths, {
+    status: "all",
+    tag: "OPS",
+    limit: 10,
+  });
+
+  assert.deepEqual(openCritical.map((work) => work.work_id), [criticalOps.work_id]);
+  assert.deepEqual(opsTagged.map((work) => work.work_id), [highOps.work_id, criticalOps.work_id]);
+});
+
+test("listWorks can sort by impact for active-work triage", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const low = await startWork(paths, {
+    title: "Polish wording",
+    impact: "low",
+  });
+  const critical = await startWork(paths, {
+    title: "Fix production outage",
+    impact: "critical",
+  });
+  const high = await startWork(paths, {
+    title: "Stabilize deploy pipeline",
+    impact: "high",
+  });
+
+  const descending = await listWorks(paths, {
+    status: "open",
+    sort_by: "impact",
+    sort_order: "desc",
+    limit: 10,
+  });
+  const ascending = await listWorks(paths, {
+    status: "open",
+    sort_by: "impact",
+    sort_order: "asc",
+    limit: 10,
+  });
+
+  assert.deepEqual(descending.map((work) => work.work_id), [critical.work_id, high.work_id, low.work_id]);
+  assert.deepEqual(ascending.map((work) => work.work_id), [low.work_id, high.work_id, critical.work_id]);
+});
+
+test("listWorks applies sort_order consistently for impact ties and missing impact", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const firstHigh = await startWork(paths, {
+    title: "Earlier high priority task",
+    impact: "high",
+  });
+  const secondHigh = await startWork(paths, {
+    title: "Later high priority task",
+    impact: "high",
+  });
+  const noImpact = await startWork(paths, {
+    title: "Unranked backlog cleanup",
+  });
+
+  const descending = await listWorks(paths, {
+    status: "open",
+    sort_by: "impact",
+    sort_order: "desc",
+    limit: 10,
+  });
+  const ascending = await listWorks(paths, {
+    status: "open",
+    sort_by: "impact",
+    sort_order: "asc",
+    limit: 10,
+  });
+
+  assert.deepEqual(descending.map((work) => work.work_id), [secondHigh.work_id, firstHigh.work_id, noImpact.work_id]);
+  assert.deepEqual(ascending.map((work) => work.work_id), [noImpact.work_id, firstHigh.work_id, secondHigh.work_id]);
+});
+
 test("work impact persists and can be updated explicitly", async () => {
   const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
   const paths = resolveLogbookPaths(projectRoot);
@@ -720,6 +821,9 @@ test("summary workdocs mark a done work as closed/consolidated and keep summary 
   const evidenceContext = await readWorkContext(paths, activeWork.work_id, {
     include_recent_logs: true,
   });
+  const compactContext = await readWorkContext(paths, activeWork.work_id, {
+    compact: true,
+  });
   const works = await listWorks(paths, { status: "done", limit: 10 });
 
   assert.equal(summaryDoc.created, true);
@@ -733,6 +837,11 @@ test("summary workdocs mark a done work as closed/consolidated and keep summary 
   assert.match(loadedContext.summary_text ?? "", /Captured a canonical re-entry brief/);
   assert.equal(evidenceContext.recent_log_count, 1);
   assert.equal(evidenceContext.recent_logs.length, 1);
+  assert.equal(compactContext.reentry_brief?.title, activeWork.title);
+  assert.equal(compactContext.reentry_brief?.status, "done");
+  assert.equal(compactContext.reentry_brief?.latest_log_summary, "Captured the final session handoff before consolidation.");
+  assert.equal(compactContext.reentry_brief?.next_step_summary, "");
+  assert.ok(compactContext.reentry_brief?.artifact_files.includes("summary.md"));
   assert.equal(works[0]?.context_mode, "closed/consolidated");
   assert.equal(works[0]?.artifact_availability.summary, true);
   assert.equal(works[0]?.next_step_summary, undefined);

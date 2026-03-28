@@ -60,6 +60,7 @@ Tasklog MCP now works best in a work-first flow.
 ## Intent matrix
 
 - user asks what is open -> \`get_active_context\`, then \`list_works(status="open")\`
+- user wants unfinished work filtered by tag or impact -> \`list_works(status="open", tag="...", impact="critical")\`
 - user wants to continue prior work -> \`get_active_context\`, then \`resume_work\` if needed, then \`read_work_context\`
 - user starts a new effort -> \`start_work\`
 - user says note this down -> \`append_work_note\`
@@ -77,6 +78,7 @@ Use:
 
 - \`get_active_context\` at the start of a session
 - \`list_works(status="open")\` when the user asks what is still open
+- add \`tag\`, \`impact\`, or \`sort_by="impact"\` when the user is triaging unfinished work
 - \`start_work\` for a new task
 - \`resume_work\` when the user wants to continue an existing task
 - \`read_work_context\` before substantial implementation inside one work

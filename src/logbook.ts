@@ -20,6 +20,8 @@ export const ACTIVE_WORK_FRESHNESS = ["fresh", "stale", "invalid"] as const;
 export const WORK_CONTEXT_MODES = ["active", "closed/raw", "closed/consolidated"] as const;
 
 const WORK_LIST_FILTERS = ["open", "active", "blocked", "done", "all"] as const;
+const WORK_LIST_SORT_FIELDS = ["updated_at", "impact"] as const;
+const WORK_LIST_SORT_ORDERS = ["desc", "asc"] as const;
 const WORKDOC_FILENAMES = {
   design: "design.md",
   plan: "plan.md",
@@ -36,6 +38,8 @@ export type WorkImpact = (typeof WORK_IMPACTS)[number];
 export type ActiveWorkFreshness = (typeof ACTIVE_WORK_FRESHNESS)[number];
 export type WorkContextMode = (typeof WORK_CONTEXT_MODES)[number];
 export type WorkListFilter = (typeof WORK_LIST_FILTERS)[number];
+export type WorkListSortField = (typeof WORK_LIST_SORT_FIELDS)[number];
+export type WorkListSortOrder = (typeof WORK_LIST_SORT_ORDERS)[number];
 export type WorkDocType = keyof typeof WORKDOC_FILENAMES;
 
 export interface SessionLogEntry extends Record<string, unknown> {
@@ -95,6 +99,15 @@ export interface WorkListEntry extends WorkRecord {
   recent_log_id?: string;
 }
 
+export interface ReentryBrief extends Record<string, unknown> {
+  title: string;
+  status: string;
+  scope_paths: string[];
+  latest_log_summary: string;
+  next_step_summary: string;
+  artifact_files: string[];
+}
+
 export interface WorkContextSummary extends Record<string, unknown> {
   work: WorkRecord;
   artifact_paths: WorkArtifactPaths;
@@ -104,6 +117,7 @@ export interface WorkContextSummary extends Record<string, unknown> {
   recent_log_count: number;
   next_step_summary?: string;
   summary_text?: string;
+  reentry_brief?: ReentryBrief;
 }
 
 export interface ActiveContextRecord extends Record<string, unknown> {
@@ -133,6 +147,10 @@ export interface StartWorkInput {
 export interface ListWorksInput {
   status?: WorkListFilter;
   query?: string;
+  tag?: string;
+  impact?: WorkImpact;
+  sort_by?: WorkListSortField;
+  sort_order?: WorkListSortOrder;
   limit?: number;
 }
 
@@ -164,6 +182,9 @@ export interface GetRecentLogsOptions {
 export interface ReadWorkContextOptions {
   include_summary?: boolean;
   include_recent_logs?: boolean;
+  // Internal-only experimental re-entry surface. Keep this off the public MCP tool
+  // schema until the product flow is ready for agents to choose it intentionally.
+  compact?: boolean;
 }
 
 export interface CreateWorkDocResult extends Record<string, unknown> {
@@ -474,11 +495,14 @@ export async function listWorks(paths: LogbookPaths, input: ListWorksInput = {})
   const [works, entries] = await Promise.all([readWorkRecords(paths), readLogEntries(paths)]);
   const safeLimit = normalizeLimit(input.limit ?? 10, 10, 100);
   const normalizedQuery = input.query?.trim().toLowerCase();
+  const normalizedTag = input.tag?.trim().toLowerCase();
 
   const filtered = works
     .filter((work) => matchesWorkStatus(work, input.status ?? "open"))
     .filter((work) => matchesWorkQuery(work, normalizedQuery))
-    .sort((left, right) => right.updated_at.localeCompare(left.updated_at))
+    .filter((work) => matchesWorkTag(work, normalizedTag))
+    .filter((work) => matchesWorkImpact(work, input.impact))
+    .sort((left, right) => compareWorkRecords(left, right, input.sort_by ?? "updated_at", input.sort_order ?? "desc"))
     .slice(0, safeLimit);
 
   return Promise.all(
@@ -587,6 +611,16 @@ export async function readWorkContext(
     contextMode === "closed/consolidated"
       ? undefined
       : allRecentLogs.find((entry) => entry.next_steps)?.next_steps;
+  const reentryBrief = options.compact
+    ? {
+      title: work.title,
+      status: work.status,
+      scope_paths: work.scope_paths,
+      latest_log_summary: allRecentLogs[0]?.summary ?? "",
+      next_step_summary: nextStepSummary ?? "",
+      artifact_files: existingArtifactFileNames(artifactPaths, artifactAvailability),
+    }
+    : undefined;
 
   return {
     work,
@@ -597,6 +631,7 @@ export async function readWorkContext(
     recent_log_count: allRecentLogs.length,
     next_step_summary: nextStepSummary,
     summary_text: summaryText,
+    reentry_brief: reentryBrief,
   };
 }
 
@@ -1097,6 +1132,21 @@ function getArtifactPath(paths: WorkArtifactPaths, docType: Exclude<WorkDocType,
   }
 }
 
+function existingArtifactFileNames(
+  paths: WorkArtifactPaths,
+  availability: WorkArtifactAvailability,
+): string[] {
+  const files = [
+    availability.design ? path.basename(paths.designPath) : null,
+    availability.plan ? path.basename(paths.planPath) : null,
+    availability.spec ? path.basename(paths.specPath) : null,
+    availability.summary ? path.basename(paths.summaryPath) : null,
+    availability.notes ? path.basename(paths.notesPath) : null,
+  ];
+
+  return files.filter((fileName): fileName is string => fileName !== null);
+}
+
 function buildWorkDocContents(
   docType: WorkDocType,
   work: WorkRecord,
@@ -1571,6 +1621,7 @@ function matchesWorkQuery(work: WorkRecord, query: string | undefined): boolean 
     work.title,
     work.slug,
     work.summary,
+    work.impact,
     work.start_dir,
     ...work.scope_paths,
     ...(work.tags ?? []),
@@ -1580,6 +1631,68 @@ function matchesWorkQuery(work: WorkRecord, query: string | undefined): boolean 
     .toLowerCase();
 
   return haystack.includes(query);
+}
+
+function matchesWorkTag(work: WorkRecord, tag: string | undefined): boolean {
+  if (!tag) {
+    return true;
+  }
+
+  return (work.tags ?? []).some((candidate) => candidate.toLowerCase() === tag);
+}
+
+function matchesWorkImpact(work: WorkRecord, impact: WorkImpact | undefined): boolean {
+  if (!impact) {
+    return true;
+  }
+
+  return work.impact === impact;
+}
+
+function compareWorkRecords(
+  left: WorkRecord,
+  right: WorkRecord,
+  sortBy: WorkListSortField,
+  sortOrder: WorkListSortOrder,
+): number {
+  if (sortBy === "impact") {
+    const leftRank = impactRank(left.impact);
+    const rightRank = impactRank(right.impact);
+
+    if (leftRank !== rightRank) {
+      if (leftRank === undefined) {
+        return sortOrder === "asc" ? -1 : 1;
+      }
+
+      if (rightRank === undefined) {
+        return sortOrder === "asc" ? 1 : -1;
+      }
+
+      return sortOrder === "asc" ? leftRank - rightRank : rightRank - leftRank;
+    }
+  }
+
+  const updatedAtComparison = left.updated_at.localeCompare(right.updated_at);
+  if (updatedAtComparison !== 0) {
+    return sortOrder === "asc" ? updatedAtComparison : -updatedAtComparison;
+  }
+
+  return left.work_id.localeCompare(right.work_id);
+}
+
+function impactRank(impact: WorkImpact | undefined): number | undefined {
+  switch (impact) {
+    case "low":
+      return 0;
+    case "medium":
+      return 1;
+    case "high":
+      return 2;
+    case "critical":
+      return 3;
+    default:
+      return undefined;
+  }
 }
 
 function stringField(value: unknown, fieldName: string): string {

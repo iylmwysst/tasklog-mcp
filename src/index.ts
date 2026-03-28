@@ -55,6 +55,8 @@ import {
 
 const logger = createLogger();
 const WORK_LIST_FILTERS = ["open", "active", "blocked", "done", "all"] as const;
+const WORK_LIST_SORT_FIELDS = ["updated_at", "impact"] as const;
+const WORK_LIST_SORT_ORDERS = ["desc", "asc"] as const;
 
 process.on("uncaughtException", (error) => {
   logger.error("process.uncaught_exception", serializeError(error));
@@ -69,7 +71,7 @@ async function main(): Promise<void> {
   const server = new McpServer(
     {
       name: "tasklog-mcp",
-      version: "0.2.1",
+      version: "0.3.0",
     },
     {
       capabilities: {
@@ -175,7 +177,20 @@ function registerTools(
           .enum(WORK_LIST_FILTERS)
           .default("open")
           .describe("Which work statuses to include."),
-        query: z.string().default("").describe("Optional text search across title, scope, summary, and tags."),
+        query: z.string().default("").describe("Optional text search across title, scope, summary, impact, and tags."),
+        tag: z.string().default("").describe("Optional exact tag filter for narrowing unfinished work."),
+        impact: z
+          .enum(WORK_IMPACTS)
+          .optional()
+          .describe("Optional impact filter when you want to focus on low, medium, high, or critical work."),
+        sort_by: z
+          .enum(WORK_LIST_SORT_FIELDS)
+          .default("updated_at")
+          .describe("Which field to sort by when listing work items."),
+        sort_order: z
+          .enum(WORK_LIST_SORT_ORDERS)
+          .default("desc")
+          .describe("Whether to sort ascending or descending."),
         limit: z.number().int().min(1).max(100).default(10).describe("Maximum number of works to return."),
       },
       outputSchema: {
@@ -185,11 +200,15 @@ function registerTools(
         works: z.array(workListEntrySchema()),
       },
     },
-    observeToolCall(logger, "list_works", async ({ status, query, limit }) => {
+    observeToolCall(logger, "list_works", async ({ status, query, tag, impact, sort_by, sort_order, limit }) => {
       const summary = await getActiveContext(paths);
       const works = await listWorks(paths, {
         status,
         query,
+        tag,
+        impact,
+        sort_by,
+        sort_order,
         limit,
       });
 
@@ -358,9 +377,10 @@ function registerTools(
         include_summary,
         include_recent_logs,
       });
+      const publicContext = toPublicWorkContext(context);
       return {
-        content: [{ type: "text", text: formatWorkContextResponse(context) }],
-        structuredContent: { context },
+        content: [{ type: "text", text: formatWorkContextResponse(publicContext) }],
+        structuredContent: { context: publicContext },
       };
     }),
   );
@@ -760,6 +780,11 @@ function workContextSchema() {
     next_step_summary: z.string().optional(),
     summary_text: z.string().optional(),
   });
+}
+
+function toPublicWorkContext(context: Awaited<ReturnType<typeof readWorkContext>>) {
+  const { reentry_brief: _reentryBrief, ...publicContext } = context;
+  return publicContext;
 }
 
 function activeContextShape() {

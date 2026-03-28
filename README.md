@@ -46,7 +46,7 @@ The goal is to make session recovery cheap without turning Tasklog into a genera
 Run with `npx`:
 
 ```bash
-npx -y tasklog-mcp
+npx -y tasklog-mcp@0.3.0
 ```
 
 Or install globally:
@@ -59,13 +59,13 @@ tasklog-mcp
 Add it to Codex:
 
 ```bash
-codex mcp add tasklog -- npx -y tasklog-mcp
+codex mcp add tasklog -- npx -y tasklog-mcp@0.3.0
 ```
 
 By default, Tasklog uses the current working directory as `project_root`. To point it elsewhere:
 
 ```bash
-npx -y tasklog-mcp --project-root /path/to/workspace
+npx -y tasklog-mcp@0.3.0 --project-root /path/to/workspace
 ```
 
 ## Real Workflow Use Cases
@@ -75,6 +75,7 @@ Tasklog is most useful when sessions move fast and continuity breaks often.
 Common cases:
 
 - you come back to a workspace and want the agent to list what is still open before choosing the next task
+- you want to triage unfinished work by `impact` or `tag`, such as finding the open `critical` items first
 - you exited a session abruptly and need to clean up stale `active` work items before resuming
 - you know roughly what you were working on, but want the agent to recover scope, next steps, and artifacts without rereading long logs
 - you finished a risky or expensive change and want a narrow re-entry brief for that one work later
@@ -375,7 +376,7 @@ Generic stdio config:
     "tasklog": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "tasklog-mcp"],
+      "args": ["-y", "tasklog-mcp@0.3.0"],
       "env": {}
     }
   }
@@ -390,4 +391,4 @@ Legacy compatibility environment variables are still supported:
 - `LOGBOOK_JSON_FILE`
 - `LOGBOOK_MARKDOWN_FILE`
 
-Claude Desktop and Cursor can use the same stdio command pattern.
+Claude Desktop and Cursor can use the same stdio command pattern. If you keep separate config files per client, pin the same `tasklog-mcp@0.3.0` package version there too so Codex and Claude resolve the same release.

@@ -231,7 +231,17 @@ export function formatWorkContextResponse(context: WorkContextSummary): string {
     lines.push(
       context.next_step_summary
         ? `Next step: ${escapePlainTextField(context.next_step_summary)}`
-        : "Next step: (none recorded)",
+      : "Next step: (none recorded)",
+    );
+  }
+
+  if (context.reentry_brief) {
+    lines.push(
+      `Compact re-entry brief: title=${escapePlainTextField(context.reentry_brief.title)} status=${escapePlainTextField(context.reentry_brief.status)}`,
+      `Compact scope: ${context.reentry_brief.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
+      `Compact latest log: ${escapePlainTextField(context.reentry_brief.latest_log_summary || "(none)")}`,
+      `Compact next step: ${escapePlainTextField(context.reentry_brief.next_step_summary || "(none)")}`,
+      `Compact artifacts: ${context.reentry_brief.artifact_files.map((fileName) => escapePlainTextField(fileName)).join(", ") || "(none)"}`,
     );
   }
 
@@ -261,6 +271,44 @@ export function formatWorkContextResponse(context: WorkContextSummary): string {
     }
   } else {
     lines.push("", formatLogEntries(context.recent_logs));
+  }
+
+  return lines.join("\n");
+}
+
+export function formatCompactWorkContextResponse(context: WorkContextSummary): string {
+  // Internal-only formatter for compact re-entry experiments. This is intentionally
+  // not wired into the public MCP read_work_context surface right now.
+  if (!context.reentry_brief) {
+    return formatWorkContextResponse(context);
+  }
+
+  const lines = [
+    `Compact work context: ${escapePlainTextField(context.work.work_id)} ${escapePlainTextField(context.reentry_brief.title)}`,
+    `Status: ${escapePlainTextField(context.reentry_brief.status)}`,
+    `Context mode: ${escapePlainTextField(context.context_mode)}`,
+    `Scope: ${context.reentry_brief.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
+    `Latest log: ${escapePlainTextField(context.reentry_brief.latest_log_summary || "(none)")}`,
+    `Next step: ${escapePlainTextField(context.reentry_brief.next_step_summary || "(none)")}`,
+    `Artifacts: ${context.reentry_brief.artifact_files.map((fileName) => escapePlainTextField(fileName)).join(", ") || "(none)"}`,
+  ];
+
+  if (context.work.impact) {
+    lines.splice(3, 0, `Impact: ${escapePlainTextField(context.work.impact)}`);
+  }
+
+  if (context.context_mode === "closed/consolidated") {
+    if (context.summary_text) {
+      lines.push(`Summary doc: loaded (${context.summary_text.length} chars)`);
+    } else if (context.artifact_availability.summary) {
+      lines.push("Summary doc: available (use include_summary=true to inline it)");
+    }
+
+    if (context.recent_logs.length > 0) {
+      lines.push(`Recent logs: ${context.recent_logs.length} loaded as secondary evidence.`);
+    } else if (context.recent_log_count > 0) {
+      lines.push(`Recent logs: ${context.recent_log_count} available as secondary evidence.`);
+    }
   }
 
   return lines.join("\n");
