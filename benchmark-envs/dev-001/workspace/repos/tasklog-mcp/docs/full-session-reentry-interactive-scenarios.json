@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "description": "Frozen scenario pack for the interactive full-session re-entry benchmark. The dev lane stays intentionally small, while holdout and stress lanes extend the same family set for later rehearsal without changing the core protocol.",
+  "splits": {
+    "dev": [
+      "fsi-dev-active-context",
+      "fsi-dev-stale-active-context",
+      "fsi-dev-multiple-open-works"
+    ],
+    "holdout": [
+      "fsi-holdout-runtime-incident",
+      "fsi-holdout-stale-product-resume",
+      "fsi-holdout-multi-open-admin-vs-product",
+      "fsi-holdout-closed-distractor"
+    ],
+    "stress": [
+      "fsi-stress-full-context-incident",
+      "fsi-stress-closed-distractor-heavy",
+      "fsi-stress-stale-active-many-open"
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "fsi-dev-active-context",
+      "family": "active_work_resume",
+      "target_work_id": "0tetbC",
+      "candidate_work_ids": ["0tetbC", "8V7X0U", "je0AuN", "cegiHG"],
+      "active_work_id": "0tetbC",
+      "require_full_context": false,
+      "note": "Interactive baseline where active context already points at the correct open benchmark work."
+    },
+    {
+      "scenario_id": "fsi-dev-stale-active-context",
+      "family": "stale_active_context_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["0tetbC", "8V7X0U", "je0AuN", "cegiHG"],
+      "active_work_id": "0tetbC",
+      "require_full_context": false,
+      "note": "Interactive stale-context case where the model should move from benchmark work toward the product-facing open work."
+    },
+    {
+      "scenario_id": "fsi-dev-multiple-open-works",
+      "family": "multiple_open_works_resume",
+      "target_work_id": "cegiHG",
+      "candidate_work_ids": ["cegiHG", "D2r6E7", "rAQj1A", "8V7X0U", "je0AuN"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Interactive multi-open-work triage case with one concrete runtime incident among research and admin distractors."
+    },
+    {
+      "scenario_id": "fsi-holdout-runtime-incident",
+      "family": "active_work_resume",
+      "target_work_id": "cegiHG",
+      "candidate_work_ids": ["cegiHG", "0tetbC", "je0AuN", "8V7X0U"],
+      "active_work_id": "cegiHG",
+      "require_full_context": false,
+      "note": "Interactive holdout baseline where active context already points at the runtime incident."
+    },
+    {
+      "scenario_id": "fsi-holdout-stale-product-resume",
+      "family": "stale_active_context_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["0tetbC", "je0AuN", "8V7X0U", "cegiHG"],
+      "active_work_id": "0tetbC",
+      "require_full_context": false,
+      "note": "Interactive holdout stale-context case where the benchmark work is active but the product work is the true resume target."
+    },
+    {
+      "scenario_id": "fsi-holdout-multi-open-admin-vs-product",
+      "family": "multiple_open_works_resume",
+      "target_work_id": "8V7X0U",
+      "candidate_work_ids": ["0tetbC", "8V7X0U", "je0AuN", "cegiHG", "D2r6E7"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Interactive holdout multi-open case with research, product, incident, and admin distractors."
+    },
+    {
+      "scenario_id": "fsi-holdout-closed-distractor",
+      "family": "closed_work_do_not_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["je0AuN", "lImttL", "XF27hs", "49Q0AJ", "he5q7a"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Interactive holdout case where closed work distractors should not be resumed."
+    },
+    {
+      "scenario_id": "fsi-stress-full-context-incident",
+      "family": "active_work_resume",
+      "target_work_id": "cegiHG",
+      "candidate_work_ids": ["cegiHG", "0tetbC", "je0AuN", "8V7X0U", "D2r6E7"],
+      "active_work_id": "",
+      "require_full_context": true,
+      "note": "Interactive stress case that should justify one expanded-context call."
+    },
+    {
+      "scenario_id": "fsi-stress-closed-distractor-heavy",
+      "family": "closed_work_do_not_resume",
+      "target_work_id": "0tetbC",
+      "candidate_work_ids": ["0tetbC", "lImttL", "Ny8vZo", "XF27hs", "49Q0AJ", "QJPc5x"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Interactive stress case with one open benchmark work surrounded by polished closed distractors."
+    },
+    {
+      "scenario_id": "fsi-stress-stale-active-many-open",
+      "family": "multiple_open_works_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["D2r6E7", "0tetbC", "je0AuN", "cegiHG", "rAQj1A"],
+      "active_work_id": "D2r6E7",
+      "require_full_context": false,
+      "note": "Interactive stress case with stale active context plus several superficially resumable open works."
+    }
+  ]
+}

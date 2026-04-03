@@ -1,0 +1,317 @@
+{
+  "version": "2026-03-29-v1",
+  "benchmark_type": "tasklog_v3_independent_structured_holdout",
+  "round_id": "V3a",
+  "fixture_template_path": "docs/tasklog-v3-fixture-template.md",
+  "family_inventory_path": "docs/tasklog-v3-scenario-family-inventory.md",
+  "answer_contract_path": "docs/tasklog-v3-answer-contract.md",
+  "grader_contract_path": "docs/tasklog-v3-grader-contract.md",
+  "baseline_payload_contract_path": "docs/tasklog-v3-baseline-payload-contract.md",
+  "ontology_path": "docs/tasklog-v3-source-family-ontology.json",
+  "adjudication_guide_path": "docs/tasklog-v3-adjudication-guide.md",
+  "pack_policy": {
+    "minimum_fixture_count": 24,
+    "target_fixture_count": 32,
+    "minimum_family_count": 8,
+    "minimum_fixtures_per_family": 3,
+    "default_fixtures_per_family": 4
+  },
+  "slot_policy": {
+    "next_step_slots": [
+      "action_verb",
+      "primary_target",
+      "gating_constraint"
+    ],
+    "rubric_fallback_default": false
+  },
+  "fixtures": [
+    {
+      "fixture_id": "v3-001",
+      "family_id": "authoritative_log_overrides_note",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-002",
+      "family_id": "authoritative_log_overrides_note",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-003",
+      "family_id": "authoritative_log_overrides_note",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-004",
+      "family_id": "authoritative_log_overrides_note",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-005",
+      "family_id": "stale_active_context_must_be_ignored",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-006",
+      "family_id": "stale_active_context_must_be_ignored",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-007",
+      "family_id": "stale_active_context_must_be_ignored",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflict_or_absence"
+    },
+    {
+      "fixture_id": "v3-008",
+      "family_id": "stale_active_context_must_be_ignored",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-009",
+      "family_id": "blocked_work_requires_escalation",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-010",
+      "family_id": "blocked_work_requires_escalation",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-011",
+      "family_id": "blocked_work_requires_escalation",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-012",
+      "family_id": "blocked_work_requires_escalation",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-013",
+      "family_id": "abstain_when_no_authoritative_source",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-014",
+      "family_id": "abstain_when_no_authoritative_source",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v3-015",
+      "family_id": "abstain_when_no_authoritative_source",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-016",
+      "family_id": "abstain_when_no_authoritative_source",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v3-017",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-018",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v3-019",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "latest_session_log"
+    },
+    {
+      "fixture_id": "v3-020",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "workdoc_notes"
+    },
+    {
+      "fixture_id": "v3-021",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-022",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflict_or_absence"
+    },
+    {
+      "fixture_id": "v3-023",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-024",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-025",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-026",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v3-027",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-028",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-029",
+      "family_id": "resume_with_state_constrained_next_step",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-030",
+      "family_id": "resume_with_state_constrained_next_step",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-031",
+      "family_id": "resume_with_state_constrained_next_step",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v3-032",
+      "family_id": "resume_with_state_constrained_next_step",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "rubric_fallback_family": false,
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    }
+  ]
+}

@@ -1,0 +1,325 @@
+{
+  "version": 1,
+  "round_id": "V4",
+  "status": "frozen_before_full_authoring",
+  "allocation_version": "v4-family-allocation-2026-03-30a",
+  "pack_shape": {
+    "fixture_count": 32,
+    "family_count": 8,
+    "default_fixtures_per_family": 4
+  },
+  "selection_method": [
+    "Select exactly 32 fixtures from the frozen 48-candidate source pool.",
+    "Keep the V3 family inventory and default 4-fixture-per-family pack shape.",
+    "Distribute source areas so no one narrow module family dominates the first pack.",
+    "Leave 16 candidates unallocated as reserve so post-audit substitutions can version forward rather than rewrite the first allocation in place."
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "v4-001",
+      "family_id": "authoritative_log_overrides_note",
+      "source_instance_id": "swebench-harness-run-evaluation",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-002",
+      "family_id": "authoritative_log_overrides_note",
+      "source_instance_id": "swebench-harness-test-spec-utils",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-003",
+      "family_id": "authoritative_log_overrides_note",
+      "source_instance_id": "swebench-inference-run-api",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-004",
+      "family_id": "authoritative_log_overrides_note",
+      "source_instance_id": "swebench-collect-build-dataset",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-005",
+      "family_id": "stale_active_context_must_be_ignored",
+      "source_instance_id": "swebench-harness-prepare-images",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-006",
+      "family_id": "stale_active_context_must_be_ignored",
+      "source_instance_id": "swebench-harness-test-spec-create-scripts",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-007",
+      "family_id": "stale_active_context_must_be_ignored",
+      "source_instance_id": "swebench-inference-run-live",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflict_or_absence"
+    },
+    {
+      "fixture_id": "v4-008",
+      "family_id": "stale_active_context_must_be_ignored",
+      "source_instance_id": "swebench-versioning-get-versions",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-009",
+      "family_id": "blocked_work_requires_escalation",
+      "source_instance_id": "swebench-harness-docker-utils",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-010",
+      "family_id": "blocked_work_requires_escalation",
+      "source_instance_id": "swebench-inference-run-llama",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-011",
+      "family_id": "blocked_work_requires_escalation",
+      "source_instance_id": "swebench-collect-build-dataset-ft",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-012",
+      "family_id": "blocked_work_requires_escalation",
+      "source_instance_id": "swebench-docs-reference-harness",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-013",
+      "family_id": "abstain_when_no_authoritative_source",
+      "source_instance_id": "swebench-harness-grading",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-014",
+      "family_id": "abstain_when_no_authoritative_source",
+      "source_instance_id": "swebench-inference-create-instance",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-015",
+      "family_id": "abstain_when_no_authoritative_source",
+      "source_instance_id": "swebench-collect-make-repo-shell",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-016",
+      "family_id": "abstain_when_no_authoritative_source",
+      "source_instance_id": "swebench-docs-reference-inference",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-017",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "source_instance_id": "swebench-harness-utils",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-018",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "source_instance_id": "swebench-inference-create-text-dataset",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-019",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "source_instance_id": "swebench-collect-make-lite",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-020",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "source_instance_id": "swebench-docs-reference-versioning",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-021",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "source_instance_id": "swebench-harness-docker-build",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-022",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "source_instance_id": "swebench-inference-bm25-retrieval",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-023",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "source_instance_id": "swebench-collect-get-tasks-pipeline",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflict_or_absence"
+    },
+    {
+      "fixture_id": "v4-024",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "source_instance_id": "swebench-docs-guides-evaluation",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-025",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "source_instance_id": "swebench-harness-reporting",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-026",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "source_instance_id": "swebench-inference-eval-retrieval",
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-027",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "source_instance_id": "swebench-collect-lite-criteria",
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-028",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "source_instance_id": "swebench-versioning-utils",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-029",
+      "family_id": "resume_with_state_constrained_next_step",
+      "source_instance_id": "swebench-harness-remove-containers",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-030",
+      "family_id": "resume_with_state_constrained_next_step",
+      "source_instance_id": "swebench-inference-tokenize-dataset",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-031",
+      "family_id": "resume_with_state_constrained_next_step",
+      "source_instance_id": "swebench-collect-get-top-pypi",
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-032",
+      "family_id": "resume_with_state_constrained_next_step",
+      "source_instance_id": "swebench-versioning-constants",
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    }
+  ],
+  "reserve_source_instance_ids": [
+    "swebench-harness-test-spec",
+    "swebench-harness-test-spec-python",
+    "swebench-harness-test-spec-javascript",
+    "swebench-harness-modal-run-evaluation",
+    "swebench-harness-modal-entrypoint",
+    "swebench-harness-modal-utils",
+    "swebench-harness-log-parser-python",
+    "swebench-harness-log-parser-javascript",
+    "swebench-inference-make-datasets-utils",
+    "swebench-inference-llamao-distributed-attention",
+    "swebench-inference-llamao-modeling-flash-llama",
+    "swebench-inference-codellama-device-maps",
+    "swebench-collect-utils",
+    "swebench-collect-print-pulls",
+    "swebench-collect-make-repo-call",
+    "swebench-versioning-extract-web-pvlib"
+  ]
+}

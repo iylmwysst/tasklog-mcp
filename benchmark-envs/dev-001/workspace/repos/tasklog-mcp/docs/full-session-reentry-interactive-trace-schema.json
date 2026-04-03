@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tasklog.dev/schemas/full-session-reentry-interactive-trace.json",
+  "title": "Full Session Re-entry Interactive Trace Batch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "benchmark_type",
+    "split",
+    "project_root",
+    "pack_path",
+    "trace_schema_path",
+    "run_id",
+    "provider",
+    "model_id",
+    "model_family",
+    "reasoning_setting",
+    "runner_name",
+    "runner_version",
+    "traces"
+  ],
+  "properties": {
+    "benchmark_type": {
+      "const": "full_session_reentry_interactive"
+    },
+    "split": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pack_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_schema_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reasoning_setting": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runner_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runner_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scenario_id",
+          "variant_label",
+          "step_budget",
+          "final_status",
+          "model_turns",
+          "run_started_at",
+          "run_finished_at",
+          "tool_calls",
+          "final_answer"
+        ],
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "variant_label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "step_budget": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "max_tool_calls",
+              "max_model_turns",
+              "max_final_answer_attempts"
+            ],
+            "properties": {
+              "max_tool_calls": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "max_model_turns": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "max_final_answer_attempts": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "final_status": {
+            "enum": [
+              "answered",
+              "budget_exhausted",
+              "error",
+              "stopped_without_answer"
+            ]
+          },
+          "model_turns": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "run_started_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "run_finished_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tool_calls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "step_index",
+                "tool_name",
+                "tool_input",
+                "tool_result",
+                "latency_ms"
+              ],
+              "properties": {
+                "step_index": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "tool_name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "tool_input": {
+                  "type": "object"
+                },
+                "tool_result": {},
+                "latency_ms": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "final_answer": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

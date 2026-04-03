@@ -1,0 +1,38 @@
+{
+  "benchmark_type": "llm_reentry_understanding",
+  "split": "dev",
+  "provider": "openai",
+  "model_id": "gpt-5.4-mini",
+  "model_family": "gpt-5.4-mini",
+  "reasoning_setting": "medium",
+  "runner_name": "tasklog-benchmark-runner",
+  "runner_version": "2026-03-28-review",
+  "project_root": "/path/to/workspace",
+  "pack_path": "/tmp/tasklog-llm-dev/llm-reentry-pack.json",
+  "answers_path": "/tmp/tasklog-llm-dev/answers.json",
+  "metadata_path": "/tmp/tasklog-llm-dev/answers.meta.json",
+  "run_id": "run-001",
+  "submitted_at": "2026-03-28T16:00:00Z",
+  "responses": [
+    {
+      "benchmark_type": "llm_reentry_understanding",
+      "scenario_id": "work-reentry-cegiHG",
+      "variant_label": "B",
+      "provider": "openai",
+      "model_id": "gpt-5.4-mini",
+      "model_family": "gpt-5.4-mini",
+      "reasoning_setting": "medium",
+      "runner_name": "tasklog-benchmark-runner",
+      "runner_version": "2026-03-28-review",
+      "run_id": "run-001",
+      "run_started_at": "2026-03-28T16:00:12Z",
+      "run_finished_at": "2026-03-28T16:00:24Z",
+      "latency_ms": 12042,
+      "input_tokens": 1821,
+      "output_tokens": 244,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "estimated_cost_usd": 0.0184
+    }
+  ]
+}

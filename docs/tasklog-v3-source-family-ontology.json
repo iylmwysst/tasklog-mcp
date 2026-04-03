@@ -1,0 +1,46 @@
+{
+  "version": "2026-03-29-v1",
+  "benchmark_type": "tasklog_v3_independent_structured_holdout",
+  "exact_label_to_family": {
+    "active_context": "active_context",
+    "work_summary": "work_record",
+    "latest_session_log": "session_log",
+    "latest_next_steps": "session_log",
+    "workdoc_plan": "workdoc",
+    "workdoc_design": "workdoc",
+    "workdoc_spec": "workdoc",
+    "workdoc_notes": "workdoc",
+    "artifact_file": "artifact",
+    "notes_markdown": "notes",
+    "conflicting_sources": "no_authoritative_source",
+    "no_authoritative_source": "no_authoritative_source"
+  },
+  "families": {
+    "active_context": [
+      "active_context"
+    ],
+    "work_record": [
+      "work_summary"
+    ],
+    "session_log": [
+      "latest_session_log",
+      "latest_next_steps"
+    ],
+    "workdoc": [
+      "workdoc_plan",
+      "workdoc_design",
+      "workdoc_spec",
+      "workdoc_notes"
+    ],
+    "artifact": [
+      "artifact_file"
+    ],
+    "notes": [
+      "notes_markdown"
+    ],
+    "no_authoritative_source": [
+      "conflicting_sources",
+      "no_authoritative_source"
+    ]
+  }
+}

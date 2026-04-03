@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "description": "Initial scripted multi-step scenario pack for the supporting full-session re-entry benchmark. The current pack includes dev, holdout, and stress lanes for review readiness. A blocked-work family is still intentionally absent because the current workspace does not have a strong blocked work candidate with enough benchmark evidence.",
+  "splits": {
+    "dev": [
+      "fsr-dev-active-context",
+      "fsr-dev-stale-active-context",
+      "fsr-dev-multiple-open-works"
+    ],
+    "holdout": [
+      "fsr-holdout-runtime-incident",
+      "fsr-holdout-stale-product-resume",
+      "fsr-holdout-multi-open-admin-vs-product",
+      "fsr-holdout-closed-distractor"
+    ],
+    "stress": [
+      "fsr-stress-full-context-incident",
+      "fsr-stress-closed-distractor-heavy",
+      "fsr-stress-stale-active-many-open"
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "fsr-dev-active-context",
+      "family": "active_work_resume",
+      "target_work_id": "0tetbC",
+      "candidate_work_ids": ["0tetbC", "8V7X0U", "je0AuN", "cegiHG"],
+      "active_work_id": "0tetbC",
+      "require_full_context": false,
+      "note": "Baseline active-work resume case where active context already points at the correct task."
+    },
+    {
+      "scenario_id": "fsr-dev-stale-active-context",
+      "family": "stale_active_context_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["0tetbC", "8V7X0U", "je0AuN", "cegiHG"],
+      "active_work_id": "0tetbC",
+      "require_full_context": false,
+      "note": "Stale active-context case where the session still points at the benchmark work but the target to resume is the open-source product work."
+    },
+    {
+      "scenario_id": "fsr-dev-multiple-open-works",
+      "family": "multiple_open_works_resume",
+      "target_work_id": "cegiHG",
+      "candidate_work_ids": ["cegiHG", "D2r6E7", "rAQj1A", "8V7X0U", "je0AuN"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Multiple-open-work triage case with one concrete runtime incident and several administrative or research alternatives."
+    },
+    {
+      "scenario_id": "fsr-holdout-runtime-incident",
+      "family": "active_work_resume",
+      "target_work_id": "cegiHG",
+      "candidate_work_ids": ["cegiHG", "0tetbC", "je0AuN", "8V7X0U"],
+      "active_work_id": "cegiHG",
+      "require_full_context": false,
+      "note": "Holdout baseline where active context already points at the runtime incident and the main challenge is resisting research or product distractors."
+    },
+    {
+      "scenario_id": "fsr-holdout-stale-product-resume",
+      "family": "stale_active_context_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["0tetbC", "je0AuN", "8V7X0U", "cegiHG"],
+      "active_work_id": "0tetbC",
+      "require_full_context": false,
+      "note": "Holdout stale-context case where the benchmark work is still active in context but the intended resume target is the open-source product work."
+    },
+    {
+      "scenario_id": "fsr-holdout-multi-open-admin-vs-product",
+      "family": "multiple_open_works_resume",
+      "target_work_id": "8V7X0U",
+      "candidate_work_ids": ["0tetbC", "8V7X0U", "je0AuN", "cegiHG", "D2r6E7"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Holdout multi-open case that forces the model to distinguish research, product, incident, and release or admin work."
+    },
+    {
+      "scenario_id": "fsr-holdout-closed-distractor",
+      "family": "closed_work_do_not_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["je0AuN", "lImttL", "XF27hs", "49Q0AJ", "he5q7a"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Holdout case where several completed Tasklog works are plausible distractors but the only resumable target is still-open product work."
+    },
+    {
+      "scenario_id": "fsr-stress-full-context-incident",
+      "family": "active_work_resume",
+      "target_work_id": "cegiHG",
+      "candidate_work_ids": ["cegiHG", "0tetbC", "je0AuN", "8V7X0U", "D2r6E7"],
+      "active_work_id": "",
+      "require_full_context": true,
+      "note": "Stress case that allows or requires deeper context expansion on the runtime incident."
+    },
+    {
+      "scenario_id": "fsr-stress-closed-distractor-heavy",
+      "family": "closed_work_do_not_resume",
+      "target_work_id": "0tetbC",
+      "candidate_work_ids": ["0tetbC", "lImttL", "Ny8vZo", "XF27hs", "49Q0AJ", "QJPc5x"],
+      "active_work_id": "",
+      "require_full_context": false,
+      "note": "Stress case with one open benchmark work surrounded by several polished completed work artifacts."
+    },
+    {
+      "scenario_id": "fsr-stress-stale-active-many-open",
+      "family": "multiple_open_works_resume",
+      "target_work_id": "je0AuN",
+      "candidate_work_ids": ["D2r6E7", "0tetbC", "je0AuN", "cegiHG", "rAQj1A"],
+      "active_work_id": "D2r6E7",
+      "require_full_context": false,
+      "note": "Stress case with stale active context plus several open works that are all superficially resumable."
+    }
+  ]
+}

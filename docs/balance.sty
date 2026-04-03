@@ -1,0 +1,8 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{balance}[2026/04/02 Local shim for CAS template builds]
+
+% The Elsevier CAS class only requires this package to exist in this
+% environment. Keep the public commands as no-ops so local builds work
+% without the upstream balance package.
+\newcommand{\balance}{}
+\newcommand{\nobalance}{}

@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "description": "Frozen current-work split proposal for the fairer LLM re-entry benchmark. Dev is allowed for prompt and protocol debugging. Holdout is reserved for the main claim. Stress is for edge-shape diagnostics and should not be mixed into the primary holdout score.",
+  "selection_rules": [
+    "Exclude benchmark-maintenance work and sparse works.",
+    "Keep holdout diverse across active, done, artifact-heavy, docs-heavy, code-adjacent, and cross-repo shapes.",
+    "Use dev for tuning and protocol debugging only.",
+    "Use stress for edge-case analysis after the holdout protocol is frozen."
+  ],
+  "track_rules": {
+    "primary_holdout": "work_reentry_only",
+    "open_work_discovery": "live_diagnostic_only_until_frozen_fixture_exists",
+    "tasklog_primary_arm": "brief",
+    "latency_cost_model_metadata": "external_runner_metadata"
+  },
+  "splits": {
+    "dev": [
+      "D2r6E7",
+      "bDgxZg",
+      "Ny8vZo",
+      "itpZQ2"
+    ],
+    "holdout": [
+      "cegiHG",
+      "he5q7a",
+      "lImttL",
+      "XF27hs",
+      "49Q0AJ",
+      "6GfxAk"
+    ],
+    "stress": [
+      "iyQLs9",
+      "8mEwNH",
+      "QJPc5x",
+      "74YC4P"
+    ]
+  }
+}

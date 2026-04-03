@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "fixture_id": "dev-001",
+  "created_at": "2026-03-28T22:46:21.121Z",
+  "environment_type": "tasklog_benchmark_fixture",
+  "workspace_root": "workspace",
+  "contamination_controls": [
+    "fresh output directory per fixture",
+    "repo snapshots copied without node_modules, dist, target, .tasklog, or workdocs",
+    "no ambient Tasklog state copied from the operator workspace",
+    "runner should mount only this fixture directory during claim-lane evaluation"
+  ],
+  "state_paths": {
+    "state_root": "workspace/.tasklog",
+    "works_file": "workspace/.tasklog/works.json",
+    "session_log_json": "workspace/.tasklog/session-log.json",
+    "session_log_markdown": "workspace/.tasklog/session-log.md",
+    "active_context_file": "workspace/.tasklog/active-context.json",
+    "workdocs_root": "workspace/workdocs"
+  },
+  "repos": [
+    {
+      "repo_id": "tasklog-mcp",
+      "source_path": "/Users/Lab/Desktop/WebWay/tasklog-mcp",
+      "target_path": "workspace/repos/tasklog-mcp",
+      "source_git_head": "31682184844b9a7ff2d1a3b59572b8117e0defdf"
+    }
+  ]
+}

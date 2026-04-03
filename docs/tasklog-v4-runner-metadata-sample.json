@@ -1,0 +1,38 @@
+{
+  "benchmark_type": "tasklog_v4_swe_grounded_reentry",
+  "split": "holdout",
+  "provider": "openai",
+  "model_id": "gpt-5.4",
+  "model_family": "gpt-5.4",
+  "reasoning_setting": "medium",
+  "runner_name": "tasklog-v4-holdout-runner",
+  "runner_version": "2026-03-31-v4-freeze",
+  "project_root": "/Users/Lab/Desktop/TasklogSweLab/fixtures-v4",
+  "pack_path": "/Users/Lab/Desktop/TasklogSweLab/runs/v4-holdout/run-001/holdout-pack.json",
+  "answers_path": "/Users/Lab/Desktop/TasklogSweLab/runs/v4-holdout/run-001/holdout-answers.json",
+  "metadata_path": "/Users/Lab/Desktop/TasklogSweLab/runs/v4-holdout/run-001/holdout-answers.meta.json",
+  "run_id": "v4-run-001",
+  "submitted_at": "2026-03-31T10:55:00Z",
+  "responses": [
+    {
+      "benchmark_type": "tasklog_v4_swe_grounded_reentry",
+      "scenario_id": "v4-001",
+      "variant_label": "E",
+      "provider": "openai",
+      "model_id": "gpt-5.4",
+      "model_family": "gpt-5.4",
+      "reasoning_setting": "medium",
+      "runner_name": "tasklog-v4-holdout-runner",
+      "runner_version": "2026-03-31-v4-freeze",
+      "run_id": "v4-run-001",
+      "run_started_at": "2026-03-31T10:55:05Z",
+      "run_finished_at": "2026-03-31T10:55:18Z",
+      "latency_ms": 13041,
+      "input_tokens": 2460,
+      "output_tokens": 322,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "estimated_cost_usd": 0.0312
+    }
+  ]
+}

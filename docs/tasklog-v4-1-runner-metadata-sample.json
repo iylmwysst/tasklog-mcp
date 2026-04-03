@@ -1,0 +1,43 @@
+{
+  "benchmark_type": "tasklog_v4_swe_grounded_reentry",
+  "round_id": "V4.1",
+  "split": "holdout",
+  "provider": "openai",
+  "model_id": "gpt-5.4",
+  "model_family": "gpt-5.4",
+  "reasoning_setting": "medium",
+  "runner_name": "tasklog-v4-1-holdout-runner",
+  "runner_version": "2026-03-31-v4-1-go-no-go",
+  "project_root": "/Users/Lab/Desktop/TasklogSweLab/fixtures-v4",
+  "pack_path": "/Users/Lab/Desktop/TasklogSweLab/fixtures-v4/pack-manifest.json",
+  "answers_path": "/tmp/tasklog-v4-1-holdout/v4-1-answers.json",
+  "metadata_path": "/tmp/tasklog-v4-1-holdout/v4-1-answers.meta.json",
+  "run_id": "tasklog-v4-1-slot-a-openai-frontier-large-rep1-2026-03-31T12-15-00-000Z",
+  "submitted_at": "2026-03-31T12:15:00Z",
+  "model_slot": "slot_a_openai_frontier_large",
+  "repetition_index": 1,
+  "status": "completed",
+  "failure_message": null,
+  "responses": [
+    {
+      "benchmark_type": "tasklog_v4_swe_grounded_reentry",
+      "scenario_id": "v4-001",
+      "variant_label": "E",
+      "provider": "openai",
+      "model_id": "gpt-5.4",
+      "model_family": "gpt-5.4",
+      "reasoning_setting": "medium",
+      "runner_name": "tasklog-v4-1-holdout-runner",
+      "runner_version": "2026-03-31-v4-1-go-no-go",
+      "run_id": "tasklog-v4-1-slot-a-openai-frontier-large-rep1-2026-03-31T12-15-00-000Z",
+      "run_started_at": "2026-03-31T12:15:05Z",
+      "run_finished_at": "2026-03-31T12:15:18Z",
+      "latency_ms": 13041,
+      "input_tokens": 2460,
+      "output_tokens": 322,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "estimated_cost_usd": 0.0312
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "round_id": "V4",
+  "status": "audited_subset_passed",
+  "audit_plan_version": "v4-audit-subset-2026-03-30a",
+  "audit_fixture_target": 8,
+  "family_coverage_minimum": 1,
+  "review_status": "passed",
+  "review_method": "human_audit_user_review",
+  "reviewed_at": "2026-03-30T15:30:00.000Z",
+  "selection_rules": [
+    "Select exactly one audited fixture per family for the first 32-fixture allocation.",
+    "Prefer fixtures that span different source areas so the audited subset does not collapse into one narrow module cluster.",
+    "Include at least one ambiguity-heavy fixture and at least one state-constrained next-step fixture in the initial audit slice."
+  ],
+  "selected_fixtures": [
+    {
+      "fixture_id": "v4-001",
+      "family_id": "authoritative_log_overrides_note",
+      "reason": "Covers the core log-vs-note authority pattern on the main harness evaluation entrypoint.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-005",
+      "family_id": "stale_active_context_must_be_ignored",
+      "reason": "Covers stale active-context risk on a concrete harness image-preparation workflow.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-009",
+      "family_id": "blocked_work_requires_escalation",
+      "reason": "Covers explicit escalation gating in a Docker-heavy harness path.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-013",
+      "family_id": "abstain_when_no_authoritative_source",
+      "reason": "Covers ambiguity and abstention behavior in a grading-related code path.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-018",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "reason": "Covers the clarifying-question family on an inference dataset creation workflow.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-021",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "reason": "Covers strong distractor artifacts in a Docker build path where old done-work noise could dominate.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-026",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "reason": "Covers provenance-sensitive tiebreak behavior on a retrieval evaluation source.",
+      "review_status": "audited_pass"
+    },
+    {
+      "fixture_id": "v4-030",
+      "family_id": "resume_with_state_constrained_next_step",
+      "reason": "Covers state-constrained next-step logic on an inference tokenization path.",
+      "review_status": "audited_pass"
+    }
+  ],
+  "pilot_fixture_ids": [
+    "v4-001",
+    "v4-005",
+    "v4-013",
+    "v4-026"
+  ]
+}

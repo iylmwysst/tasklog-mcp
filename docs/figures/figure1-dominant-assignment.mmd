@@ -1,0 +1,51 @@
+---
+config:
+  theme: base
+  flowchart:
+    curve: linear
+    htmlLabels: true
+    nodeSpacing: 40
+    rankSpacing: 48
+  themeVariables:
+    fontFamily: Georgia, "Times New Roman", serif
+    primaryColor: "#f7f8fa"
+    primaryTextColor: "#111827"
+    primaryBorderColor: "#6b7280"
+    secondaryColor: "#e6edf5"
+    tertiaryColor: "#eef2f7"
+    lineColor: "#4b5563"
+    edgeLabelBackground: "#ffffff"
+---
+flowchart TD
+    A["<b>Current Work</b><br/>Which work item currently governs?"] -->|resolved| B["<b>Authoritative Record</b><br/>Which persisted record is entitled to govern that work item?<br/><span style='font-size:12px'><i>pivotal layer</i></span>"]
+    A -->|unresolved| F1["dominant loss =<br/><b>focus_loss</b>"]
+
+    B -->|resolved| C["<b>Readiness Mode</b><br/>Is the valid present mode act, ask, wait, escalate, or abstain?"]
+    B -->|unresolved| F2["dominant loss =<br/><b>authority_loss</b>"]
+
+    C -->|resolved| D["<b>Next Valid Action</b><br/>What concrete next step is justified now?"]
+    C -->|unresolved| F3["dominant loss =<br/><b>readiness_loss</b>"]
+
+    D -->|resolved| E["<b>Closure Status</b><br/>Is the work actually done, falsely done, or still action-governing?"]
+    D -->|unresolved| F4["dominant loss =<br/><b>intent_loss</b>"]
+
+    E -->|resolved| G["<b>Resumed action justified</b><br/><span style='font-size:12px'>or justified non-action outcome</span>"]
+    E -->|unresolved| F5["dominant loss =<br/><b>closure_loss</b>"]
+
+    N["Assign the dominant loss at the earliest unresolved governing layer."]
+    M["Later uncertainty does not outrank an earlier unresolved layer."]
+
+    B -.-> N
+    G -.-> M
+
+    classDef layer fill:#f7f8fa,stroke:#6b7280,stroke-width:1.4px,color:#111827;
+    classDef pivotal fill:#e6edf5,stroke:#334155,stroke-width:2.6px,color:#111827;
+    classDef fail fill:#ffffff,stroke:#9ca3af,stroke-width:1.2px,color:#374151;
+    classDef success fill:#effaf5,stroke:#0f766e,stroke-width:1.8px,color:#134e4a;
+    classDef note fill:#fffaf0,stroke:#c2410c,stroke-dasharray: 4 3,color:#7c2d12;
+
+    class A,C,D,E layer;
+    class B pivotal;
+    class F1,F2,F3,F4,F5 fail;
+    class G success;
+    class N,M note;

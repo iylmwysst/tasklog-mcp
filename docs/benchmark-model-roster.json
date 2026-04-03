@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "description": "Frozen review candidate roster for Tasklog benchmark runs. Exact provider-facing ids and reasoning settings should be recorded in runner metadata for every batch.",
+  "lanes": {
+    "smoke": [
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4-mini",
+        "model_family": "gpt-5.4-mini",
+        "reasoning_setting": "medium"
+      },
+      {
+        "provider": "anthropic",
+        "model_id": "claude-haiku-4.5",
+        "model_family": "claude-haiku-4.5",
+        "reasoning_setting": "standard"
+      }
+    ],
+    "pre_holdout_dev": [
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4-mini",
+        "model_family": "gpt-5.4-mini",
+        "reasoning_setting": "medium"
+      },
+      {
+        "provider": "anthropic",
+        "model_id": "claude-sonnet-4.6",
+        "model_family": "claude-sonnet-4.6",
+        "reasoning_setting": "standard"
+      }
+    ],
+    "holdout": [
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4-mini",
+        "model_family": "gpt-5.4-mini",
+        "reasoning_setting": "medium"
+      },
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4",
+        "model_family": "gpt-5.4",
+        "reasoning_setting": "medium"
+      },
+      {
+        "provider": "anthropic",
+        "model_id": "claude-sonnet-4.6",
+        "model_family": "claude-sonnet-4.6",
+        "reasoning_setting": "standard"
+      },
+      {
+        "provider": "anthropic",
+        "model_id": "claude-opus-4.6",
+        "model_family": "claude-opus-4.6",
+        "reasoning_setting": "standard"
+      }
+    ],
+    "v4_claim": [
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4",
+        "model_family": "gpt-5.4",
+        "reasoning_setting": "medium"
+      },
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4-mini",
+        "model_family": "gpt-5.4-mini",
+        "reasoning_setting": "medium"
+      },
+      {
+        "provider": "anthropic",
+        "model_id": "claude-sonnet-4.6",
+        "model_family": "claude-sonnet-4.6",
+        "reasoning_setting": "standard"
+      }
+    ],
+    "post_holdout_ablation": [
+      {
+        "provider": "openai",
+        "model_id": "gpt-5.4",
+        "model_family": "gpt-5.4",
+        "reasoning_setting": "high"
+      },
+      {
+        "provider": "anthropic",
+        "model_id": "claude-haiku-4.5",
+        "model_family": "claude-haiku-4.5",
+        "reasoning_setting": "standard"
+      }
+    ]
+  }
+}

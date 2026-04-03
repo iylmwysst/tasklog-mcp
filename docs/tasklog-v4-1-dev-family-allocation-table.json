@@ -1,0 +1,245 @@
+{
+  "version": 1,
+  "round_id": "V4.1-dev",
+  "status": "frozen_before_authoring",
+  "allocation_version": "v4-1-dev-family-allocation-2026-03-31a",
+  "pack_shape": {
+    "fixture_count": 16,
+    "family_count": 8,
+    "default_fixtures_per_family": 2
+  },
+  "protocol_basis": "V4.1",
+  "source_disjoint_from_round_id": "V4",
+  "selection_method": [
+    "Select only from the 16 reserve candidates not used by the frozen V4 holdout allocation.",
+    "Keep the same family inventory as V4/V4.1, but shrink to a 16-fixture development lane with 2 fixtures per family.",
+    "Copy the first two V4 family-level decision-shape patterns per family so the dev lane exercises the same protocol boundary without reusing holdout sources.",
+    "Use the development lane for iteration only; evaluate final system changes on V4/V4.1 holdout artifacts."
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "v4-1-dev-001",
+      "family_id": "authoritative_log_overrides_note",
+      "source_instance_id": "swebench-harness-modal-entrypoint",
+      "source_title": "Modal evaluation entrypoint wrapper",
+      "source_area": "harness_modal_eval",
+      "source_rel_paths": [
+        "swebench/harness/modal_eval/run_evaluation_modal_entrypoint.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-002",
+      "family_id": "authoritative_log_overrides_note",
+      "source_instance_id": "swebench-harness-test-spec",
+      "source_title": "Harness test-spec orchestrator",
+      "source_area": "harness_test_spec",
+      "source_rel_paths": [
+        "swebench/harness/test_spec/test_spec.py"
+      ],
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-003",
+      "family_id": "stale_active_context_must_be_ignored",
+      "source_instance_id": "swebench-harness-test-spec-python",
+      "source_title": "Harness Python test-spec rules",
+      "source_area": "harness_test_spec",
+      "source_rel_paths": [
+        "swebench/harness/test_spec/python.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-004",
+      "family_id": "stale_active_context_must_be_ignored",
+      "source_instance_id": "swebench-inference-make-datasets-utils",
+      "source_title": "Inference dataset utility layer",
+      "source_area": "inference_make_datasets",
+      "source_rel_paths": [
+        "swebench/inference/make_datasets/utils.py"
+      ],
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-005",
+      "family_id": "blocked_work_requires_escalation",
+      "source_instance_id": "swebench-harness-modal-run-evaluation",
+      "source_title": "Modal evaluation runner",
+      "source_area": "harness_modal_eval",
+      "source_rel_paths": [
+        "swebench/harness/modal_eval/run_evaluation_modal.py"
+      ],
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-006",
+      "family_id": "blocked_work_requires_escalation",
+      "source_instance_id": "swebench-collect-make-repo-call",
+      "source_title": "Collection make-repo wrapper",
+      "source_area": "collect_make_repo",
+      "source_rel_paths": [
+        "swebench/collect/make_repo/call_make_repo.py"
+      ],
+      "primary_decision_mode": "resume_blocked_with_escalation",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-007",
+      "family_id": "abstain_when_no_authoritative_source",
+      "source_instance_id": "swebench-collect-print-pulls",
+      "source_title": "Collection pull-printing helper",
+      "source_area": "collect",
+      "source_rel_paths": [
+        "swebench/collect/print_pulls.py"
+      ],
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-1-dev-008",
+      "family_id": "abstain_when_no_authoritative_source",
+      "source_instance_id": "swebench-versioning-extract-web-pvlib",
+      "source_title": "Versioning extract-web pvlib helper",
+      "source_area": "versioning_extract_web",
+      "source_rel_paths": [
+        "swebench/versioning/extract_web/get_versions_pvlib-python.py"
+      ],
+      "primary_decision_mode": "abstain_insufficient_evidence",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-009",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "source_instance_id": "swebench-collect-utils",
+      "source_title": "Collection shared utilities",
+      "source_area": "collect",
+      "source_rel_paths": [
+        "swebench/collect/utils.py"
+      ],
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-1-dev-010",
+      "family_id": "ask_single_missing_fact_before_resume",
+      "source_instance_id": "swebench-inference-codellama-device-maps",
+      "source_title": "Codellama device map metadata",
+      "source_area": "inference",
+      "source_rel_paths": [
+        "swebench/inference/codellama_device_maps.json"
+      ],
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "no_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-011",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "source_instance_id": "swebench-harness-test-spec-javascript",
+      "source_title": "Harness JavaScript test-spec rules",
+      "source_area": "harness_test_spec",
+      "source_rel_paths": [
+        "swebench/harness/test_spec/javascript.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-012",
+      "family_id": "done_work_noise_vs_true_active_signal",
+      "source_instance_id": "swebench-harness-log-parser-javascript",
+      "source_title": "Harness JavaScript log parser",
+      "source_area": "harness_log_parsers",
+      "source_rel_paths": [
+        "swebench/harness/log_parsers/javascript.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-013",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "source_instance_id": "swebench-harness-log-parser-python",
+      "source_title": "Harness Python log parser",
+      "source_area": "harness_log_parsers",
+      "source_rel_paths": [
+        "swebench/harness/log_parsers/python.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-014",
+      "family_id": "provenance_tiebreak_between_open_works",
+      "source_instance_id": "swebench-inference-llamao-modeling-flash-llama",
+      "source_title": "Llamao flash-llama model support",
+      "source_area": "inference_llamao",
+      "source_rel_paths": [
+        "swebench/inference/llamao/modeling_flash_llama.py"
+      ],
+      "primary_decision_mode": "ask_clarifying_question",
+      "difficulty": "hard",
+      "candidate_work_id_allowed": true,
+      "expected_label_mode": "conflicting_sources"
+    },
+    {
+      "fixture_id": "v4-1-dev-015",
+      "family_id": "resume_with_state_constrained_next_step",
+      "source_instance_id": "swebench-harness-modal-utils",
+      "source_title": "Modal evaluation utilities",
+      "source_area": "harness_modal_eval",
+      "source_rel_paths": [
+        "swebench/harness/modal_eval/utils.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    },
+    {
+      "fixture_id": "v4-1-dev-016",
+      "family_id": "resume_with_state_constrained_next_step",
+      "source_instance_id": "swebench-inference-llamao-distributed-attention",
+      "source_title": "Llamao distributed attention support",
+      "source_area": "inference_llamao",
+      "source_rel_paths": [
+        "swebench/inference/llamao/distributed_attention.py"
+      ],
+      "primary_decision_mode": "resume_work",
+      "difficulty": "medium",
+      "candidate_work_id_allowed": false,
+      "expected_label_mode": "single_authoritative_source"
+    }
+  ]
+}

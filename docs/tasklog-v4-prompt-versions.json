@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "round_id": "V4",
+  "status": "frozen_before_full_authoring",
+  "generation_prompt_version": "v4-generator-2026-03-30a",
+  "review_prompt_version": "v4-review-2026-03-30a",
+  "generator_model": "codex-5.1-mini",
+  "reviewer_model": "codex-5.2",
+  "work_object_authoring_role": "generator",
+  "reviewer_scope": [
+    "Review and normalize fixture drafts created by the generator.",
+    "Do not originate the first work object or hidden gold answer.",
+    "Check realism against the repo snapshot, family adherence, fairness, and leakage."
+  ],
+  "generator_prompt_must_not_include": [
+    "expected benchmark answer",
+    "winning arm hint",
+    "selected_work_id as gold truth",
+    "final evidence label",
+    "gold next-step wording",
+    "grader-only vocabulary"
+  ],
+  "review_prompt_must_check": [
+    "realism against the repo snapshot",
+    "consistency between repo state and Tasklog state",
+    "absence of gold-answer leakage",
+    "adherence to the assigned family pattern",
+    "fairness across Tasklog and Normalized State arms"
+  ],
+  "generator_output_contract": [
+    "Create one interrupted-work draft state from the frozen repo snapshot and assigned source instance.",
+    "Seed .tasklog state, workdocs, logs, and notes needed for the fixture without embedding hidden gold labels.",
+    "Record a plausible in-progress work object and plausible distractor evidence for the assigned family.",
+    "Leave the final benchmark answer undecided inside the authored artifact."
+  ],
+  "reviewer_output_contract": [
+    "Return either reviewed_pass, reviewed_pass_with_edits, or reviewed_needs_rework.",
+    "Normalize language and structure without injecting a hidden answer key.",
+    "Flag leakage, realism breaks, fairness drift, or family mismatch explicitly."
+  ],
+  "generator_prompt_lines": [
+    "You are the generator role for Tasklog V4 fixture authoring.",
+    "Your job is to create one plausible interrupted-work fixture draft from a frozen SWE-bench repo snapshot and an assigned scenario family.",
+    "You may inspect the frozen repo snapshot and the frozen family-allocation row for this fixture.",
+    "You must create the first work object and surrounding Tasklog state yourself; do not wait for the reviewer to invent it.",
+    "Author a plausible active or blocked work state, supporting logs, workdocs, notes, and distractor evidence that fit the assigned family.",
+    "Preserve ambiguity where the family requires it, but keep the state realistic and inspectable.",
+    "Do not include the expected winner, final selected_work_id, final evidence label, gold next-step wording, or any grader-only hints.",
+    "Do not use benchmark-output knowledge or post-hoc cleanup.",
+    "Return a fixture draft plus generator notes describing any uncertainty that the reviewer should inspect."
+  ],
+  "review_prompt_lines": [
+    "You are the reviewer role for Tasklog V4 fixture authoring.",
+    "You are reviewing a fixture draft created from a frozen SWE-bench repo snapshot.",
+    "You may inspect the repo snapshot, the assigned family row, and the generated Tasklog state.",
+    "Do not author the first work object from scratch unless the draft is being rejected for rework; your role is review and normalization, not primary generation.",
+    "Check whether the drafted work object is plausible for the repo scope, whether distractors are intentional, and whether the family logic is legible.",
+    "Check that neither benchmark arm receives hidden authority shortcuts or answer leakage.",
+    "If you edit, keep the changes local to realism, consistency, neutrality, and formatting. Do not write an answer key into the fixture.",
+    "Return a structured review result with status, required fixes if any, and a short audit-focused rationale."
+  ]
+}

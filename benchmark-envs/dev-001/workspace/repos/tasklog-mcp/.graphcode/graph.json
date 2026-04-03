@@ -1,0 +1,4922 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/config.test.ts",
+      "type": "file",
+      "name": "config.test.ts",
+      "path": "src/config.test.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/config.ts",
+      "type": "file",
+      "name": "config.ts",
+      "path": "src/config.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/config.ts:readServerConfig",
+      "type": "function",
+      "name": "readServerConfig",
+      "path": "src/config.ts",
+      "line": 9,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/config.ts:parseArgs",
+      "type": "function",
+      "name": "parseArgs",
+      "path": "src/config.ts",
+      "line": 27,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "path": "src/index.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:main",
+      "type": "function",
+      "name": "main",
+      "path": "src/index.ts",
+      "line": 62,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:registerResources",
+      "type": "function",
+      "name": "registerResources",
+      "path": "src/index.ts",
+      "line": 98,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:registerTools",
+      "type": "function",
+      "name": "registerTools",
+      "path": "src/index.ts",
+      "line": 139,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:logEntrySchema",
+      "type": "function",
+      "name": "logEntrySchema",
+      "path": "src/index.ts",
+      "line": 621,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:workRecordSchema",
+      "type": "function",
+      "name": "workRecordSchema",
+      "path": "src/index.ts",
+      "line": 641,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:artifactAvailabilitySchema",
+      "type": "function",
+      "name": "artifactAvailabilitySchema",
+      "path": "src/index.ts",
+      "line": 656,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:workArtifactPathsSchema",
+      "type": "function",
+      "name": "workArtifactPathsSchema",
+      "path": "src/index.ts",
+      "line": 665,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:workListEntrySchema",
+      "type": "function",
+      "name": "workListEntrySchema",
+      "path": "src/index.ts",
+      "line": 675,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:workContextSchema",
+      "type": "function",
+      "name": "workContextSchema",
+      "path": "src/index.ts",
+      "line": 684,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:activeContextShape",
+      "type": "function",
+      "name": "activeContextShape",
+      "path": "src/index.ts",
+      "line": 694,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:workDocOutputShape",
+      "type": "function",
+      "name": "workDocOutputShape",
+      "path": "src/index.ts",
+      "line": 708,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:summarizeToolArgs",
+      "type": "function",
+      "name": "summarizeToolArgs",
+      "path": "src/index.ts",
+      "line": 740,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/index.ts:summarizeToolResult",
+      "type": "function",
+      "name": "summarizeToolResult",
+      "path": "src/index.ts",
+      "line": 756,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/logbook.test.ts",
+      "type": "file",
+      "name": "logbook.test.ts",
+      "path": "src/logbook.test.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/logbook.ts",
+      "type": "file",
+      "name": "logbook.ts",
+      "path": "src/logbook.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolveLogbookPaths",
+      "type": "function",
+      "name": "resolveLogbookPaths",
+      "path": "src/logbook.ts",
+      "line": 192,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:readLogEntries",
+      "type": "function",
+      "name": "readLogEntries",
+      "path": "src/logbook.ts",
+      "line": 240,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:appendLogEntry",
+      "type": "function",
+      "name": "appendLogEntry",
+      "path": "src/logbook.ts",
+      "line": 268,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:getRecentLogEntries",
+      "type": "function",
+      "name": "getRecentLogEntries",
+      "path": "src/logbook.ts",
+      "line": 314,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:getOpenThreadEntries",
+      "type": "function",
+      "name": "getOpenThreadEntries",
+      "path": "src/logbook.ts",
+      "line": 325,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:updateLogStatus",
+      "type": "function",
+      "name": "updateLogStatus",
+      "path": "src/logbook.ts",
+      "line": 344,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:amendLogMetadata",
+      "type": "function",
+      "name": "amendLogMetadata",
+      "path": "src/logbook.ts",
+      "line": 363,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:readWorkRecords",
+      "type": "function",
+      "name": "readWorkRecords",
+      "path": "src/logbook.ts",
+      "line": 397,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:startWork",
+      "type": "function",
+      "name": "startWork",
+      "path": "src/logbook.ts",
+      "line": 421,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:listWorks",
+      "type": "function",
+      "name": "listWorks",
+      "path": "src/logbook.ts",
+      "line": 454,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:getActiveContext",
+      "type": "function",
+      "name": "getActiveContext",
+      "path": "src/logbook.ts",
+      "line": 470,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resumeWork",
+      "type": "function",
+      "name": "resumeWork",
+      "path": "src/logbook.ts",
+      "line": 479,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:setWorkStatus",
+      "type": "function",
+      "name": "setWorkStatus",
+      "path": "src/logbook.ts",
+      "line": 502,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:readWorkContext",
+      "type": "function",
+      "name": "readWorkContext",
+      "path": "src/logbook.ts",
+      "line": 530,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:createWorkDoc",
+      "type": "function",
+      "name": "createWorkDoc",
+      "path": "src/logbook.ts",
+      "line": 553,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:appendWorkNote",
+      "type": "function",
+      "name": "appendWorkNote",
+      "path": "src/logbook.ts",
+      "line": 598,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:formatLogEntries",
+      "type": "function",
+      "name": "formatLogEntries",
+      "path": "src/logbook.ts",
+      "line": 638,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:filterRecentLogs",
+      "type": "function",
+      "name": "filterRecentLogs",
+      "path": "src/logbook.ts",
+      "line": 689,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:readPreferredLogFile",
+      "type": "function",
+      "name": "readPreferredLogFile",
+      "path": "src/logbook.ts",
+      "line": 714,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeEntry",
+      "type": "function",
+      "name": "normalizeEntry",
+      "path": "src/logbook.ts",
+      "line": 726,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeWorkRecord",
+      "type": "function",
+      "name": "normalizeWorkRecord",
+      "path": "src/logbook.ts",
+      "line": 768,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:persistEntries",
+      "type": "function",
+      "name": "persistEntries",
+      "path": "src/logbook.ts",
+      "line": 801,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:persistWorkRecords",
+      "type": "function",
+      "name": "persistWorkRecords",
+      "path": "src/logbook.ts",
+      "line": 832,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "function",
+      "name": "readActiveContextRecord",
+      "path": "src/logbook.ts",
+      "line": 837,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:writeActiveContextRecord",
+      "type": "function",
+      "name": "writeActiveContextRecord",
+      "path": "src/logbook.ts",
+      "line": 863,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:buildActiveContextSummary",
+      "type": "function",
+      "name": "buildActiveContextSummary",
+      "path": "src/logbook.ts",
+      "line": 868,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:buildWorkListEntry",
+      "type": "function",
+      "name": "buildWorkListEntry",
+      "path": "src/logbook.ts",
+      "line": 888,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:getArtifactAvailability",
+      "type": "function",
+      "name": "getArtifactAvailability",
+      "path": "src/logbook.ts",
+      "line": 907,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:renderMarkdown",
+      "type": "function",
+      "name": "renderMarkdown",
+      "path": "src/logbook.ts",
+      "line": 918,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:getWorkArtifactPaths",
+      "type": "function",
+      "name": "getWorkArtifactPaths",
+      "path": "src/logbook.ts",
+      "line": 990,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:getArtifactPath",
+      "type": "function",
+      "name": "getArtifactPath",
+      "path": "src/logbook.ts",
+      "line": 1006,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:buildWorkDocContents",
+      "type": "function",
+      "name": "buildWorkDocContents",
+      "path": "src/logbook.ts",
+      "line": 1017,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:markSuperseded",
+      "type": "function",
+      "name": "markSuperseded",
+      "path": "src/logbook.ts",
+      "line": 1101,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:findLogEntry",
+      "type": "function",
+      "name": "findLogEntry",
+      "path": "src/logbook.ts",
+      "line": 1112,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:findWorkRecord",
+      "type": "function",
+      "name": "findWorkRecord",
+      "path": "src/logbook.ts",
+      "line": 1121,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolveWorkReference",
+      "type": "function",
+      "name": "resolveWorkReference",
+      "path": "src/logbook.ts",
+      "line": 1130,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolvePreferredWork",
+      "type": "function",
+      "name": "resolvePreferredWork",
+      "path": "src/logbook.ts",
+      "line": 1157,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolveAppendWorkId",
+      "type": "function",
+      "name": "resolveAppendWorkId",
+      "path": "src/logbook.ts",
+      "line": 1183,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolveActiveWorkFreshness",
+      "type": "function",
+      "name": "resolveActiveWorkFreshness",
+      "path": "src/logbook.ts",
+      "line": 1209,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolveChangeType",
+      "type": "function",
+      "name": "resolveChangeType",
+      "path": "src/logbook.ts",
+      "line": 1233,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:touchWorkRecord",
+      "type": "function",
+      "name": "touchWorkRecord",
+      "path": "src/logbook.ts",
+      "line": 1245,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeSummary",
+      "type": "function",
+      "name": "normalizeSummary",
+      "path": "src/logbook.ts",
+      "line": 1253,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeTitle",
+      "type": "function",
+      "name": "normalizeTitle",
+      "path": "src/logbook.ts",
+      "line": 1262,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeAffectedFiles",
+      "type": "function",
+      "name": "normalizeAffectedFiles",
+      "path": "src/logbook.ts",
+      "line": 1271,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeTags",
+      "type": "function",
+      "name": "normalizeTags",
+      "path": "src/logbook.ts",
+      "line": 1275,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeLogIds",
+      "type": "function",
+      "name": "normalizeLogIds",
+      "path": "src/logbook.ts",
+      "line": 1284,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "function",
+      "name": "normalizeOptionalText",
+      "path": "src/logbook.ts",
+      "line": 1293,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeStatus",
+      "type": "function",
+      "name": "normalizeStatus",
+      "path": "src/logbook.ts",
+      "line": 1298,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeWorkStatus",
+      "type": "function",
+      "name": "normalizeWorkStatus",
+      "path": "src/logbook.ts",
+      "line": 1306,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeChangeType",
+      "type": "function",
+      "name": "normalizeChangeType",
+      "path": "src/logbook.ts",
+      "line": 1314,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeLimit",
+      "type": "function",
+      "name": "normalizeLimit",
+      "path": "src/logbook.ts",
+      "line": 1326,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeRevision",
+      "type": "function",
+      "name": "normalizeRevision",
+      "path": "src/logbook.ts",
+      "line": 1334,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeScopedPath",
+      "type": "function",
+      "name": "normalizeScopedPath",
+      "path": "src/logbook.ts",
+      "line": 1342,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeScopePaths",
+      "type": "function",
+      "name": "normalizeScopePaths",
+      "path": "src/logbook.ts",
+      "line": 1347,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:normalizeTargetPaths",
+      "type": "function",
+      "name": "normalizeTargetPaths",
+      "path": "src/logbook.ts",
+      "line": 1360,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:readPlanTargetPaths",
+      "type": "function",
+      "name": "readPlanTargetPaths",
+      "path": "src/logbook.ts",
+      "line": 1379,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:parseYamlScalar",
+      "type": "function",
+      "name": "parseYamlScalar",
+      "path": "src/logbook.ts",
+      "line": 1417,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:samePathSet",
+      "type": "function",
+      "name": "samePathSet",
+      "path": "src/logbook.ts",
+      "line": 1426,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:isPathWithinScope",
+      "type": "function",
+      "name": "isPathWithinScope",
+      "path": "src/logbook.ts",
+      "line": 1435,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:matchesWorkStatus",
+      "type": "function",
+      "name": "matchesWorkStatus",
+      "path": "src/logbook.ts",
+      "line": 1440,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:matchesWorkQuery",
+      "type": "function",
+      "name": "matchesWorkQuery",
+      "path": "src/logbook.ts",
+      "line": 1451,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:stringField",
+      "type": "function",
+      "name": "stringField",
+      "path": "src/logbook.ts",
+      "line": 1472,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:optionalStringField",
+      "type": "function",
+      "name": "optionalStringField",
+      "path": "src/logbook.ts",
+      "line": 1480,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:slugify",
+      "type": "function",
+      "name": "slugify",
+      "path": "src/logbook.ts",
+      "line": 1484,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:buildUniqueHumanId",
+      "type": "function",
+      "name": "buildUniqueHumanId",
+      "path": "src/logbook.ts",
+      "line": 1494,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:buildHumanId",
+      "type": "function",
+      "name": "buildHumanId",
+      "path": "src/logbook.ts",
+      "line": 1505,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:writeAtomically",
+      "type": "function",
+      "name": "writeAtomically",
+      "path": "src/logbook.ts",
+      "line": 1525,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolvePathWithinRoot",
+      "type": "function",
+      "name": "resolvePathWithinRoot",
+      "path": "src/logbook.ts",
+      "line": 1538,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:resolveInsideProjectRoot",
+      "type": "function",
+      "name": "resolveInsideProjectRoot",
+      "path": "src/logbook.ts",
+      "line": 1549,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:ensureDirectory",
+      "type": "function",
+      "name": "ensureDirectory",
+      "path": "src/logbook.ts",
+      "line": 1560,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:pathExists",
+      "type": "function",
+      "name": "pathExists",
+      "path": "src/logbook.ts",
+      "line": 1564,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:isMissingFile",
+      "type": "function",
+      "name": "isMissingFile",
+      "path": "src/logbook.ts",
+      "line": 1577,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:renderQuotedText",
+      "type": "function",
+      "name": "renderQuotedText",
+      "path": "src/logbook.ts",
+      "line": 1586,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:renderListText",
+      "type": "function",
+      "name": "renderListText",
+      "path": "src/logbook.ts",
+      "line": 1590,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:escapeMarkdownInline",
+      "type": "function",
+      "name": "escapeMarkdownInline",
+      "path": "src/logbook.ts",
+      "line": 1597,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:toYamlScalar",
+      "type": "function",
+      "name": "toYamlScalar",
+      "path": "src/logbook.ts",
+      "line": 1601,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logbook.ts:escapePlainTextField",
+      "type": "function",
+      "name": "escapePlainTextField",
+      "path": "src/logbook.ts",
+      "line": 1605,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/logger.ts",
+      "type": "file",
+      "name": "logger.ts",
+      "path": "src/logger.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logger.ts:createLogger",
+      "type": "function",
+      "name": "createLogger",
+      "path": "src/logger.ts",
+      "line": 19,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logger.ts:serializeError",
+      "type": "function",
+      "name": "serializeError",
+      "path": "src/logger.ts",
+      "line": 24,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logger.ts:createBoundLogger",
+      "type": "function",
+      "name": "createBoundLogger",
+      "path": "src/logger.ts",
+      "line": 38,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logger.ts:write",
+      "type": "function",
+      "name": "write",
+      "path": "src/logger.ts",
+      "line": 39,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/logger.ts:isTruthy",
+      "type": "function",
+      "name": "isTruthy",
+      "path": "src/logger.ts",
+      "line": 65,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/resources.ts",
+      "type": "file",
+      "name": "resources.ts",
+      "path": "src/resources.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/response-format.test.ts",
+      "type": "file",
+      "name": "response-format.test.ts",
+      "path": "src/response-format.test.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.test.ts:makeEntry",
+      "type": "function",
+      "name": "makeEntry",
+      "path": "src/response-format.test.ts",
+      "line": 20,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.test.ts:makeWork",
+      "type": "function",
+      "name": "makeWork",
+      "path": "src/response-format.test.ts",
+      "line": 36,
+      "metadata": {}
+    },
+    {
+      "id": "file:src/response-format.ts",
+      "type": "file",
+      "name": "response-format.ts",
+      "path": "src/response-format.ts",
+      "line": null,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatReadResponse",
+      "type": "function",
+      "name": "formatReadResponse",
+      "path": "src/response-format.ts",
+      "line": 18,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatAppendResponse",
+      "type": "function",
+      "name": "formatAppendResponse",
+      "path": "src/response-format.ts",
+      "line": 33,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatStatusUpdateResponse",
+      "type": "function",
+      "name": "formatStatusUpdateResponse",
+      "path": "src/response-format.ts",
+      "line": 63,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatMetadataAmendResponse",
+      "type": "function",
+      "name": "formatMetadataAmendResponse",
+      "path": "src/response-format.ts",
+      "line": 73,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatActiveContextResponse",
+      "type": "function",
+      "name": "formatActiveContextResponse",
+      "path": "src/response-format.ts",
+      "line": 101,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatWorkListResponse",
+      "type": "function",
+      "name": "formatWorkListResponse",
+      "path": "src/response-format.ts",
+      "line": 125,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatWorkCreatedResponse",
+      "type": "function",
+      "name": "formatWorkCreatedResponse",
+      "path": "src/response-format.ts",
+      "line": 169,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatWorkStatusResponse",
+      "type": "function",
+      "name": "formatWorkStatusResponse",
+      "path": "src/response-format.ts",
+      "line": 181,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatWorkContextResponse",
+      "type": "function",
+      "name": "formatWorkContextResponse",
+      "path": "src/response-format.ts",
+      "line": 190,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:formatWorkDocResponse",
+      "type": "function",
+      "name": "formatWorkDocResponse",
+      "path": "src/response-format.ts",
+      "line": 205,
+      "metadata": {}
+    },
+    {
+      "id": "function:src/response-format.ts:escapePlainTextField",
+      "type": "function",
+      "name": "escapePlainTextField",
+      "path": "src/response-format.ts",
+      "line": 231,
+      "metadata": {}
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/config.ts",
+      "target": "function:src/config.ts:readServerConfig",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/config.ts",
+      "target": "function:src/config.ts:parseArgs",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:main",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:registerResources",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:registerTools",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:logEntrySchema",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:workRecordSchema",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:artifactAvailabilitySchema",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:workArtifactPathsSchema",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:workListEntrySchema",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:workContextSchema",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:activeContextShape",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:workDocOutputShape",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:summarizeToolArgs",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/index.ts",
+      "target": "function:src/index.ts:summarizeToolResult",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolveLogbookPaths",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:appendLogEntry",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:getRecentLogEntries",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:getOpenThreadEntries",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:updateLogStatus",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:amendLogMetadata",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:startWork",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:listWorks",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:getActiveContext",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resumeWork",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:setWorkStatus",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:readWorkContext",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:createWorkDoc",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:appendWorkNote",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:formatLogEntries",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:filterRecentLogs",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:readPreferredLogFile",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeEntry",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeWorkRecord",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:persistEntries",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:persistWorkRecords",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:writeActiveContextRecord",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:buildActiveContextSummary",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:buildWorkListEntry",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:getArtifactAvailability",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:renderMarkdown",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:getWorkArtifactPaths",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:getArtifactPath",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:buildWorkDocContents",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:markSuperseded",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:findLogEntry",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:findWorkRecord",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolveWorkReference",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolvePreferredWork",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolveAppendWorkId",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolveActiveWorkFreshness",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolveChangeType",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:touchWorkRecord",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeSummary",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeTitle",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeAffectedFiles",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeTags",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeLogIds",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeStatus",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeWorkStatus",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeChangeType",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeLimit",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeRevision",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeScopedPath",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeScopePaths",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:normalizeTargetPaths",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:readPlanTargetPaths",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:parseYamlScalar",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:samePathSet",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:isPathWithinScope",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:matchesWorkStatus",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:matchesWorkQuery",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:stringField",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:optionalStringField",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:slugify",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:buildUniqueHumanId",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:buildHumanId",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:writeAtomically",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolvePathWithinRoot",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:resolveInsideProjectRoot",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:ensureDirectory",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:pathExists",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:isMissingFile",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:renderQuotedText",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:renderListText",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:escapeMarkdownInline",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:toYamlScalar",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logbook.ts",
+      "target": "function:src/logbook.ts:escapePlainTextField",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logger.ts",
+      "target": "function:src/logger.ts:createLogger",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logger.ts",
+      "target": "function:src/logger.ts:serializeError",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logger.ts",
+      "target": "function:src/logger.ts:createBoundLogger",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logger.ts",
+      "target": "function:src/logger.ts:write",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/logger.ts",
+      "target": "function:src/logger.ts:isTruthy",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.test.ts",
+      "target": "function:src/response-format.test.ts:makeEntry",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.test.ts",
+      "target": "function:src/response-format.test.ts:makeWork",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatReadResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatAppendResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatStatusUpdateResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatMetadataAmendResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatActiveContextResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatWorkListResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatWorkCreatedResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatWorkStatusResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatWorkContextResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:formatWorkDocResponse",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "file:src/response-format.ts",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "contains",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.file_contains_symbol"
+        },
+        "confidence": {
+          "score": 0.95,
+          "tier": "high"
+        }
+      }
+    },
+    {
+      "source": "function:src/config.ts:readServerConfig",
+      "target": "function:src/config.ts:parseArgs",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:main",
+      "target": "function:src/index.ts:registerResources",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:main",
+      "target": "function:src/index.ts:registerTools",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:activeContextShape",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:workListEntrySchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:workRecordSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:workArtifactPathsSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:workContextSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:logEntrySchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:registerTools",
+      "target": "function:src/index.ts:workDocOutputShape",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workListEntrySchema",
+      "target": "function:src/index.ts:workRecordSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workListEntrySchema",
+      "target": "function:src/index.ts:artifactAvailabilitySchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workContextSchema",
+      "target": "function:src/index.ts:workRecordSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workContextSchema",
+      "target": "function:src/index.ts:workArtifactPathsSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workContextSchema",
+      "target": "function:src/index.ts:artifactAvailabilitySchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workContextSchema",
+      "target": "function:src/index.ts:logEntrySchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:activeContextShape",
+      "target": "function:src/index.ts:workRecordSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/index.ts:workDocOutputShape",
+      "target": "function:src/index.ts:workRecordSchema",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolveLogbookPaths",
+      "target": "function:src/logbook.ts:resolveInsideProjectRoot",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readLogEntries",
+      "target": "function:src/logbook.ts:readPreferredLogFile",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readLogEntries",
+      "target": "function:src/logbook.ts:normalizeEntry",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readLogEntries",
+      "target": "function:src/logbook.ts:isMissingFile",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:resolveAppendWorkId",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:buildUniqueHumanId",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeSummary",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeStatus",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeChangeType",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeAffectedFiles",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeTags",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:normalizeLogIds",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:markSuperseded",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:touchWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:persistWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:appendLogEntry",
+      "target": "function:src/logbook.ts:persistEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getOpenThreadEntries",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getOpenThreadEntries",
+      "target": "function:src/logbook.ts:normalizeLimit",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:updateLogStatus",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:updateLogStatus",
+      "target": "function:src/logbook.ts:findLogEntry",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:updateLogStatus",
+      "target": "function:src/logbook.ts:normalizeStatus",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:updateLogStatus",
+      "target": "function:src/logbook.ts:persistEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:amendLogMetadata",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:amendLogMetadata",
+      "target": "function:src/logbook.ts:findLogEntry",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:amendLogMetadata",
+      "target": "function:src/logbook.ts:normalizeAffectedFiles",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:amendLogMetadata",
+      "target": "function:src/logbook.ts:normalizeTags",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:amendLogMetadata",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:amendLogMetadata",
+      "target": "function:src/logbook.ts:persistEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkRecords",
+      "target": "function:src/logbook.ts:normalizeWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkRecords",
+      "target": "function:src/logbook.ts:isMissingFile",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:normalizeTitle",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:normalizeScopedPath",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:normalizeScopePaths",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:buildUniqueHumanId",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:slugify",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:normalizeTags",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:persistWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:ensureDirectory",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:getWorkArtifactPaths",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:startWork",
+      "target": "function:src/logbook.ts:writeActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:listWorks",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:listWorks",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:listWorks",
+      "target": "function:src/logbook.ts:normalizeLimit",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:listWorks",
+      "target": "function:src/logbook.ts:matchesWorkStatus",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:listWorks",
+      "target": "function:src/logbook.ts:matchesWorkQuery",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:listWorks",
+      "target": "function:src/logbook.ts:buildWorkListEntry",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getActiveContext",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getActiveContext",
+      "target": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getActiveContext",
+      "target": "function:src/logbook.ts:buildActiveContextSummary",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:setWorkStatus",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:setWorkStatus",
+      "target": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:setWorkStatus",
+      "target": "function:src/logbook.ts:findWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:setWorkStatus",
+      "target": "function:src/logbook.ts:normalizeWorkStatus",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:setWorkStatus",
+      "target": "function:src/logbook.ts:persistWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:setWorkStatus",
+      "target": "function:src/logbook.ts:writeActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkContext",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkContext",
+      "target": "function:src/logbook.ts:readLogEntries",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkContext",
+      "target": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkContext",
+      "target": "function:src/logbook.ts:resolvePreferredWork",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkContext",
+      "target": "function:src/logbook.ts:getWorkArtifactPaths",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readWorkContext",
+      "target": "function:src/logbook.ts:getArtifactAvailability",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:formatLogEntries",
+      "target": "function:src/logbook.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:filterRecentLogs",
+      "target": "function:src/logbook.ts:readWorkRecords",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:filterRecentLogs",
+      "target": "function:src/logbook.ts:readActiveContextRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:filterRecentLogs",
+      "target": "function:src/logbook.ts:buildActiveContextSummary",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readPreferredLogFile",
+      "target": "function:src/logbook.ts:pathExists",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:stringField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:optionalStringField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeStatus",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeChangeType",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:resolveChangeType",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeAffectedFiles",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeTags",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeLogIds",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeEntry",
+      "target": "function:src/logbook.ts:normalizeRevision",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:stringField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:normalizeScopedPath",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:optionalStringField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:slugify",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:normalizeWorkStatus",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:normalizeScopePaths",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeWorkRecord",
+      "target": "function:src/logbook.ts:normalizeTags",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:persistEntries",
+      "target": "function:src/logbook.ts:renderMarkdown",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:persistEntries",
+      "target": "function:src/logbook.ts:writeAtomically",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:persistWorkRecords",
+      "target": "function:src/logbook.ts:writeAtomically",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readActiveContextRecord",
+      "target": "function:src/logbook.ts:normalizeOptionalText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readActiveContextRecord",
+      "target": "function:src/logbook.ts:optionalStringField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readActiveContextRecord",
+      "target": "function:src/logbook.ts:isMissingFile",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:writeActiveContextRecord",
+      "target": "function:src/logbook.ts:writeAtomically",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:buildActiveContextSummary",
+      "target": "function:src/logbook.ts:resolveActiveWorkFreshness",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:buildWorkListEntry",
+      "target": "function:src/logbook.ts:getWorkArtifactPaths",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:buildWorkListEntry",
+      "target": "function:src/logbook.ts:getArtifactAvailability",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getArtifactAvailability",
+      "target": "function:src/logbook.ts:pathExists",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:renderMarkdown",
+      "target": "function:src/logbook.ts:escapeMarkdownInline",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:renderMarkdown",
+      "target": "function:src/logbook.ts:renderQuotedText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:renderMarkdown",
+      "target": "function:src/logbook.ts:renderListText",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:getWorkArtifactPaths",
+      "target": "function:src/logbook.ts:resolveInsideProjectRoot",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:buildWorkDocContents",
+      "target": "function:src/logbook.ts:toYamlScalar",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolveWorkReference",
+      "target": "function:src/logbook.ts:findWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolveWorkReference",
+      "target": "function:src/logbook.ts:matchesWorkQuery",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolvePreferredWork",
+      "target": "function:src/logbook.ts:findWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolvePreferredWork",
+      "target": "function:src/logbook.ts:resolveActiveWorkFreshness",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolveAppendWorkId",
+      "target": "function:src/logbook.ts:findWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:resolveAppendWorkId",
+      "target": "function:src/logbook.ts:buildActiveContextSummary",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:touchWorkRecord",
+      "target": "function:src/logbook.ts:findWorkRecord",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeTitle",
+      "target": "function:src/logbook.ts:normalizeSummary",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeScopedPath",
+      "target": "function:src/logbook.ts:resolvePathWithinRoot",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeScopePaths",
+      "target": "function:src/logbook.ts:resolvePathWithinRoot",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeTargetPaths",
+      "target": "function:src/logbook.ts:normalizeScopePaths",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:normalizeTargetPaths",
+      "target": "function:src/logbook.ts:isPathWithinScope",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:readPlanTargetPaths",
+      "target": "function:src/logbook.ts:parseYamlScalar",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:buildUniqueHumanId",
+      "target": "function:src/logbook.ts:buildHumanId",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:pathExists",
+      "target": "function:src/logbook.ts:isMissingFile",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:renderQuotedText",
+      "target": "function:src/logbook.ts:escapeMarkdownInline",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logbook.ts:renderListText",
+      "target": "function:src/logbook.ts:escapeMarkdownInline",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logger.ts:createLogger",
+      "target": "function:src/logger.ts:isTruthy",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logger.ts:createLogger",
+      "target": "function:src/logger.ts:createBoundLogger",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/logger.ts:createBoundLogger",
+      "target": "function:src/logger.ts:write",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatReadResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatAppendResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatStatusUpdateResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatMetadataAmendResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatActiveContextResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatWorkListResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatWorkCreatedResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatWorkStatusResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatWorkContextResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    },
+    {
+      "source": "function:src/response-format.ts:formatWorkDocResponse",
+      "target": "function:src/response-format.ts:escapePlainTextField",
+      "type": "calls",
+      "metadata": {
+        "provenance": {
+          "extractor": "heuristic",
+          "rule": "ts.symbol_call_name_match"
+        },
+        "confidence": {
+          "score": 0.65,
+          "tier": "medium"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "files_scanned": 9,
+    "extractor": "heuristic"
+  }
+}

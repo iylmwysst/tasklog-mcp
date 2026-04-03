@@ -1,0 +1,281 @@
+{
+  "version": 1,
+  "round_id": "V4.1-dev",
+  "status": "frozen_before_authoring",
+  "protocol_basis": "V4.1",
+  "parent_round_id": "V4",
+  "source_dataset": "SWE-bench repo snapshot",
+  "source_pool_type": "source_disjoint_dev_lane_pool",
+  "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+  "upstream_repo_slug": "princeton-nlp/SWE-bench",
+  "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+  "selection_rule_version": "v4-1-dev-source-pool-2026-03-31a",
+  "selection_notes": [
+    "This development lane reuses the V4 source dataset and provenance contract but only from reserve candidates left unused by the frozen V4 holdout allocation.",
+    "The lane keeps the V4.1 protocol boundary while remaining source-disjoint from the visible V4 holdout fixtures.",
+    "All 16 reserve candidates are consumed so the development lane cannot quietly drift back into the holdout source set."
+  ],
+  "disjoint_against_round_id": "V4",
+  "disjoint_against_allocation_path": "docs/tasklog-v4-family-allocation-table.json",
+  "pool_size": 16,
+  "selected_pool_target": 16,
+  "reserve_pool_target": 0,
+  "candidates": [
+    {
+      "source_instance_id": "swebench-harness-test-spec",
+      "source_title": "Harness test-spec orchestrator",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/test_spec/test_spec.py"
+      ],
+      "source_area": "harness_test_spec",
+      "complexity_hint": "hard",
+      "eligible_families": [
+        "authoritative_log_overrides_note",
+        "provenance_tiebreak_between_open_works"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-test-spec-python",
+      "source_title": "Harness Python test-spec rules",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/test_spec/python.py"
+      ],
+      "source_area": "harness_test_spec",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "stale_active_context_must_be_ignored",
+        "ask_single_missing_fact_before_resume"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-test-spec-javascript",
+      "source_title": "Harness JavaScript test-spec rules",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/test_spec/javascript.py"
+      ],
+      "source_area": "harness_test_spec",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "done_work_noise_vs_true_active_signal",
+        "provenance_tiebreak_between_open_works"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-modal-run-evaluation",
+      "source_title": "Modal evaluation runner",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/modal_eval/run_evaluation_modal.py"
+      ],
+      "source_area": "harness_modal_eval",
+      "complexity_hint": "hard",
+      "eligible_families": [
+        "blocked_work_requires_escalation",
+        "resume_with_state_constrained_next_step"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-modal-entrypoint",
+      "source_title": "Modal evaluation entrypoint wrapper",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/modal_eval/run_evaluation_modal_entrypoint.py"
+      ],
+      "source_area": "harness_modal_eval",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "authoritative_log_overrides_note",
+        "stale_active_context_must_be_ignored"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-modal-utils",
+      "source_title": "Modal evaluation utilities",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/modal_eval/utils.py"
+      ],
+      "source_area": "harness_modal_eval",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "ask_single_missing_fact_before_resume",
+        "resume_with_state_constrained_next_step"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-log-parser-python",
+      "source_title": "Harness Python log parser",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/log_parsers/python.py"
+      ],
+      "source_area": "harness_log_parsers",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "provenance_tiebreak_between_open_works",
+        "resume_with_state_constrained_next_step"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-harness-log-parser-javascript",
+      "source_title": "Harness JavaScript log parser",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/harness/log_parsers/javascript.py"
+      ],
+      "source_area": "harness_log_parsers",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "done_work_noise_vs_true_active_signal",
+        "abstain_when_no_authoritative_source"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-inference-make-datasets-utils",
+      "source_title": "Inference dataset utility layer",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/inference/make_datasets/utils.py"
+      ],
+      "source_area": "inference_make_datasets",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "ask_single_missing_fact_before_resume",
+        "stale_active_context_must_be_ignored"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-inference-llamao-distributed-attention",
+      "source_title": "Llamao distributed attention support",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/inference/llamao/distributed_attention.py"
+      ],
+      "source_area": "inference_llamao",
+      "complexity_hint": "hard",
+      "eligible_families": [
+        "blocked_work_requires_escalation",
+        "resume_with_state_constrained_next_step"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-inference-llamao-modeling-flash-llama",
+      "source_title": "Llamao flash-llama model support",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/inference/llamao/modeling_flash_llama.py"
+      ],
+      "source_area": "inference_llamao",
+      "complexity_hint": "hard",
+      "eligible_families": [
+        "done_work_noise_vs_true_active_signal",
+        "provenance_tiebreak_between_open_works"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-inference-codellama-device-maps",
+      "source_title": "Codellama device map metadata",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/inference/codellama_device_maps.json"
+      ],
+      "source_area": "inference",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "abstain_when_no_authoritative_source",
+        "ask_single_missing_fact_before_resume"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-collect-utils",
+      "source_title": "Collection shared utilities",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/collect/utils.py"
+      ],
+      "source_area": "collect",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "ask_single_missing_fact_before_resume",
+        "provenance_tiebreak_between_open_works"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-collect-print-pulls",
+      "source_title": "Collection pull-printing helper",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/collect/print_pulls.py"
+      ],
+      "source_area": "collect",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "abstain_when_no_authoritative_source",
+        "done_work_noise_vs_true_active_signal"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-collect-make-repo-call",
+      "source_title": "Collection make-repo wrapper",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/collect/make_repo/call_make_repo.py"
+      ],
+      "source_area": "collect_make_repo",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "blocked_work_requires_escalation",
+        "resume_with_state_constrained_next_step"
+      ]
+    },
+    {
+      "source_instance_id": "swebench-versioning-extract-web-pvlib",
+      "source_title": "Versioning extract-web pvlib helper",
+      "upstream_repo_slug": "princeton-nlp/SWE-bench",
+      "upstream_commit": "f7bbbb2ccdf479001d6467c9e34af59e44a840f9",
+      "source_vendor_path": "/Users/Lab/Desktop/TasklogSweLab/vendor/SWE-bench",
+      "source_rel_paths": [
+        "swebench/versioning/extract_web/get_versions_pvlib-python.py"
+      ],
+      "source_area": "versioning_extract_web",
+      "complexity_hint": "medium",
+      "eligible_families": [
+        "abstain_when_no_authoritative_source",
+        "provenance_tiebreak_between_open_works"
+      ]
+    }
+  ]
+}
