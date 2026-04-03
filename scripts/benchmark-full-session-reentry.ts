@@ -10,7 +10,9 @@ import {
   resolveLogbookPaths,
   type LogbookPaths,
   type SessionLogEntry,
+  type WorkArtifactAvailability,
   type WorkRecord,
+  type WorkState,
 } from "../src/logbook.js";
 
 const ARTIFACT_FILES = ["design.md", "plan.md", "spec.md", "summary.md", "notes.md"] as const;
@@ -88,6 +90,21 @@ interface StrategyVariant {
 interface BlindVariant {
   label: string;
   payload: string;
+}
+
+interface WorkBrief {
+  work_id: string;
+  title: string;
+  status: string;
+  scope_paths: string[];
+  latest_log_summary: string;
+  next_step_summary: string;
+  artifact_files: string[];
+  used_expanded_context: boolean;
+  artifact_availability: WorkArtifactAvailability;
+  context_mode: string;
+  work_state: WorkState;
+  recent_log_count: number;
 }
 
 interface AnswerKeyVariant {
@@ -350,16 +367,7 @@ async function buildWorkBrief(
   paths: LogbookPaths,
   work: WorkRecord,
   requireFullContext = false,
-): Promise<{
-  work_id: string;
-  title: string;
-  status: string;
-  scope_paths: string[];
-  latest_log_summary: string;
-  next_step_summary: string;
-  artifact_files: string[];
-  used_expanded_context: boolean;
-}> {
+): Promise<WorkBrief> {
   const surface = requireFullContext ? "full" : "brief";
   const context = await readWorkContext(paths, work.work_id, { surface, include_recent_logs: requireFullContext });
   const logs = await readLogEntries(paths);
@@ -368,16 +376,22 @@ async function buildWorkBrief(
     work_id: work.work_id,
     title: context.work.title,
     status: context.work.status,
-    scope_paths: context.reentry_brief?.scope_paths ?? context.work.scope_paths,
-    latest_log_summary: normalizeOptional(
-      context.reentry_brief?.latest_log_summary ?? latestLog(logsForWork)?.summary,
-    ),
+    scope_paths: context.work_state.current_work.scope_paths,
+    latest_log_summary: normalizeOptional(latestLog(logsForWork)?.summary),
     next_step_summary: normalizeOptional(
-      context.reentry_brief?.next_step_summary ?? context.next_step_summary ?? latestNextStep(logsForWork),
+      context.work_state.next_valid_action.summary || latestNextStep(logsForWork),
     ),
-    artifact_files: context.reentry_brief?.artifact_files ?? [],
+    artifact_files: existingArtifactFileNames(context.artifact_availability),
     used_expanded_context: requireFullContext,
+    artifact_availability: context.artifact_availability,
+    context_mode: context.context_mode,
+    work_state: context.work_state,
+    recent_log_count: context.recent_log_count,
   };
+}
+
+function existingArtifactFileNames(availability: WorkArtifactAvailability): string[] {
+  return ARTIFACT_FILES.filter((fileName) => availability[fileName.replace(".md", "") as keyof WorkArtifactAvailability]);
 }
 
 async function noContinuityWorkText(projectRoot: string, work: WorkRecord): Promise<string> {
@@ -589,12 +603,10 @@ function buildTasklogPayload(
         tool: "read_reentry_brief",
         input: { work_id: candidate.work_id },
         result: {
-          title: candidate.title,
-          status: candidate.status,
-          scope_paths: candidate.scope_paths,
-          latest_log_summary: candidate.latest_log_summary,
-          next_step_summary: candidate.next_step_summary,
-          artifact_files: candidate.artifact_files,
+          artifact_availability: candidate.artifact_availability,
+          context_mode: candidate.context_mode,
+          work_state: candidate.work_state,
+          recent_log_count: candidate.recent_log_count,
         },
       })),
     ],

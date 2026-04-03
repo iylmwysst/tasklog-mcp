@@ -530,19 +530,13 @@ function buildWorkReentryTasklogPayload(
   activeContext: Awaited<ReturnType<typeof resumeWork>>,
   workContext: Awaited<ReturnType<typeof readWorkContext>>,
 ): string {
-  const brief = workContext.reentry_brief ?? {
-    title: workContext.work.title,
-    status: workContext.work.status,
-    scope_paths: workContext.work.scope_paths,
-    latest_log_summary: workContext.recent_logs[0]?.summary ?? "",
-    next_step_summary: workContext.next_step_summary ?? "",
-    artifact_files: [],
-  };
-
   return JSON.stringify({
     active_work_title: activeContext.active_work?.title ?? "",
     context_mode: workContext.context_mode,
-    reentry_brief: brief,
+    artifact_availability: workContext.artifact_availability,
+    work_state: workContext.work_state,
+    recent_log_count: workContext.recent_log_count,
+    recent_log_summary: workContext.recent_logs[0]?.summary ?? "",
   }, null, 2);
 }
 

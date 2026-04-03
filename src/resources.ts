@@ -1,8 +1,12 @@
 import {
   ACTIVE_WORK_FRESHNESS,
   APPENDABLE_LOG_STATUSES,
+  AUTHORITY_STATUSES,
   CHANGE_TYPES,
+  GOVERNING_SOURCES,
   LOG_STATUSES,
+  NEXT_ACTION_KINDS,
+  READINESS_MODES,
   WORK_IMPACTS,
   WORK_STATUSES,
 } from "./logbook.js";
@@ -13,6 +17,10 @@ const changeTypeBullets = CHANGE_TYPES.map((changeType) => `- \`${changeType}\``
 const workStatusBullets = WORK_STATUSES.map((status) => `- \`${status}\``).join("\n");
 const workImpactBullets = WORK_IMPACTS.map((impact) => `- \`${impact}\``).join("\n");
 const freshnessBullets = ACTIVE_WORK_FRESHNESS.map((status) => `- \`${status}\``).join("\n");
+const governingSourceBullets = GOVERNING_SOURCES.map((source) => `- \`${source}\``).join("\n");
+const readinessBullets = READINESS_MODES.map((mode) => `- \`${mode}\``).join("\n");
+const authorityBullets = AUTHORITY_STATUSES.map((status) => `- \`${status}\``).join("\n");
+const nextActionBullets = NEXT_ACTION_KINDS.map((kind) => `- \`${kind}\``).join("\n");
 
 export const USAGE_RESOURCE_TEXT = `# Tasklog Usage
 
@@ -22,6 +30,8 @@ Tasklog MCP now works best in a work-first flow.
 
 - \`work\` is the main unit of discovery and resume
 - \`log\` is for session activity only
+- \`resume_capsule\` is the required correctness-first handoff object on each new session log
+- \`work_state\` is the read-time resumptive decision surface returned by \`read_reentry_brief\` and \`read_work_context\`
 - \`note\` is for lightweight capture
 - \`design\`, \`plan\`, \`spec\`, and closed-work \`summary\` are first-class work artifacts
 - human-facing docs live under \`workdocs/\`
@@ -83,9 +93,24 @@ Use:
 - \`resume_work\` when the user wants to continue an existing task
 - \`read_reentry_brief\` as the default first read after choosing one work
 - \`read_work_context\` when the brief is not enough and the session needs the full surface
-- \`get_recent_logs\` when the new session needs the latest handoff summary
+- \`get_recent_logs\` when the new session needs raw session evidence beyond the governing brief
 
 This is the intended session-to-session recovery path. Pull prior context back through Tasklog tools instead of treating the session log as a notebook to read top to bottom. Use \`read_reentry_brief\` first. Expand to \`read_work_context\` only when the brief is not enough. For consolidated closed work, prefer \`summary.md\` as the re-entry brief and treat recent raw logs as secondary evidence. By default, \`read_work_context\` does not inline the summary body or recent raw logs for consolidated work. Use \`include_summary=true\` and \`include_recent_logs=true\` only when that extra evidence is actually needed in context.
+
+Tasklog now exposes resumptive decision state explicitly:
+
+- \`append_session_log\` requires an authored \`resume_capsule\`
+- \`read_reentry_brief\` returns \`work_state\` as the primary resumptive surface
+- \`read_work_context\` returns the same \`work_state\` plus broader evidence
+- \`resume_capsule\` remains the authored handoff object for writes and summary frontmatter, but default read surfaces now center the returned \`work_state\`
+
+### Resume capsule rules
+
+- every new \`append_session_log\` call must include \`resume_capsule\`
+- \`readiness="act"\` and \`readiness="done"\` require both \`blocking_or_missing_fact\` and \`verification_target\` to be empty
+- \`readiness="wait"\` and \`readiness="ask"\` require \`blocking_or_missing_fact\`
+- \`readiness="revalidate"\` requires both \`blocking_or_missing_fact\` and \`verification_target\`
+- \`resume_capsule.current_work\` must match the resolved \`work_id\` for the new log entry
 
 ### Create artifacts by intent
 
@@ -127,6 +152,8 @@ Use \`append_session_log\` when:
 - work is pausing and the next session needs a handoff
 
 The log should summarize what happened in this session. It should not replace work docs.
+
+Every new \`append_session_log\` should attach a \`resume_capsule\` so the next session does not need to infer authority and readiness from scratch.
 
 ## Do / Don't
 
@@ -180,6 +207,22 @@ ${workImpactBullets}
 
 ${changeTypeBullets}
 
+## Governing source values
+
+${governingSourceBullets}
+
+## Readiness values
+
+${readinessBullets}
+
+## Authority status values
+
+${authorityBullets}
+
+## Next valid action kinds
+
+${nextActionBullets}
+
 ## Deprecated behavior
 
 - \`get_open_threads\` is kept for migration only
@@ -223,6 +266,37 @@ type ChangeType =
 
 type LogStatus = "WIP" | "Done" | "Blocked" | "Superseded";
 
+type GoverningSource =
+  | "work_record"
+  | "latest_log"
+  | "summary_doc"
+  | "plan_doc"
+  | "spec_doc"
+  | "notes_doc"
+  | "active_context_hint";
+
+type ReadinessMode = "act" | "wait" | "ask" | "revalidate" | "done";
+
+type AuthorityStatus = "clear" | "weak" | "conflicted";
+
+type NextActionKind =
+  | "resume"
+  | "review_summary"
+  | "inspect_logs"
+  | "wait_for_unblock"
+  | "clarify"
+  | "close";
+
+interface ResumeCapsule {
+  current_work: string;
+  governing_source: GoverningSource[];
+  authority_reason: string;
+  readiness: ReadinessMode;
+  next_valid_action: string;
+  blocking_or_missing_fact?: string;
+  verification_target?: string;
+}
+
 interface SessionLogEntry {
   id: string; // 6-char base62 for new entries
   work_id?: string;
@@ -236,9 +310,33 @@ interface SessionLogEntry {
   blockers?: string;
   related_log_ids?: string[];
   supersedes_log_id?: string;
+  resume_capsule?: ResumeCapsule; // required on new append_session_log writes; may be absent on legacy entries
   revision: number;
   created_at: string;
   updated_at: string;
+}
+
+interface WorkState {
+  current_work: {
+    work_id: string;
+    title: string;
+    status: WorkStatus;
+    context_mode: "active" | "closed/raw" | "closed/consolidated";
+    scope_paths: string[];
+  };
+  authority: {
+    status: AuthorityStatus;
+    basis: GoverningSource[];
+    reason: string;
+  };
+  readiness: {
+    mode: ReadinessMode;
+    reason: string;
+  };
+  next_valid_action: {
+    kind: NextActionKind;
+    summary: string;
+  };
 }
 
 interface ActiveContext {
@@ -263,6 +361,10 @@ interface ActiveContext {
 
 ## Notes
 
+- New \`append_session_log\` calls must include \`resume_capsule\`
+- \`readiness="wait"\` and \`readiness="ask"\` require \`blocking_or_missing_fact\`
+- \`readiness="revalidate"\` requires both \`blocking_or_missing_fact\` and \`verification_target\`
+- \`readiness="act"\` and \`readiness="done"\` require those extra fields to stay empty
 - Old UUID-like log ids remain readable during migration
 - \`related_log_ids\` may still point at legacy ids
 - \`target_paths\` belongs in \`plan.md\` frontmatter, not in the work record
@@ -295,7 +397,36 @@ This starts one work inside a shared workspace root while keeping the scope limi
   "change_type": "feature",
   "affected_files": ["src/logbook.ts", "src/index.ts"],
   "work_id": "a91K2x",
-  "tags": ["work-first", "context"]
+  "tags": ["work-first", "context"],
+  "resume_capsule": {
+    "current_work": "a91K2x",
+    "governing_source": ["work_record", "latest_log", "notes_doc"],
+    "authority_reason": "The work record, latest log, and notes agree on the current implementation pass.",
+    "readiness": "act",
+    "next_valid_action": "Resume manual UX validation against the updated resumptive-state surface."
+  }
+}
+\`\`\`
+
+## Good Example: Append a Session Log That Needs Revalidation
+
+\`\`\`json
+{
+  "summary": "Prepared the summary-driven closed-work read path, but the consolidated read still needs a live client check.",
+  "status": "Done",
+  "change_type": "test",
+  "affected_files": ["src/logbook.ts", "src/resources.ts"],
+  "work_id": "a91K2x",
+  "tags": ["summary-doc", "reentry"],
+  "resume_capsule": {
+    "current_work": "a91K2x",
+    "governing_source": ["latest_log", "summary_doc"],
+    "authority_reason": "The code path is updated and the canonical summary exists, but the client surface still needs confirmation.",
+    "readiness": "revalidate",
+    "next_valid_action": "Re-run read_work_context against a consolidated work and compare the returned work_state to the summary frontmatter.",
+    "blocking_or_missing_fact": "No live client verification has confirmed the new consolidated-read behavior yet.",
+    "verification_target": "Confirm consolidated reads prefer summary-derived state until include_recent_logs or include_summary is requested."
+  }
 }
 \`\`\`
 
@@ -325,5 +456,6 @@ Why it is bad:
 
 - The summary does not say what changed
 - The summary does not say what outcome was produced
+- It omits the required \`resume_capsule\` for a new session log
 - It omits work context in a work-first flow when one should exist
 `;

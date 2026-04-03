@@ -12,7 +12,9 @@ import {
   resolveLogbookPaths,
   type LogbookPaths,
   type SessionLogEntry,
+  type WorkArtifactAvailability,
   type WorkRecord,
+  type WorkState,
 } from "../src/logbook.js";
 
 const ARTIFACT_FILES = ["design.md", "plan.md", "spec.md", "summary.md", "notes.md"] as const;
@@ -91,16 +93,31 @@ interface WorkBrief {
   next_step_summary: string;
   artifact_files: string[];
   used_expanded_context: boolean;
+  artifact_availability: WorkArtifactAvailability;
+  context_mode: string;
+  work_state: WorkState;
+  recent_log_count: number;
 }
 
 interface WorkContextBundle {
-  work_id: string;
-  title: string;
-  status: string;
-  scope_paths: string[];
-  latest_log_summary: string;
-  next_step_summary: string;
-  artifact_files: string[];
+  work: {
+    work_id: string;
+    title: string;
+    status: string;
+    scope_paths: string[];
+  };
+  artifact_paths: {
+    workDir: string;
+    designPath: string;
+    planPath: string;
+    specPath: string;
+    summaryPath: string;
+    notesPath: string;
+  };
+  artifact_availability: WorkArtifactAvailability;
+  context_mode: string;
+  work_state: WorkState;
+  recent_log_count: number;
   recent_logs: Array<{
     id: string;
     summary: string;
@@ -493,13 +510,17 @@ async function buildWorkBrief(paths: LogbookPaths, work: WorkRecord, requireFull
     work_id: work.work_id,
     title: context.work.title,
     status: context.work.status,
-    scope_paths: context.reentry_brief?.scope_paths ?? context.work.scope_paths,
-    latest_log_summary: normalizeOptional(context.reentry_brief?.latest_log_summary ?? latestLog(logsForWork)?.summary),
+    scope_paths: context.work_state.current_work.scope_paths,
+    latest_log_summary: normalizeOptional(latestLog(logsForWork)?.summary),
     next_step_summary: normalizeOptional(
-      context.reentry_brief?.next_step_summary ?? context.next_step_summary ?? latestNextStep(logsForWork),
+      context.work_state.next_valid_action.summary || latestNextStep(logsForWork),
     ),
-    artifact_files: context.reentry_brief?.artifact_files ?? [],
+    artifact_files: existingArtifactFileNames(context.artifact_availability),
     used_expanded_context: requireFullContext,
+    artifact_availability: context.artifact_availability,
+    context_mode: context.context_mode,
+    work_state: context.work_state,
+    recent_log_count: context.recent_log_count,
   };
 }
 
@@ -517,17 +538,26 @@ async function buildWorkContextBundle(paths: LogbookPaths, work: WorkRecord, req
       next_steps: entry.next_steps,
       affected_files: entry.affected_files,
     }));
-  const brief = await buildWorkBrief(paths, work, requireFullContext);
   return {
-    work_id: work.work_id,
-    title: context.work.title,
-    status: context.work.status,
-    scope_paths: brief.scope_paths,
-    latest_log_summary: brief.latest_log_summary,
-    next_step_summary: brief.next_step_summary,
-    artifact_files: brief.artifact_files,
+    work: {
+      work_id: context.work.work_id,
+      title: context.work.title,
+      status: context.work.status,
+      scope_paths: context.work.scope_paths,
+    },
+    artifact_paths: context.artifact_paths,
+    artifact_availability: context.artifact_availability,
+    context_mode: context.context_mode,
+    work_state: context.work_state,
+    recent_log_count: context.recent_log_count,
     recent_logs: logsForWork,
   };
+}
+
+function existingArtifactFileNames(availability: WorkArtifactAvailability): string[] {
+  return ["design", "plan", "spec", "summary", "notes"]
+    .filter((name) => availability[name as keyof WorkArtifactAvailability])
+    .map((name) => `${name}.md`);
 }
 
 function sessionPrompt(): string {
@@ -800,7 +830,12 @@ function buildNormalizedVariant(
       { work_id: "string" },
       candidateBriefs.map((candidate) => ({
         input: { work_id: candidate.work_id },
-        result: candidate,
+        result: {
+          artifact_availability: candidate.artifact_availability,
+          context_mode: candidate.context_mode,
+          work_state: candidate.work_state,
+          recent_log_count: candidate.recent_log_count,
+        },
       })),
     ),
     tool(

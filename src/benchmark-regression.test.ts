@@ -25,6 +25,76 @@ async function writeJson(filePath: string, value: unknown): Promise<void> {
   await writeFile(filePath, JSON.stringify(value, null, 2), "utf8");
 }
 
+function minimalReadReentryBriefResult(projectRoot: string) {
+  return {
+    artifact_availability: {
+      design: false,
+      plan: false,
+      spec: false,
+      summary: false,
+      notes: false,
+    },
+    context_mode: "active",
+    work_state: {
+      current_work: {
+        work_id: "0tetbC",
+        title: "Measure Tasklog re-entry value",
+        status: "active",
+        context_mode: "active",
+        scope_paths: [path.join(projectRoot, "tasklog-mcp")],
+      },
+      authority: {
+        status: "clear",
+        basis: ["work_record", "latest_log"],
+        reason: "Work record and latest log agree.",
+      },
+      readiness: {
+        mode: "act",
+        reason: "The work is active and ready to resume.",
+      },
+      next_valid_action: {
+        kind: "resume",
+        summary: "Next step summary",
+      },
+    },
+    recent_log_count: 1,
+  };
+}
+
+function minimalReadWorkContextResult(projectRoot: string) {
+  return {
+    work: {
+      work_id: "0tetbC",
+      title: "Measure Tasklog re-entry value",
+      slug: "measure-tasklog-re-entry-value",
+      status: "active",
+      start_dir: projectRoot,
+      scope_paths: [path.join(projectRoot, "tasklog-mcp")],
+      created_at: "2026-03-29T00:00:00Z",
+      updated_at: "2026-03-29T00:00:00Z",
+    },
+    artifact_paths: {
+      workDir: path.join(projectRoot, "workdocs/0tetbC-measure-tasklog-re-entry-value"),
+      designPath: path.join(projectRoot, "workdocs/0tetbC-measure-tasklog-re-entry-value/design.md"),
+      planPath: path.join(projectRoot, "workdocs/0tetbC-measure-tasklog-re-entry-value/plan.md"),
+      specPath: path.join(projectRoot, "workdocs/0tetbC-measure-tasklog-re-entry-value/spec.md"),
+      summaryPath: path.join(projectRoot, "workdocs/0tetbC-measure-tasklog-re-entry-value/summary.md"),
+      notesPath: path.join(projectRoot, "workdocs/0tetbC-measure-tasklog-re-entry-value/notes.md"),
+    },
+    artifact_availability: {
+      design: false,
+      plan: false,
+      spec: false,
+      summary: false,
+      notes: false,
+    },
+    context_mode: "active",
+    work_state: minimalReadReentryBriefResult(projectRoot).work_state,
+    recent_logs: [],
+    recent_log_count: 1,
+  };
+}
+
 function minimalV4HoldoutBatch() {
   return {
     benchmark_type: "tasklog_v4_swe_grounded_reentry",
@@ -294,16 +364,7 @@ function minimalInteractiveKey(projectRoot: string) {
                   deterministic_responses: [
                     {
                       input: { work_id: "0tetbC" },
-                      result: {
-                        work_id: "0tetbC",
-                        title: "Measure Tasklog re-entry value",
-                        status: "active",
-                        scope_paths: [path.join(projectRoot, "tasklog-mcp")],
-                        latest_log_summary: "Latest log summary",
-                        next_step_summary: "Next step summary",
-                        artifact_files: [],
-                        recent_logs: [],
-                      },
+                      result: minimalReadWorkContextResult(projectRoot),
                     },
                   ],
                 },
@@ -314,16 +375,7 @@ function minimalInteractiveKey(projectRoot: string) {
                   deterministic_responses: [
                     {
                       input: { work_id: "0tetbC" },
-                      result: {
-                        work_id: "0tetbC",
-                        title: "Measure Tasklog re-entry value",
-                        status: "active",
-                        scope_paths: [path.join(projectRoot, "tasklog-mcp")],
-                        latest_log_summary: "Latest log summary",
-                        next_step_summary: "Next step summary",
-                        artifact_files: [],
-                        used_expanded_context: false,
-                      },
+                      result: minimalReadReentryBriefResult(projectRoot),
                     },
                   ],
                 },
@@ -744,16 +796,7 @@ test("bench:session:interactive grading loads frozen answer key from sibling pat
             step_index: 3,
             tool_name: "read_reentry_brief",
             tool_input: { work_id: "0tetbC" },
-            tool_result: {
-              work_id: "0tetbC",
-              title: "Measure Tasklog re-entry value",
-              status: "active",
-              scope_paths: [path.join(projectRoot, "tasklog-mcp")],
-              latest_log_summary: "Latest log summary",
-              next_step_summary: "Next step summary",
-              artifact_files: [],
-              used_expanded_context: false,
-            },
+            tool_result: minimalReadReentryBriefResult(projectRoot),
             latency_ms: 5,
           },
         ],
@@ -820,16 +863,7 @@ test("bench:session:interactive grading records tool policy violations", async (
             step_index: 1,
             tool_name: "read_reentry_brief",
             tool_input: { work_id: "0tetbC" },
-            tool_result: {
-              work_id: "0tetbC",
-              title: "Measure Tasklog re-entry value",
-              status: "active",
-              scope_paths: [path.join(projectRoot, "tasklog-mcp")],
-              latest_log_summary: "Latest log summary",
-              next_step_summary: "Next step summary",
-              artifact_files: [],
-              used_expanded_context: false,
-            },
+            tool_result: minimalReadReentryBriefResult(projectRoot),
             latency_ms: 5,
           },
         ],
@@ -949,16 +983,7 @@ test("bench:session:interactive grading flags fixture replay mismatches", async 
             step_index: 3,
             tool_name: "read_reentry_brief",
             tool_input: { work_id: "0tetbC" },
-            tool_result: {
-              work_id: "0tetbC",
-              title: "Measure Tasklog re-entry value",
-              status: "active",
-              scope_paths: [path.join(projectRoot, "tasklog-mcp")],
-              latest_log_summary: "Latest log summary",
-              next_step_summary: "Next step summary",
-              artifact_files: [],
-              used_expanded_context: false,
-            },
+            tool_result: minimalReadReentryBriefResult(projectRoot),
             latency_ms: 5,
           }
         ],
@@ -1046,16 +1071,7 @@ test("bench:session:interactive grading flags read_work_context before brief", a
             step_index: 3,
             tool_name: "read_work_context",
             tool_input: { work_id: "0tetbC" },
-            tool_result: {
-              work_id: "0tetbC",
-              title: "Measure Tasklog re-entry value",
-              status: "active",
-              scope_paths: [path.join(projectRoot, "tasklog-mcp")],
-              latest_log_summary: "Latest log summary",
-              next_step_summary: "Next step summary",
-              artifact_files: [],
-              recent_logs: [],
-            },
+            tool_result: minimalReadWorkContextResult(projectRoot),
             latency_ms: 5,
           }
         ],

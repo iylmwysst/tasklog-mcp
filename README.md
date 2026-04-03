@@ -114,6 +114,8 @@ The main objects are:
 
 - `work`: one coherent effort
 - `log`: one session handoff entry
+- `resume_capsule`: required correctness-first resumptive state stored on each new session log
+- `work_state`: normalized read-time resumptive state returned by Tasklog read tools
 - `design.md`: goals, constraints, tradeoffs
 - `plan.md`: execution sequence and target paths
 - `spec.md`: exact behavior or contract details
@@ -125,6 +127,17 @@ In practice:
 - active work is driven by recent logs plus current workdocs
 - small closed work can stay raw
 - selected closed work can become summary-first
+- resumptive correctness is driven by `work_state`, not only by retrieving more raw context
+
+## Resumptive State
+
+Tasklog now exposes an explicit resumptive decision layer.
+
+- `append_session_log` requires a `resume_capsule` with `current_work`, governing sources, readiness, and the next valid action
+- `read_reentry_brief` returns `work_state` as the primary small re-entry surface
+- `read_work_context` returns the same `work_state` plus broader evidence such as logs, artifacts, and optional summary text
+- `resume_capsule` remains authoritative on write paths and summary frontmatter, but default read surfaces now center the returned `work_state`
+- `get_recent_logs` should be treated as a raw-evidence tool, not as a second re-entry brief
 
 ## Typical Flow
 
@@ -143,6 +156,7 @@ Recommended tool choices:
 - capture exact rules: `create_spec_doc`
 - note something down: `append_work_note`
 - record a session handoff: `append_session_log`
+  include the required `resume_capsule` so the next session can recover authority/readiness without re-inferring them
 
 ## Benchmark
 

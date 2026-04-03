@@ -10,14 +10,18 @@ import {
   appendWorkNote,
   APPENDABLE_LOG_STATUSES,
   ACTIVE_WORK_FRESHNESS,
+  AUTHORITY_STATUSES,
   CHANGE_TYPES,
   createWorkDoc,
+  GOVERNING_SOURCES,
   getActiveContext,
   getOpenThreadEntries,
   getRecentLogEntries,
   listWorks,
   LOG_STATUSES,
+  NEXT_ACTION_KINDS,
   readWorkContext,
+  READINESS_MODES,
   resumeWork,
   setWorkImpact,
   setWorkStatus,
@@ -417,16 +421,13 @@ function registerTools(
     {
       title: "Get recent session logs",
       description:
-        "Read recent session summaries. Defaults to the active work when one is fresh; otherwise falls back to project-wide history.",
+        "Read recent raw session evidence. Defaults to the active work when one is fresh; otherwise falls back to project-wide history.",
       inputSchema: {
         limit: z.number().int().min(1).max(50).default(5).describe("How many recent log entries to return."),
         work_id: z.string().default("").describe("Optional explicit work id filter."),
         project_wide: z.boolean().default(false).describe("When true, ignore the active work and read project-wide history."),
       },
       outputSchema: {
-        project_root: z.string(),
-        json_path: z.string(),
-        markdown_path: z.string(),
         count: z.number().int(),
         entries: z.array(logEntrySchema()),
       },
@@ -437,11 +438,8 @@ function registerTools(
         project_wide,
       });
       return {
-        content: [{ type: "text", text: formatReadResponse("Recent logs", entries, paths) }],
+        content: [{ type: "text", text: formatReadResponse("Recent logs", entries) }],
         structuredContent: {
-          project_root: paths.projectRoot,
-          json_path: paths.jsonPath,
-          markdown_path: paths.markdownPath,
           count: entries.length,
           entries,
         },
@@ -465,6 +463,7 @@ function registerTools(
         blockers: z.string().default("").describe("Optional note describing why work cannot currently proceed."),
         related_log_ids: z.array(z.string().min(1)).default([]).describe("Optional IDs of earlier entries this work relates to."),
         supersedes_log_id: z.string().default("").describe("Optional older entry this new entry takes over."),
+        resume_capsule: resumeCapsuleInputSchema().describe("Required correctness-first resumptive state authored at handoff time."),
         work_id: z.string().default("").describe("Optional explicit work id for this session log."),
       },
       outputSchema: {
@@ -487,6 +486,7 @@ function registerTools(
         blockers,
         related_log_ids,
         supersedes_log_id,
+        resume_capsule,
         work_id,
       }) => {
         const entry = await appendLogEntry(paths, {
@@ -499,6 +499,7 @@ function registerTools(
           blockers,
           related_log_ids,
           supersedes_log_id,
+          resume_capsule,
           work_id: work_id || undefined,
         });
 
@@ -647,7 +648,7 @@ function registerTools(
     observeToolCall(logger, "get_open_threads", async ({ limit }) => {
       const entries = await getOpenThreadEntries(paths, limit);
       return {
-        content: [{ type: "text", text: formatReadResponse("Open threads", entries, paths) }],
+        content: [{ type: "text", text: formatReadResponse("Open threads", entries) }],
         structuredContent: {
           project_root: paths.projectRoot,
           json_path: paths.jsonPath,
@@ -743,6 +744,7 @@ function logEntrySchema() {
     blockers: z.string().optional(),
     related_log_ids: z.array(z.string()).optional(),
     supersedes_log_id: z.string().optional(),
+    resume_capsule: resumeCapsuleSchema().optional(),
     revision: z.number().int(),
     created_at: z.string(),
     updated_at: z.string(),
@@ -786,6 +788,47 @@ function workArtifactPathsSchema() {
   });
 }
 
+function resumeCapsuleInputSchema() {
+  return z.object({
+    current_work: z.string().min(1),
+    governing_source: z.array(z.enum(GOVERNING_SOURCES)).min(1),
+    authority_reason: z.string().min(1),
+    readiness: z.enum(READINESS_MODES),
+    next_valid_action: z.string().min(1),
+    blocking_or_missing_fact: z.string().optional(),
+    verification_target: z.string().optional(),
+  });
+}
+
+function resumeCapsuleSchema() {
+  return resumeCapsuleInputSchema();
+}
+
+function workStateSchema() {
+  return z.object({
+    current_work: z.object({
+      work_id: z.string(),
+      title: z.string(),
+      status: z.enum(WORK_STATUSES),
+      context_mode: z.enum(WORK_CONTEXT_MODES),
+      scope_paths: z.array(z.string()),
+    }),
+    authority: z.object({
+      status: z.enum(AUTHORITY_STATUSES),
+      basis: z.array(z.enum(GOVERNING_SOURCES)),
+      reason: z.string(),
+    }),
+    readiness: z.object({
+      mode: z.enum(READINESS_MODES),
+      reason: z.string(),
+    }),
+    next_valid_action: z.object({
+      kind: z.enum(NEXT_ACTION_KINDS),
+      summary: z.string(),
+    }),
+  });
+}
+
 function workListEntrySchema() {
   return workRecordSchema().extend({
     artifact_availability: artifactAvailabilitySchema(),
@@ -802,52 +845,38 @@ function workContextSchema() {
     artifact_paths: workArtifactPathsSchema(),
     artifact_availability: artifactAvailabilitySchema(),
     context_mode: z.enum(WORK_CONTEXT_MODES),
+    work_state: workStateSchema(),
     recent_logs: z.array(logEntrySchema()),
     recent_log_count: z.number().int(),
-    next_step_summary: z.string().optional(),
     summary_text: z.string().optional(),
-  });
-}
-
-function reentryBriefSchema() {
-  return z.object({
-    title: z.string(),
-    status: z.string(),
-    scope_paths: z.array(z.string()),
-    latest_log_summary: z.string(),
-    next_step_summary: z.string(),
-    artifact_files: z.array(z.string()),
   });
 }
 
 function reentryBriefContextSchema() {
   return z.object({
-    work: workRecordSchema(),
     artifact_availability: artifactAvailabilitySchema(),
     context_mode: z.enum(WORK_CONTEXT_MODES),
+    work_state: workStateSchema(),
     recent_log_count: z.number().int(),
-    summary_text: z.string().optional(),
-    reentry_brief: reentryBriefSchema(),
   });
 }
 
 function toPublicWorkContext(context: Awaited<ReturnType<typeof readWorkContext>>) {
-  const { reentry_brief: _reentryBrief, ...publicContext } = context;
+  const {
+    reentry_brief: _reentryBrief,
+    next_step_summary: _nextStepSummary,
+    resume_capsule: _resumeCapsule,
+    ...publicContext
+  } = context;
   return publicContext;
 }
 
 function toPublicReentryBriefContext(context: Awaited<ReturnType<typeof readWorkContext>>) {
-  if (!context.reentry_brief) {
-    throw new Error("read_reentry_brief requires a brief surface.");
-  }
-
   return {
-    work: context.work,
     artifact_availability: context.artifact_availability,
     context_mode: context.context_mode,
+    work_state: context.work_state,
     recent_log_count: context.recent_log_count,
-    summary_text: context.summary_text,
-    reentry_brief: context.reentry_brief,
   };
 }
 

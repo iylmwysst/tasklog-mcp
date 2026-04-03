@@ -18,13 +18,13 @@ interface LogPathsSummary {
 export function formatReadResponse(
   label: string,
   entries: SessionLogEntry[],
-  paths: LogPathsSummary,
 ): string {
+  if (entries.length === 0) {
+    return `${label}:\nNo session logs recorded.`;
+  }
+
   return [
     `${label}:`,
-    `Project root: ${escapePlainTextField(paths.projectRoot)}`,
-    `JSON log: ${escapePlainTextField(paths.jsonPath)}`,
-    `Markdown log: ${escapePlainTextField(paths.markdownPath)}`,
     "",
     formatLogEntries(entries),
   ].join("\n");
@@ -45,6 +45,13 @@ export function formatAppendResponse(
 
   if (entry.work_id) {
     lines.push(`Work: ${escapePlainTextField(entry.work_id)}`);
+  }
+
+  if (entry.resume_capsule) {
+    lines.push(
+      `Resume readiness: ${escapePlainTextField(entry.resume_capsule.readiness)}`,
+      `Resume action: ${escapePlainTextField(entry.resume_capsule.next_valid_action)}`,
+    );
   }
 
   lines.push(
@@ -229,21 +236,11 @@ export function formatWorkContextResponse(context: WorkContextSummary): string {
     );
   } else {
     lines.push(
-      context.next_step_summary
-        ? `Next step: ${escapePlainTextField(context.next_step_summary)}`
-      : "Next step: (none recorded)",
+      `Next valid action summary: ${escapePlainTextField(context.work_state.next_valid_action.summary)}`,
     );
   }
 
-  if (context.reentry_brief) {
-    lines.push(
-      `Compact re-entry brief: title=${escapePlainTextField(context.reentry_brief.title)} status=${escapePlainTextField(context.reentry_brief.status)}`,
-      `Compact scope: ${context.reentry_brief.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
-      `Compact latest log: ${escapePlainTextField(context.reentry_brief.latest_log_summary || "(none)")}`,
-      `Compact next step: ${escapePlainTextField(context.reentry_brief.next_step_summary || "(none)")}`,
-      `Compact artifacts: ${context.reentry_brief.artifact_files.map((fileName) => escapePlainTextField(fileName)).join(", ") || "(none)"}`,
-    );
-  }
+  lines.push(...formatWorkStateLines(context));
 
   if (context.summary_text) {
     lines.push(
@@ -277,18 +274,11 @@ export function formatWorkContextResponse(context: WorkContextSummary): string {
 }
 
 export function formatReentryBriefResponse(context: WorkContextSummary): string {
-  if (!context.reentry_brief) {
-    return formatWorkContextResponse(context);
-  }
-
   const lines = [
-    `Compact work context: ${escapePlainTextField(context.work.work_id)} ${escapePlainTextField(context.reentry_brief.title)}`,
-    `Status: ${escapePlainTextField(context.reentry_brief.status)}`,
+    `Re-entry brief: ${escapePlainTextField(context.work.work_id)} ${escapePlainTextField(context.work.title)}`,
+    `Status: ${escapePlainTextField(context.work.status)}`,
     `Context mode: ${escapePlainTextField(context.context_mode)}`,
-    `Scope: ${context.reentry_brief.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
-    `Latest log: ${escapePlainTextField(context.reentry_brief.latest_log_summary || "(none)")}`,
-    `Next step: ${escapePlainTextField(context.reentry_brief.next_step_summary || "(none)")}`,
-    `Artifacts: ${context.reentry_brief.artifact_files.map((fileName) => escapePlainTextField(fileName)).join(", ") || "(none)"}`,
+    `Scope: ${context.work.scope_paths.map((scopePath) => escapePlainTextField(scopePath)).join(", ")}`,
   ];
 
   if (context.work.impact) {
@@ -296,12 +286,14 @@ export function formatReentryBriefResponse(context: WorkContextSummary): string 
   }
 
   if (context.context_mode === "closed/consolidated") {
-    if (context.summary_text) {
-      lines.push(`Summary doc: loaded (${context.summary_text.length} chars)`);
-    } else if (context.artifact_availability.summary) {
+    if (context.artifact_availability.summary) {
       lines.push("Summary doc: available (use include_summary=true to inline it)");
     }
+  } else if (context.recent_log_count > 0) {
+    lines.push(`Recent logs: ${context.recent_log_count} available as raw evidence.`);
+  }
 
+  if (context.context_mode === "closed/consolidated") {
     if (context.recent_logs.length > 0) {
       lines.push(`Recent logs: ${context.recent_logs.length} loaded as secondary evidence.`);
     } else if (context.recent_log_count > 0) {
@@ -309,11 +301,25 @@ export function formatReentryBriefResponse(context: WorkContextSummary): string 
     }
   }
 
+  lines.push(...formatWorkStateLines(context));
+
   return lines.join("\n");
 }
 
 export function formatCompactWorkContextResponse(context: WorkContextSummary): string {
   return formatReentryBriefResponse(context);
+}
+
+function formatWorkStateLines(context: WorkContextSummary): string[] {
+  return [
+    `Authority: ${escapePlainTextField(context.work_state.authority.status)} (${context.work_state.authority.basis
+      .map((source) => escapePlainTextField(source))
+      .join(", ")})`,
+    `Authority reason: ${escapePlainTextField(context.work_state.authority.reason)}`,
+    `Readiness: ${escapePlainTextField(context.work_state.readiness.mode)}`,
+    `Readiness reason: ${escapePlainTextField(context.work_state.readiness.reason)}`,
+    `Next valid action: ${escapePlainTextField(context.work_state.next_valid_action.kind)} - ${escapePlainTextField(context.work_state.next_valid_action.summary)}`,
+  ];
 }
 
 export function formatWorkDocResponse(

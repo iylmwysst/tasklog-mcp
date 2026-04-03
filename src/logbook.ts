@@ -18,6 +18,25 @@ export const WORK_STATUSES = ["active", "blocked", "done"] as const;
 export const WORK_IMPACTS = ["low", "medium", "high", "critical"] as const;
 export const ACTIVE_WORK_FRESHNESS = ["fresh", "stale", "invalid"] as const;
 export const WORK_CONTEXT_MODES = ["active", "closed/raw", "closed/consolidated"] as const;
+export const GOVERNING_SOURCES = [
+  "work_record",
+  "latest_log",
+  "summary_doc",
+  "plan_doc",
+  "spec_doc",
+  "notes_doc",
+  "active_context_hint",
+] as const;
+export const READINESS_MODES = ["act", "wait", "ask", "revalidate", "done"] as const;
+export const AUTHORITY_STATUSES = ["clear", "weak", "conflicted"] as const;
+export const NEXT_ACTION_KINDS = [
+  "resume",
+  "review_summary",
+  "inspect_logs",
+  "wait_for_unblock",
+  "clarify",
+  "close",
+] as const;
 
 const WORK_LIST_FILTERS = ["open", "active", "blocked", "done", "all"] as const;
 const WORK_LIST_SORT_FIELDS = ["updated_at", "impact"] as const;
@@ -41,6 +60,43 @@ export type WorkListFilter = (typeof WORK_LIST_FILTERS)[number];
 export type WorkListSortField = (typeof WORK_LIST_SORT_FIELDS)[number];
 export type WorkListSortOrder = (typeof WORK_LIST_SORT_ORDERS)[number];
 export type WorkDocType = keyof typeof WORKDOC_FILENAMES;
+export type GoverningSource = (typeof GOVERNING_SOURCES)[number];
+export type ReadinessMode = (typeof READINESS_MODES)[number];
+export type AuthorityStatus = (typeof AUTHORITY_STATUSES)[number];
+export type NextActionKind = (typeof NEXT_ACTION_KINDS)[number];
+
+export interface ResumeCapsule extends Record<string, unknown> {
+  current_work: string;
+  governing_source: GoverningSource[];
+  authority_reason: string;
+  readiness: ReadinessMode;
+  next_valid_action: string;
+  blocking_or_missing_fact?: string;
+  verification_target?: string;
+}
+
+export interface WorkState extends Record<string, unknown> {
+  current_work: {
+    work_id: string;
+    title: string;
+    status: WorkStatus;
+    context_mode: WorkContextMode;
+    scope_paths: string[];
+  };
+  authority: {
+    status: AuthorityStatus;
+    basis: GoverningSource[];
+    reason: string;
+  };
+  readiness: {
+    mode: ReadinessMode;
+    reason: string;
+  };
+  next_valid_action: {
+    kind: NextActionKind;
+    summary: string;
+  };
+}
 
 export interface SessionLogEntry extends Record<string, unknown> {
   id: string;
@@ -55,6 +111,7 @@ export interface SessionLogEntry extends Record<string, unknown> {
   blockers?: string;
   related_log_ids?: string[];
   supersedes_log_id?: string;
+  resume_capsule?: ResumeCapsule;
   revision: number;
   created_at: string;
   updated_at: string;
@@ -113,10 +170,12 @@ export interface WorkContextSummary extends Record<string, unknown> {
   artifact_paths: WorkArtifactPaths;
   artifact_availability: WorkArtifactAvailability;
   context_mode: WorkContextMode;
+  work_state: WorkState;
   recent_logs: SessionLogEntry[];
   recent_log_count: number;
   next_step_summary?: string;
   summary_text?: string;
+  resume_capsule?: ResumeCapsule;
   reentry_brief?: ReentryBrief;
 }
 
@@ -164,6 +223,7 @@ export interface AppendSessionLogInput {
   blockers?: string;
   related_log_ids?: string[];
   supersedes_log_id?: string;
+  resume_capsule?: ResumeCapsule;
   work_id?: string;
 }
 
@@ -318,6 +378,10 @@ export async function appendLogEntry(
     ]);
     const now = new Date().toISOString();
     const resolvedWorkId = resolveAppendWorkId(works, activeContext, input.work_id);
+    const normalizedResumeCapsule = normalizeResumeCapsule(input.resume_capsule);
+    if (normalizedResumeCapsule && resolvedWorkId && normalizedResumeCapsule.current_work !== resolvedWorkId) {
+      throw new Error("resume_capsule.current_work must match the resolved work_id for this log entry.");
+    }
     const entry: SessionLogEntry = {
       id: buildUniqueHumanId(new Set(currentEntries.map((item) => item.id))),
       work_id: resolvedWorkId,
@@ -331,6 +395,7 @@ export async function appendLogEntry(
       blockers: normalizeOptionalText(input.blockers),
       related_log_ids: normalizeLogIds(input.related_log_ids),
       supersedes_log_id: normalizeOptionalText(input.supersedes_log_id),
+      resume_capsule: normalizedResumeCapsule,
       revision: 1,
       created_at: now,
       updated_at: now,
@@ -599,10 +664,15 @@ export async function readWorkContext(
     readActiveContextRecord(paths),
   ]);
   const work = resolvePreferredWork(works, activeContext, workId);
+  const workLogs = entries.filter((entry) => entry.work_id === work.work_id);
   const artifactPaths = getWorkArtifactPaths(paths, work);
   const artifactAvailability = await getArtifactAvailability(artifactPaths);
-  const allRecentLogs = entries.filter((entry) => entry.work_id === work.work_id).slice(-5).reverse();
+  const allRecentLogs = workLogs.slice(-5).reverse();
   const contextMode = resolveWorkContextMode(work, artifactAvailability);
+  const summaryResumeCapsule =
+    contextMode === "closed/consolidated"
+      ? await readSummaryResumeCapsule(artifactPaths.summaryPath)
+      : undefined;
   const includeRecentLogs =
     contextMode !== "closed/consolidated" || options.include_recent_logs === true;
   const recentLogs = includeRecentLogs ? allRecentLogs : [];
@@ -613,6 +683,20 @@ export async function readWorkContext(
     contextMode === "closed/consolidated"
       ? undefined
       : allRecentLogs.find((entry) => entry.next_steps)?.next_steps;
+  const latestLogResumeCapsule = [...workLogs].reverse().find((entry) => entry.resume_capsule)?.resume_capsule;
+  const resumeCapsule =
+    contextMode === "closed/consolidated"
+      ? summaryResumeCapsule ?? latestLogResumeCapsule
+      : latestLogResumeCapsule;
+  const workState = buildWorkState(
+    work,
+    contextMode,
+    artifactAvailability,
+    workLogs,
+    activeContext,
+    nextStepSummary,
+    resumeCapsule,
+  );
   const useBriefSurface = options.surface === "brief" || options.compact === true;
   const reentryBrief = useBriefSurface
     ? {
@@ -630,10 +714,12 @@ export async function readWorkContext(
     artifact_paths: artifactPaths,
     artifact_availability: artifactAvailability,
     context_mode: contextMode,
+    work_state: workState,
     recent_logs: recentLogs,
     recent_log_count: allRecentLogs.length,
     next_step_summary: nextStepSummary,
     summary_text: summaryText,
+    resume_capsule: resumeCapsule,
     reentry_brief: reentryBrief,
   };
 }
@@ -644,9 +730,10 @@ export async function createWorkDoc(
   input: { work_id?: string; target_paths?: string[] } = {},
 ): Promise<CreateWorkDocResult> {
   return withMutationLock(async () => {
-    const [works, activeContext] = await Promise.all([
+    const [works, activeContext, entries] = await Promise.all([
       readWorkRecords(paths),
       readActiveContextRecord(paths),
+      readLogEntries(paths),
     ]);
     const work = resolvePreferredWork(works, activeContext, input.work_id);
     const artifactPaths = getWorkArtifactPaths(paths, work);
@@ -672,7 +759,11 @@ export async function createWorkDoc(
 
     await ensureDirectory(artifactPaths.workDir);
     if (created) {
-      await writeAtomically(targetPath, buildWorkDocContents(docType, work, targetPaths));
+      const summaryResumeCapsule =
+        docType === "summary"
+          ? buildCanonicalSummaryResumeCapsule(work, entries.filter((entry) => entry.work_id === work.work_id))
+          : undefined;
+      await writeAtomically(targetPath, buildWorkDocContents(docType, work, targetPaths, summaryResumeCapsule));
     }
 
     touchWorkRecord(works, work.work_id, new Date().toISOString());
@@ -769,6 +860,15 @@ export function formatLogEntries(entries: SessionLogEntry[]): string {
         lines.push(`  Supersedes: ${escapePlainTextField(entry.supersedes_log_id)}`);
       }
 
+      if (entry.resume_capsule) {
+        lines.push(
+          `  Resume state: readiness=${escapePlainTextField(entry.resume_capsule.readiness)} basis=${entry.resume_capsule.governing_source
+            .map((source) => escapePlainTextField(source))
+            .join(", ")}`,
+          `  Resume action: ${escapePlainTextField(entry.resume_capsule.next_valid_action)}`,
+        );
+      }
+
       return lines.join("\n");
     })
     .join("\n\n");
@@ -847,6 +947,7 @@ function normalizeEntry(value: unknown, index: number): SessionLogEntry {
         : [],
     ),
     supersedes_log_id: normalizeOptionalText(optionalStringField(entry.supersedes_log_id)),
+    resume_capsule: normalizeResumeCapsule(entry.resume_capsule),
     revision: normalizeRevision(entry.revision),
     created_at: optionalStringField(entry.created_at) ?? timestamp,
     updated_at: optionalStringField(entry.updated_at) ?? timestamp,
@@ -1091,6 +1192,33 @@ function renderMarkdown(entries: SessionLogEntry[]): string {
             section.push("", `**Supersedes**: ${escapeMarkdownInline(entry.supersedes_log_id)}`);
           }
 
+          if (entry.resume_capsule) {
+            section.push(
+              "",
+              "**Resume capsule**",
+              "",
+              `- Current work: ${escapeMarkdownInline(entry.resume_capsule.current_work)}`,
+              `- Governing source: ${entry.resume_capsule.governing_source
+                .map((source) => escapeMarkdownInline(source))
+                .join(", ")}`,
+              `- Readiness: ${escapeMarkdownInline(entry.resume_capsule.readiness)}`,
+              `- Authority reason: ${escapeMarkdownInline(entry.resume_capsule.authority_reason)}`,
+              `- Next valid action: ${escapeMarkdownInline(entry.resume_capsule.next_valid_action)}`,
+            );
+
+            if (entry.resume_capsule.blocking_or_missing_fact) {
+              section.push(
+                `- Blocking or missing fact: ${escapeMarkdownInline(entry.resume_capsule.blocking_or_missing_fact)}`,
+              );
+            }
+
+            if (entry.resume_capsule.verification_target) {
+              section.push(
+                `- Verification target: ${escapeMarkdownInline(entry.resume_capsule.verification_target)}`,
+              );
+            }
+          }
+
           section.push(
             "",
             `**Revision**: ${entry.revision}`,
@@ -1154,6 +1282,7 @@ function buildWorkDocContents(
   docType: WorkDocType,
   work: WorkRecord,
   targetPaths?: string[],
+  summaryResumeCapsule?: ResumeCapsule,
 ): string {
   const frontmatter = [
     "---",
@@ -1170,6 +1299,18 @@ function buildWorkDocContents(
           ...(targetPaths ?? work.scope_paths).map(
             (targetPath) => `  - ${toYamlScalar(targetPath)}`,
           ),
+        ]
+      : []),
+    ...(docType === "summary" && summaryResumeCapsule
+      ? [
+          `resume_current_work: ${toYamlScalar(summaryResumeCapsule.current_work)}`,
+          "resume_governing_source:",
+          ...summaryResumeCapsule.governing_source.map((source) => `  - ${toYamlScalar(source)}`),
+          `resume_authority_reason: ${toYamlScalar(summaryResumeCapsule.authority_reason)}`,
+          `resume_readiness: ${toYamlScalar(summaryResumeCapsule.readiness)}`,
+          `resume_next_valid_action: ${toYamlScalar(summaryResumeCapsule.next_valid_action)}`,
+          `resume_blocking_or_missing_fact: ${toYamlScalar(summaryResumeCapsule.blocking_or_missing_fact ?? "")}`,
+          `resume_verification_target: ${toYamlScalar(summaryResumeCapsule.verification_target ?? "")}`,
         ]
       : []),
     `updated_at: ${toYamlScalar(work.updated_at)}`,
@@ -1244,6 +1385,16 @@ function buildWorkDocContents(
         "## Known limitations or deferred work",
         "",
         "## Re-entry guidance",
+        "",
+        "## Resumptive state",
+        "",
+        "- current work:",
+        "- governing source:",
+        "- authority reason:",
+        "- readiness:",
+        "- next valid action:",
+        "- blocking or missing fact:",
+        "- verification target:",
         "",
         "## Evidence pointers",
         "",
@@ -1404,6 +1555,337 @@ function touchWorkRecord(works: WorkRecord[], workId: string, now: string, summa
   }
 }
 
+function buildWorkState(
+  work: WorkRecord,
+  contextMode: WorkContextMode,
+  artifactAvailability: WorkArtifactAvailability,
+  workLogs: SessionLogEntry[],
+  activeContext: ActiveContextRecord,
+  nextStepSummary: string | undefined,
+  resumeCapsule: ResumeCapsule | undefined,
+): WorkState {
+  const latestBlocker = [...workLogs].reverse().find((entry) => entry.blockers)?.blockers;
+  const basis = resumeCapsule?.governing_source
+    ?? deriveDefaultGoverningSources(work, contextMode, artifactAvailability, workLogs, activeContext);
+  const authority = buildAuthorityState(work, contextMode, basis, workLogs, activeContext, resumeCapsule);
+  const readiness = buildReadinessState(work, contextMode, authority, nextStepSummary, latestBlocker, resumeCapsule);
+  const nextActionKind = mapNextActionKind(readiness.mode, contextMode);
+
+  return {
+    current_work: {
+      work_id: work.work_id,
+      title: work.title,
+      status: work.status,
+      context_mode: contextMode,
+      scope_paths: work.scope_paths,
+    },
+    authority,
+    readiness,
+    next_valid_action: {
+      kind: nextActionKind,
+      summary: buildNextActionSummary(
+        nextActionKind,
+        contextMode,
+        nextStepSummary,
+        latestBlocker,
+        resumeCapsule,
+      ),
+    },
+  };
+}
+
+function buildCanonicalSummaryResumeCapsule(
+  work: WorkRecord,
+  workLogs: SessionLogEntry[],
+): ResumeCapsule {
+  const latestLogResumeCapsule = [...workLogs].reverse().find((entry) => entry.resume_capsule)?.resume_capsule;
+  const governingSource: GoverningSource[] = latestLogResumeCapsule
+    ? Array.from(new Set<GoverningSource>(["summary_doc", ...latestLogResumeCapsule.governing_source]))
+    : ["summary_doc", "work_record", ...(workLogs.length > 0 ? (["latest_log"] as GoverningSource[]) : [])];
+
+  return {
+    current_work: work.work_id,
+    governing_source: governingSource,
+    authority_reason: latestLogResumeCapsule
+      ? `summary.md consolidates the closed-work state after the final handoff. ${latestLogResumeCapsule.authority_reason}`
+      : "summary.md is the canonical closed-work resumptive record for this work.",
+    readiness: "done",
+    next_valid_action: "Review the summary before revisiting this closed work or opening follow-up work.",
+  };
+}
+
+async function readSummaryResumeCapsule(summaryPath: string): Promise<ResumeCapsule | undefined> {
+  const summaryText = await readOptionalTextFile(summaryPath);
+  if (!summaryText) {
+    return undefined;
+  }
+
+  const frontmatter = parseFrontmatter(summaryText);
+  const currentWork = frontmatter.resume_current_work;
+  const governingSource = frontmatter.resume_governing_source;
+  const authorityReason = frontmatter.resume_authority_reason;
+  const readiness = frontmatter.resume_readiness;
+  const nextValidAction = frontmatter.resume_next_valid_action;
+
+  if (
+    typeof currentWork !== "string"
+    || !Array.isArray(governingSource)
+    || typeof authorityReason !== "string"
+    || typeof readiness !== "string"
+    || typeof nextValidAction !== "string"
+  ) {
+    return undefined;
+  }
+
+  return normalizeResumeCapsule({
+    current_work: currentWork,
+    governing_source: governingSource,
+    authority_reason: authorityReason,
+    readiness,
+    next_valid_action: nextValidAction,
+    blocking_or_missing_fact:
+      typeof frontmatter.resume_blocking_or_missing_fact === "string"
+        ? frontmatter.resume_blocking_or_missing_fact
+        : undefined,
+    verification_target:
+      typeof frontmatter.resume_verification_target === "string"
+        ? frontmatter.resume_verification_target
+        : undefined,
+  });
+}
+
+function deriveDefaultGoverningSources(
+  work: WorkRecord,
+  contextMode: WorkContextMode,
+  artifactAvailability: WorkArtifactAvailability,
+  workLogs: SessionLogEntry[],
+  activeContext: ActiveContextRecord,
+): GoverningSource[] {
+  const basis: GoverningSource[] = ["work_record"];
+  if (workLogs.length > 0) {
+    basis.push("latest_log");
+  }
+
+  if (contextMode === "closed/consolidated" && artifactAvailability.summary) {
+    basis.push("summary_doc");
+  }
+
+  const activeWork = activeContext.active_work_id === work.work_id ? work : undefined;
+  if (resolveActiveWorkFreshness(activeContext, activeWork) === "fresh") {
+    basis.push("active_context_hint");
+  }
+
+  return basis;
+}
+
+function buildAuthorityState(
+  work: WorkRecord,
+  contextMode: WorkContextMode,
+  basis: GoverningSource[],
+  workLogs: SessionLogEntry[],
+  activeContext: ActiveContextRecord,
+  resumeCapsule: ResumeCapsule | undefined,
+): WorkState["authority"] {
+  if (resumeCapsule && resumeCapsule.current_work !== work.work_id) {
+    return {
+      status: "conflicted",
+      basis,
+      reason: `Latest resume capsule points to work ${resumeCapsule.current_work} instead of ${work.work_id}.`,
+    };
+  }
+
+  if (work.status === "done" && contextMode === "closed/raw") {
+    return {
+      status: "weak",
+      basis,
+      reason: resumeCapsule?.authority_reason
+        ?? "Done work has no consolidated summary yet, so authority remains weak until the closed state is revalidated.",
+    };
+  }
+
+  if (resumeCapsule) {
+    return {
+      status: basis.length === 1 && basis[0] === "active_context_hint" ? "weak" : "clear",
+      basis,
+      reason: resumeCapsule.authority_reason,
+    };
+  }
+
+  if (basis.length === 1) {
+    return {
+      status: "weak",
+      basis,
+      reason: "No explicit resume capsule is available; authority falls back to a thin persisted state surface.",
+    };
+  }
+
+  const activeWork = activeContext.active_work_id === work.work_id ? work : undefined;
+  const freshness = resolveActiveWorkFreshness(activeContext, activeWork);
+  if (basis.includes("active_context_hint") && freshness !== "fresh") {
+    return {
+      status: "weak",
+      basis,
+      reason: "The active-context hint is stale, so authority depends on persisted work state and recent logs.",
+    };
+  }
+
+  if (contextMode === "closed/consolidated") {
+    return {
+      status: "clear",
+      basis,
+      reason: "Work record and summary doc align on a consolidated closed-work state.",
+    };
+  }
+
+  if (workLogs.length > 0) {
+    return {
+      status: "clear",
+      basis,
+      reason: "Work record and latest log align on the current work state.",
+    };
+  }
+
+  return {
+    status: "weak",
+    basis,
+    reason: "Only the work record is available to govern resumed action.",
+  };
+}
+
+function buildReadinessState(
+  work: WorkRecord,
+  contextMode: WorkContextMode,
+  authority: WorkState["authority"],
+  nextStepSummary: string | undefined,
+  latestBlocker: string | undefined,
+  resumeCapsule: ResumeCapsule | undefined,
+): WorkState["readiness"] {
+  if (authority.status === "conflicted") {
+    return {
+      mode: "revalidate",
+      reason: "Authority is conflicted, so the current state must be revalidated before any action.",
+    };
+  }
+
+  if (resumeCapsule) {
+    return {
+      mode: resumeCapsule.readiness,
+      reason: buildAuthoredReadinessReason(resumeCapsule),
+    };
+  }
+
+  if (work.status === "blocked") {
+    return {
+      mode: "wait",
+      reason: latestBlocker
+        ? `The work is blocked: ${latestBlocker}`
+        : "The work status is blocked, so the correct mode is to wait for an unblock or escalation.",
+    };
+  }
+
+  if (work.status === "done" && contextMode === "closed/consolidated" && authority.status === "clear") {
+    return {
+      mode: "done",
+      reason: "The work is done and has a consolidated summary, so resumed action should default to closure-aware review.",
+    };
+  }
+
+  if (work.status === "done") {
+    return {
+      mode: "revalidate",
+      reason: "The work looks done but lacks a fully consolidated closed-work state.",
+    };
+  }
+
+  if (authority.status === "weak" && nextStepSummary) {
+    return {
+      mode: "revalidate",
+      reason: "A next step exists, but authority is weak enough that the state should be revalidated before resuming.",
+    };
+  }
+
+  if (!nextStepSummary) {
+    return {
+      mode: "ask",
+      reason: "The work is active, but no safe next step is recorded yet.",
+    };
+  }
+
+  return {
+    mode: "act",
+    reason: "The work is active, authority is clear, and a concrete next step is recorded.",
+  };
+}
+
+function buildAuthoredReadinessReason(resumeCapsule: ResumeCapsule): string {
+  switch (resumeCapsule.readiness) {
+    case "act":
+      return "Latest authored handoff says the work is ready to resume directly.";
+    case "wait":
+      return resumeCapsule.blocking_or_missing_fact
+        ? `Latest authored handoff says to wait: ${resumeCapsule.blocking_or_missing_fact}`
+        : "Latest authored handoff says the work should wait.";
+    case "ask":
+      return resumeCapsule.blocking_or_missing_fact
+        ? `Latest authored handoff says one fact is missing: ${resumeCapsule.blocking_or_missing_fact}`
+        : "Latest authored handoff says one missing fact must be clarified.";
+    case "revalidate":
+      return resumeCapsule.verification_target
+        ? `Latest authored handoff says to revalidate: ${resumeCapsule.verification_target}`
+        : "Latest authored handoff says the state must be revalidated.";
+    case "done":
+      return "Latest authored handoff says the work should be treated as complete.";
+  }
+}
+
+function mapNextActionKind(readiness: ReadinessMode, contextMode: WorkContextMode): NextActionKind {
+  switch (readiness) {
+    case "act":
+      return "resume";
+    case "wait":
+      return "wait_for_unblock";
+    case "ask":
+      return "clarify";
+    case "revalidate":
+      return contextMode === "closed/consolidated" ? "review_summary" : "inspect_logs";
+    case "done":
+      return contextMode === "closed/consolidated" ? "review_summary" : "close";
+  }
+}
+
+function buildNextActionSummary(
+  kind: NextActionKind,
+  contextMode: WorkContextMode,
+  nextStepSummary: string | undefined,
+  latestBlocker: string | undefined,
+  resumeCapsule: ResumeCapsule | undefined,
+): string {
+  if (resumeCapsule?.next_valid_action) {
+    return resumeCapsule.next_valid_action;
+  }
+
+  switch (kind) {
+    case "resume":
+      return nextStepSummary ?? "Resume the active work from the latest recorded step.";
+    case "wait_for_unblock":
+      return latestBlocker
+        ? `Wait for unblock: ${latestBlocker}`
+        : "Wait for the blocker or dependency to clear before continuing.";
+    case "clarify":
+      return latestBlocker
+        ? `Clarify the missing fact: ${latestBlocker}`
+        : "Ask for the missing fact needed before the work can continue safely.";
+    case "inspect_logs":
+      return "Inspect the latest logs and workdocs to revalidate the current state before acting.";
+    case "review_summary":
+      return contextMode === "closed/consolidated"
+        ? "Review the summary doc to confirm the closed-work state before taking any follow-up action."
+        : "Review the strongest persisted summary before acting.";
+    case "close":
+      return "Close out the work or write the canonical summary before treating it as fully complete.";
+  }
+}
+
 function normalizeSummary(summary: string): string {
   const trimmed = summary.trim();
   if (!trimmed) {
@@ -1447,6 +1929,85 @@ function normalizeLogIds(logIds: string[] | undefined): string[] | undefined {
 function normalizeOptionalText(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function normalizeResumeCapsule(value: unknown): ResumeCapsule | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (!value || typeof value !== "object") {
+    throw new Error("resume_capsule must be an object when provided.");
+  }
+
+  const capsule = value as Record<string, unknown>;
+  const normalized: ResumeCapsule = {
+    current_work: stringField(capsule.current_work, "resume_capsule.current_work"),
+    governing_source: normalizeGoverningSources(capsule.governing_source),
+    authority_reason: normalizeSummary(stringField(capsule.authority_reason, "resume_capsule.authority_reason")),
+    readiness: normalizeReadinessMode(stringField(capsule.readiness, "resume_capsule.readiness")),
+    next_valid_action: normalizeSummary(stringField(capsule.next_valid_action, "resume_capsule.next_valid_action")),
+    blocking_or_missing_fact: normalizeOptionalText(
+      optionalStringField(capsule.blocking_or_missing_fact),
+    ),
+    verification_target: normalizeOptionalText(optionalStringField(capsule.verification_target)),
+  };
+
+  validateResumeCapsule(normalized);
+  return normalized;
+}
+
+function validateResumeCapsule(capsule: ResumeCapsule): void {
+  switch (capsule.readiness) {
+    case "act":
+      if (capsule.blocking_or_missing_fact) {
+        throw new Error("resume_capsule.blocking_or_missing_fact must be empty for readiness=act.");
+      }
+      if (capsule.verification_target) {
+        throw new Error("resume_capsule.verification_target must be empty for readiness=act.");
+      }
+      break;
+    case "wait":
+    case "ask":
+      if (!capsule.blocking_or_missing_fact) {
+        throw new Error(`resume_capsule.blocking_or_missing_fact is required for readiness=${capsule.readiness}.`);
+      }
+      break;
+    case "revalidate":
+      if (!capsule.verification_target) {
+        throw new Error("resume_capsule.verification_target is required for readiness=revalidate.");
+      }
+      break;
+    case "done":
+      if (capsule.blocking_or_missing_fact) {
+        throw new Error("resume_capsule.blocking_or_missing_fact must be empty for readiness=done.");
+      }
+      break;
+  }
+}
+
+function normalizeGoverningSources(value: unknown): GoverningSource[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error("resume_capsule.governing_source must be a non-empty array.");
+  }
+
+  return [...new Set(value.map((item) => normalizeGoverningSource(stringField(item, "resume_capsule.governing_source item"))))];
+}
+
+function normalizeGoverningSource(source: string): GoverningSource {
+  if (GOVERNING_SOURCES.includes(source as GoverningSource)) {
+    return source as GoverningSource;
+  }
+
+  throw new Error(`Unsupported governing_source: ${source}`);
+}
+
+function normalizeReadinessMode(mode: string): ReadinessMode {
+  if (READINESS_MODES.includes(mode as ReadinessMode)) {
+    return mode as ReadinessMode;
+  }
+
+  throw new Error(`Unsupported readiness mode: ${mode}`);
 }
 
 function normalizeStatus(status: string): LogStatus {
@@ -1544,40 +2105,8 @@ function normalizeTargetPaths(
 
 async function readPlanTargetPaths(planPath: string): Promise<string[] | undefined> {
   const contents = await readFile(planPath, "utf8");
-  const lines = contents.split(/\r?\n/);
-  const targetPaths: string[] = [];
-  let inFrontmatter = false;
-  let collecting = false;
-
-  for (const line of lines) {
-    if (line === "---") {
-      if (!inFrontmatter) {
-        inFrontmatter = true;
-        continue;
-      }
-      break;
-    }
-
-    if (!inFrontmatter) {
-      continue;
-    }
-
-    if (line === "target_paths:") {
-      collecting = true;
-      continue;
-    }
-
-    if (collecting) {
-      if (line.startsWith("  - ")) {
-        targetPaths.push(parseYamlScalar(line.slice(4)));
-        continue;
-      }
-
-      break;
-    }
-  }
-
-  return targetPaths.length > 0 ? targetPaths : undefined;
+  const frontmatter = parseFrontmatter(contents);
+  return Array.isArray(frontmatter.target_paths) ? frontmatter.target_paths : undefined;
 }
 
 function parseYamlScalar(value: string): string {
@@ -1596,6 +2125,63 @@ function samePathSet(left: string[], right: string[]): boolean {
 
   const leftSet = new Set(left);
   return right.every((item) => leftSet.has(item));
+}
+
+function parseFrontmatter(contents: string): Record<string, string | string[]> {
+  const lines = contents.split(/\r?\n/);
+  const fields: Record<string, string | string[]> = {};
+  let inFrontmatter = false;
+  let collectingListKey: string | undefined;
+
+  for (const line of lines) {
+    if (line === "---") {
+      if (!inFrontmatter) {
+        inFrontmatter = true;
+        continue;
+      }
+      break;
+    }
+
+    if (!inFrontmatter) {
+      continue;
+    }
+
+    if (collectingListKey) {
+      if (line.startsWith("  - ")) {
+        const existing = fields[collectingListKey];
+        const nextValue = parseYamlScalar(line.slice(4));
+        if (Array.isArray(existing)) {
+          existing.push(nextValue);
+        } else {
+          fields[collectingListKey] = [nextValue];
+        }
+        continue;
+      }
+
+      collectingListKey = undefined;
+    }
+
+    const separatorIndex = line.indexOf(":");
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    const rest = line.slice(separatorIndex + 1).trim();
+    if (!key) {
+      continue;
+    }
+
+    if (!rest) {
+      fields[key] = [];
+      collectingListKey = key;
+      continue;
+    }
+
+    fields[key] = parseYamlScalar(rest);
+  }
+
+  return fields;
 }
 
 function isPathWithinScope(candidatePath: string, scopePath: string): boolean {

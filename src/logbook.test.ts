@@ -35,6 +35,13 @@ test("appendLogEntry writes canonical and legacy session logs", async () => {
     tags: ["Routing", "auth"],
     next_steps: "Verify that the callback route still lands correctly after refresh.",
     blockers: "",
+    resume_capsule: {
+      current_work: "handoff-work",
+      governing_source: ["work_record", "latest_log"],
+      authority_reason: "The work record and the latest log agree on the governing state.",
+      readiness: "act",
+      next_valid_action: "Resume the callback-route verification pass.",
+    },
   });
 
   assert.match(entry.id, /^[0-9A-Za-z]{6}$/);
@@ -43,10 +50,17 @@ test("appendLogEntry writes canonical and legacy session logs", async () => {
   assert.deepEqual(entry.affected_files, ["src/auth.ts", "src/router.ts"]);
   assert.deepEqual(entry.tags, ["routing", "auth"]);
   assert.equal(entry.work_id, undefined);
+  assert.equal(entry.resume_capsule?.readiness, "act");
   assert.equal(entry.revision, 1);
 
-  const jsonLog = JSON.parse(await readFile(paths.jsonPath, "utf8")) as Array<{ summary: string }>;
-  const legacyJsonLog = JSON.parse(await readFile(paths.legacyJsonPath, "utf8")) as Array<{ summary: string }>;
+  const jsonLog = JSON.parse(await readFile(paths.jsonPath, "utf8")) as Array<{
+    summary: string;
+    resume_capsule?: { readiness: string };
+  }>;
+  const legacyJsonLog = JSON.parse(await readFile(paths.legacyJsonPath, "utf8")) as Array<{
+    summary: string;
+    resume_capsule?: { readiness: string };
+  }>;
   const markdownLog = await readFile(paths.markdownPath, "utf8");
   const legacyMarkdownLog = await readFile(paths.legacyMarkdownPath, "utf8");
 
@@ -54,9 +68,35 @@ test("appendLogEntry writes canonical and legacy session logs", async () => {
   assert.equal(legacyJsonLog.length, 1);
   assert.equal(jsonLog[0]?.summary, "Refined auth guard handling to avoid redirect loops after token expiry.");
   assert.equal(legacyJsonLog[0]?.summary, "Refined auth guard handling to avoid redirect loops after token expiry.");
+  assert.equal(jsonLog[0]?.resume_capsule?.readiness, "act");
+  assert.equal(legacyJsonLog[0]?.resume_capsule?.readiness, "act");
   assert.match(markdownLog, /AI Session Logbook/);
   assert.match(legacyMarkdownLog, /AI Session Logbook/);
   assert.match(markdownLog, /src\/auth\.ts/);
+  assert.match(markdownLog, /Resume capsule/);
+});
+
+test("appendLogEntry validates readiness-specific resume capsule requirements", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+
+  await assert.rejects(
+    () =>
+      appendLogEntry(paths, {
+        summary: "Attempted to log an invalid revalidate handoff.",
+        status: "Blocked",
+        change_type: "investigation",
+        affected_files: [],
+        resume_capsule: {
+          current_work: "abc123",
+          governing_source: ["work_record"],
+          authority_reason: "Work record is the only visible source.",
+          readiness: "revalidate",
+          next_valid_action: "Recheck the state before continuing.",
+        },
+      }),
+    /resume_capsule\.verification_target is required for readiness=revalidate/,
+  );
 });
 
 test("startWork creates a work record and fresh active context", async () => {
@@ -760,6 +800,75 @@ test("readWorkContext distinguishes closed raw work from consolidated work", asy
   assert.equal(closedRaw.context_mode, "closed/raw");
   assert.equal(closedRaw.artifact_availability.summary, false);
   assert.equal(closedRaw.summary_text, undefined);
+  assert.equal(closedRaw.work_state.authority.status, "weak");
+  assert.equal(closedRaw.work_state.readiness.mode, "revalidate");
+  assert.equal(closedRaw.work_state.next_valid_action.kind, "inspect_logs");
+});
+
+test("readWorkContext remaps authored resume capsules into work_state", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Authored resumptive handoff",
+    impact: "high",
+  });
+
+  await appendLogEntry(paths, {
+    summary: "Recorded a correctness-first handoff capsule.",
+    status: "Blocked",
+    change_type: "investigation",
+    affected_files: ["src/logbook.ts"],
+    work_id: work.work_id,
+    blockers: "Need the product decision on summary-doc authority.",
+    resume_capsule: {
+      current_work: work.work_id,
+      governing_source: ["work_record", "latest_log", "plan_doc"],
+      authority_reason: "The work record, latest log, and plan doc still agree on the active scope.",
+      readiness: "ask",
+      next_valid_action: "Ask for the product decision on summary-doc authority before changing the contract.",
+      blocking_or_missing_fact: "Need the product decision on summary-doc authority.",
+    },
+  });
+
+  const briefContext = await readWorkContext(paths, work.work_id, { surface: "brief" });
+  const fullContext = await readWorkContext(paths, work.work_id);
+
+  assert.equal(briefContext.resume_capsule?.readiness, "ask");
+  assert.deepEqual(briefContext.resume_capsule?.governing_source, ["work_record", "latest_log", "plan_doc"]);
+  assert.equal(briefContext.work_state.authority.status, "clear");
+  assert.deepEqual(briefContext.work_state.authority.basis, ["work_record", "latest_log", "plan_doc"]);
+  assert.equal(briefContext.work_state.readiness.mode, "ask");
+  assert.equal(
+    briefContext.work_state.next_valid_action.summary,
+    "Ask for the product decision on summary-doc authority before changing the contract.",
+  );
+  assert.equal(fullContext.work_state.readiness.mode, "ask");
+  assert.equal(fullContext.work_state.next_valid_action.kind, "clarify");
+});
+
+test("readWorkContext maps blocked work to wait when authority is clear", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Blocked review gate",
+  });
+
+  await setWorkStatus(paths, work.work_id, "blocked");
+  await appendLogEntry(paths, {
+    summary: "Paused for review approval.",
+    status: "Blocked",
+    change_type: "investigation",
+    affected_files: ["src/index.ts"],
+    work_id: work.work_id,
+    blockers: "Waiting for review approval from the maintainer.",
+  });
+
+  const context = await readWorkContext(paths, work.work_id);
+
+  assert.equal(context.work_state.authority.status, "clear");
+  assert.equal(context.work_state.readiness.mode, "wait");
+  assert.equal(context.work_state.next_valid_action.kind, "wait_for_unblock");
+  assert.match(context.work_state.next_valid_action.summary, /Waiting for review approval/);
 });
 
 test("summary workdocs mark a done work as closed/consolidated and keep summary loading opt-in", async () => {
@@ -833,6 +942,8 @@ test("summary workdocs mark a done work as closed/consolidated and keep summary 
   assert.equal(context.next_step_summary, undefined);
   assert.equal(context.summary_text, undefined);
   assert.equal(context.recent_log_count, 1);
+  assert.equal(context.work_state.readiness.mode, "done");
+  assert.equal(context.work_state.next_valid_action.kind, "review_summary");
   assert.deepEqual(context.recent_logs, []);
   assert.match(loadedContext.summary_text ?? "", /Captured a canonical re-entry brief/);
   assert.equal(evidenceContext.recent_log_count, 1);
@@ -845,4 +956,43 @@ test("summary workdocs mark a done work as closed/consolidated and keep summary 
   assert.equal(works[0]?.context_mode, "closed/consolidated");
   assert.equal(works[0]?.artifact_availability.summary, true);
   assert.equal(works[0]?.next_step_summary, undefined);
+});
+
+test("create summary doc seeds canonical resumptive state and closed reads prefer it", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Canonical summary carrier",
+    impact: "critical",
+  });
+
+  await setWorkStatus(paths, work.work_id, "done");
+  await appendLogEntry(paths, {
+    summary: "Recorded the final implementation handoff before consolidation.",
+    status: "Done",
+    change_type: "docs",
+    affected_files: ["src/index.ts"],
+    work_id: work.work_id,
+    resume_capsule: {
+      current_work: work.work_id,
+      governing_source: ["work_record", "latest_log"],
+      authority_reason: "The work record and final handoff log agree.",
+      readiness: "revalidate",
+      next_valid_action: "Revalidate the final state before closure.",
+      verification_target: "Confirm the final review results and release notes.",
+    },
+  });
+
+  const summaryDoc = await createWorkDoc(paths, "summary", { work_id: work.work_id });
+  const summaryText = await readFile(summaryDoc.path, "utf8");
+  const context = await readWorkContext(paths, work.work_id);
+
+  assert.match(summaryText, new RegExp(`resume_current_work: '${work.work_id}'`));
+  assert.match(summaryText, /resume_readiness: 'done'/);
+  assert.match(summaryText, /resume_governing_source:\n  - 'summary_doc'/);
+  assert.equal(context.context_mode, "closed/consolidated");
+  assert.equal(context.resume_capsule?.readiness, "done");
+  assert.ok(context.resume_capsule?.governing_source.includes("summary_doc"));
+  assert.equal(context.work_state.readiness.mode, "done");
+  assert.equal(context.work_state.next_valid_action.kind, "review_summary");
 });
