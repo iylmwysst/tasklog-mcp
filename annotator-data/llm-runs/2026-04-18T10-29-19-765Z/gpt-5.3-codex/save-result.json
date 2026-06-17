@@ -1,0 +1,15 @@
+{
+  "model": {
+    "key": "gpt-5.3-codex",
+    "provider": "codex",
+    "modelId": "gpt-5.3-codex",
+    "respondentName": "GPT-5.3-Codex",
+    "respondentTag": "LLM-GPT-53-CODEX"
+  },
+  "saved": {
+    "ok": "true",
+    "fileName": "LLM-GPT-53-CODEX.json",
+    "submittedAt": "2026-04-18T10:33:49.847Z"
+  },
+  "responseFile": "/Users/Lab/Desktop/WebWay/tasklog-mcp/annotator-data/responses/LLM-GPT-53-CODEX.json"
+}

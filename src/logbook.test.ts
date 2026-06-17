@@ -74,6 +74,7 @@ test("appendLogEntry writes canonical and legacy session logs", async () => {
   assert.match(legacyMarkdownLog, /AI Session Logbook/);
   assert.match(markdownLog, /src\/auth\.ts/);
   assert.match(markdownLog, /Resume capsule/);
+  assert.match(markdownLog, /Current work id: handoff-work/);
 });
 
 test("appendLogEntry validates readiness-specific resume capsule requirements", async () => {
@@ -96,6 +97,35 @@ test("appendLogEntry validates readiness-specific resume capsule requirements", 
         },
       }),
     /resume_capsule\.verification_target is required for readiness=revalidate/,
+  );
+});
+
+test("appendLogEntry rejects prose current_work when the resolved work id is different", async () => {
+  const projectRoot = await mkdtemp(path.join(os.tmpdir(), "tasklog-mcp-"));
+  const paths = resolveLogbookPaths(projectRoot);
+  const work = await startWork(paths, {
+    title: "Debug tasklog write hints",
+  });
+
+  await assert.rejects(
+    () =>
+      appendLogEntry(paths, {
+        summary: "Tried to write a handoff with a prose work description instead of the work id.",
+        status: "Done",
+        change_type: "docs",
+        affected_files: [],
+        work_id: work.work_id,
+        resume_capsule: {
+          current_work: "Debug tasklog write hints",
+          governing_source: ["work_record", "latest_log"],
+          authority_reason: "The work record and latest log agree on the active task.",
+          readiness: "done",
+          next_valid_action: "No further action required.",
+        },
+      }),
+    new RegExp(
+      `resume_capsule\\.current_work must be the exact work_id for this log entry\\. Expected "${work.work_id}" but received "Debug tasklog write hints"\\. This field stores the work_id, not a prose work summary\\.`,
+    ),
   );
 });
 

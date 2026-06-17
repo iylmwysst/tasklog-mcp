@@ -1,3 +1,22 @@
+You are an auxiliary LLM annotator for the Interrupted Coding Work Taxonomy validation round.
+Use only the materials below. Do not invent hidden facts or rely on external knowledge.
+Classify the episode as written, not the imagined raw session behind it.
+
+Output requirements:
+- Return exactly 10 responses in JSON under the top-level key "responses".
+- Each response must include: episodeId, interruptionClass, dominantLossClass, boundaryAmbiguous, nearestAlternativeClass, confidence, justification, notes.
+- interruptionClass must be one of: session_cutoff, task_switch, blocked_waiting, environment_drift, failure_boundary, handoff, multi_open_work_conflict, false_done, dirty_done.
+- dominantLossClass must be one of: focus_loss, authority_loss, readiness_loss, intent_loss, closure_loss.
+- boundaryAmbiguous must be either yes or no.
+- If boundaryAmbiguous is no, nearestAlternativeClass must be none.
+- confidence must be one of: high, medium, low.
+- justification should be brief and structural, usually 1-3 sentences.
+- notes should be an empty string unless a short note is necessary.
+- Preserve the packet episode IDs exactly.
+
+Materials begin below.
+
+===== VALIDATION CODEBOOK =====
 # Validation Codebook for the Interrupted Coding Work Taxonomy
 
 ## Purpose
@@ -541,3 +560,241 @@ This codebook does not:
 Its job is narrower:
 
 > make the taxonomy usable enough for an independent classification study.
+
+
+===== 30-EPISODE SEND PACK =====
+# Validation Episode Subset
+
+Annotate only the episodes below.
+
+## Episode E-SWE-01
+Setting:
+A coding agent returns to an evaluation harness repository after a pause in work on the modal execution entrypoint. The earlier local thread of work still looks coherent: a note says to continue wiring the entrypoint flow, and the open work item still appears active.
+
+Interruption boundary:
+The prior session ended after partial progress on the entrypoint path, with the expectation that implementation would continue in the same area when the session resumed.
+
+Visible records at resume time:
+- a recent local note describing the next edit in the entrypoint wrapper
+- an open work item still associated with the same subsystem
+- a newer structured state record indicating that the original strand is blocked pending approval and that a neighboring work strand now governs
+- no newer record that independently confirms whether the blocked-status record should outrank the local thread
+
+What happened before or during the interrupted attempt:
+The agent had already oriented itself around the entrypoint path and left enough local context that the earlier strand still looks easy to continue.
+
+Decision pressure:
+The obvious move is to keep implementing the entrypoint work that already has a visible local trail.
+
+Complication:
+The visible records do not fully agree about what currently governs. One record favors local continuity, while another later record changes the status of that work and points to a different governing strand. The key uncertainty is not yet whether the agent should wait for approval; it is whether that later blocked-status record should outrank the local thread in the first place.
+
+---
+
+## Episode E-SWE-02
+Setting:
+A coding agent returns to work on a modal evaluation runner in a repository where the target work item is clear and the latest repository-facing state still points to the same runner area.
+
+Interruption boundary:
+The previous session paused after the agent identified the next relevant runner changes but before it executed them.
+
+Visible records at resume time:
+- a clear current work item tied to the modal runner
+- a trusted state record showing that continuation depends on an approval, ownership confirmation, or external handoff
+- repository cues that still make further implementation look locally feasible
+
+What happened before or during the interrupted attempt:
+The interrupted attempt made enough progress that the remaining implementation path looks straightforward if the agent ignores the blocker.
+
+Decision pressure:
+The agent is tempted to keep editing the runner immediately because the coding path is visible and locally understandable.
+
+Complication:
+The issue is not which code path to touch next. The issue is whether it is safe to continue at all before an external confirmation or handoff arrives.
+
+---
+
+## Episode E-CON-01
+Setting:
+An agent returns to a repository where two feature strands remain visibly open. One strand has a recent commit and an open pull request. The other has a tracker card marked `in progress` and a newer team-side message saying that this second strand should take priority first.
+
+Interruption boundary:
+The earlier session ended before the agent resolved which of the two active-looking strands now governs resumed work.
+
+Visible records at resume time:
+- an open PR and recent commit trail for one strand
+- a tracker record marking another strand as active
+- a newer team-side instruction shifting focus toward the second strand
+
+What happened before or during the interrupted attempt:
+The earlier work touched both strands closely enough that each still looks plausibly current at the point of return.
+
+Decision pressure:
+The easiest move is to resume the branch with the richer implementation trail and open PR.
+
+Complication:
+Both candidate works are visible and nameable, but the visible signals do not agree on which one should actually govern resumed action. The ambiguity is not only about what work exists, but also about which signal outranks the others.
+
+---
+
+## Episode E-CON-02
+Setting:
+A coding agent returns to a repository after a pause while implementing a fix whose current work item is still clear. The latest trusted state does not indicate any blocker, ownership handoff, or waiting condition. The work should continue.
+
+Interruption boundary:
+The previous session ended after the agent narrowed the problem to two concrete next edits inside the same active strand of work.
+
+Visible records at resume time:
+- a stable current work item with no newer superseding record
+- notes showing that action should continue now rather than wait or escalate
+- repository evidence that leaves two immediate next edits plausible
+- no competing tracker, handoff, or later state record suggesting that a different governing source should be trusted instead
+
+What happened before or during the interrupted attempt:
+The interrupted attempt already resolved the higher-level question of whether to continue. What remained unsettled was the order of the next concrete implementation move.
+
+Decision pressure:
+The agent needs to resume by choosing the next admissible edit and continuing execution.
+
+Complication:
+The agent already knows it should keep working, and it is not choosing among competing records. What it does not know is which of two plausible edits to make first inside the same already-governing work strand.
+
+---
+
+## Episode E-HIS-01
+Setting:
+A coding agent returns to a work tracker the morning after a patch was marked complete. The tracker shows the item as done, and the implementation notes suggest that the main coding task was finished. A neighboring engineering-side record, however, indicates that one follow-up safeguard still remained open before the work should be treated as fully closed.
+
+Interruption boundary:
+The earlier session stopped after the visible done-signal appeared, before the residual follow-up obligation was resolved.
+
+Visible records at resume time:
+- a tracker or status surface showing the work as complete
+- implementation notes that reinforce the appearance of closure
+- a later engineering-side record showing one still-governing follow-up obligation
+
+What happened before or during the interrupted attempt:
+The agent had legitimate reason to believe the main implementation was complete, but the lifecycle state of the work did not settle cleanly before the pause.
+
+Decision pressure:
+The natural move is to treat the completed-looking item as closed and move on to other work.
+
+Complication:
+The visible done-signal may be real but insufficient. The resumed decision depends on whether the remaining obligation means the work still requires attention despite the completion marker.
+
+---
+
+## Episode E-CON-03
+Setting:
+A coding agent returns after a short shift in priority during the same workday. Before the interruption, it had been implementing a low-risk cleanup in one area of the repository. During the interruption, a teammate redirected attention to a more urgent bug in a different area, but the earlier cleanup branch and notes still remain visible and recent.
+
+Interruption boundary:
+The earlier session stopped when the agent switched away from the cleanup task after the urgent bug was raised, but the switch was not externalized cleanly into the working notes.
+
+Visible records at resume time:
+- a recent local note describing the next cleanup edit
+- an open bug report and newer team instruction about the urgent bug
+- a branch and file context that still make the cleanup task look immediately resumable
+
+What happened before or during the interrupted attempt:
+The agent had already made enough progress on the cleanup that the earlier path still feels locally familiar. The urgent bug was acknowledged, but the handoff between the two strands was never stabilized into one explicit current-work record.
+
+Decision pressure:
+The easiest move is to reopen the cleanup files and continue the nearly finished change.
+
+Complication:
+The main problem is not which record governs one known work item. The main problem is that resumed action still hinges on deciding which work is actually current: the older but locally continuous cleanup task or the newer urgent bug strand.
+
+---
+
+## Episode E-CON-04
+Setting:
+A coding agent returns to an active repository task whose work item, owner, and target code area are all already clear. The fix itself is understood, and the remaining implementation path looks straightforward. One external dependency, however, has not yet been approved for use in this change.
+
+Interruption boundary:
+The previous session stopped after the agent identified the code change it wanted to make but before the required approval arrived.
+
+Visible records at resume time:
+- a stable work item for the same fix
+- a recent note saying the implementation should wait for approval on the external dependency
+- repository cues that still make the code change look easy to perform immediately
+
+What happened before or during the interrupted attempt:
+The agent had already narrowed the task to a specific implementation plan. Nothing at resume time suggests that another work item or competing state record should govern instead.
+
+Decision pressure:
+The natural temptation is to make the change now because the coding path is visible and the work itself is still clearly active.
+
+Complication:
+The unresolved question is whether the present action mode is `act` or `wait`. Work identity and governing state are already settled; what remains uncertain is whether it is permissible to continue before the missing approval arrives.
+
+---
+
+## Episode E-CON-05
+Setting:
+A coding agent returns to a repository task that appears closed at first glance. The tracker marks the item complete, the patch was merged, and the implementation notes read like a finished story. The appearance of closure, however, depends on a verification step that was never actually recorded as passed.
+
+Interruption boundary:
+The earlier session ended after the work was marked complete, before anyone checked whether the final required verification had really happened.
+
+Visible records at resume time:
+- a tracker status showing the task as done
+- implementation notes that describe the change as complete
+- no independent record showing that the required final verification actually succeeded
+
+What happened before or during the interrupted attempt:
+The agent had enough success signals to believe the task was closed, so the work was treated as finished at the end of the session.
+
+Decision pressure:
+The natural move is to archive the item and focus on something else.
+
+Complication:
+The remaining issue is not which work is current and not which state record should govern it. The issue is whether closure was ever valid in the first place, because the final closure condition appears to be missing rather than merely incomplete.
+
+---
+
+## Episode E-CON-06
+Setting:
+An agent returns to a repository where two partially overlapping strands remain open after a noisy afternoon of interruptions. One strand has an unfinished refactor with an active local branch. The other has a bugfix card that was escalated late in the day and never explicitly assigned back into the working notes.
+
+Interruption boundary:
+The earlier session ended before the agent could settle which of the two still-open strands should be treated as current when work resumed.
+
+Visible records at resume time:
+- a local branch and note trail for the refactor
+- a newer bugfix card flagged as urgent
+- open files and recent commands touching both strands
+
+What happened before or during the interrupted attempt:
+The agent bounced between the refactor and the bugfix during the same session. Neither strand was closed, and neither was cleanly demoted.
+
+Decision pressure:
+The easiest move is to continue the refactor because it has the richer local continuity trail.
+
+Complication:
+The problem is not merely that two records disagree about one identified work item. The deeper problem is that the resumed action still depends on triaging which work should be current at all, because both strands remain plausibly live.
+
+---
+
+## Episode E-CON-07
+Setting:
+A coding agent returns to a repository after a brief gap caused by an environment change. Before the interruption, the local notes and open branch still pointed cleanly to one implementation task. During the gap, an automated status surface refreshed and now shows that a different, later state should govern the next move.
+
+Interruption boundary:
+The work paused long enough for the visible environment-facing state to update, but not long enough for the earlier local trail to disappear or become obviously stale.
+
+Visible records at resume time:
+- a local note and branch that still point toward the earlier implementation path
+- a newer status surface showing that the work state changed during the interruption
+- no explicit bridge note explaining why the newer surface should outrank the earlier local trail
+
+What happened before or during the interrupted attempt:
+The agent had already oriented around the earlier work path and would have continued it directly if no newer surface had appeared.
+
+Decision pressure:
+The straightforward move is to trust the richer local continuity and keep implementing.
+
+Complication:
+The key uncertainty is which visible record is entitled to govern the work's current state after the environment shift. The problem is not yet whether the governed action should be `wait` or `act`; it is whether the newer changed-state signal should outrank the earlier local thread at all.
+
+---

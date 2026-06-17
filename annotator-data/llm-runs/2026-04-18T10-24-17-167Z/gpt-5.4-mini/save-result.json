@@ -1,0 +1,15 @@
+{
+  "model": {
+    "key": "gpt-5.4-mini",
+    "provider": "codex",
+    "modelId": "gpt-5.4-mini",
+    "respondentName": "GPT-5.4-Mini",
+    "respondentTag": "LLM-GPT-54-MINI"
+  },
+  "saved": {
+    "ok": "true",
+    "fileName": "LLM-GPT-54-MINI.json",
+    "submittedAt": "2026-04-18T10:27:05.432Z"
+  },
+  "responseFile": "/Users/Lab/Desktop/WebWay/tasklog-mcp/annotator-data/responses/LLM-GPT-54-MINI.json"
+}

@@ -790,7 +790,10 @@ function workArtifactPathsSchema() {
 
 function resumeCapsuleInputSchema() {
   return z.object({
-    current_work: z.string().min(1),
+    current_work: z
+      .string()
+      .min(1)
+      .describe("Exact work_id for this log entry. Despite the field name, do not pass a prose work summary."),
     governing_source: z.array(z.enum(GOVERNING_SOURCES)).min(1),
     authority_reason: z.string().min(1),
     readiness: z.enum(READINESS_MODES),

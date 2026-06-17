@@ -1,0 +1,304 @@
+{
+  "responses": [
+    {
+      "episodeId": "E-SWE-01",
+      "interruptionClass": "environment_drift",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "yes",
+      "nearestAlternativeClass": "focus_loss",
+      "confidence": "medium",
+      "justification": "The current strand is locally visible, but a later state record may supersede it and point to a different governing strand. The unresolved layer is which record governs, not the next edit.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-02",
+      "interruptionClass": "blocked_waiting",
+      "dominantLossClass": "readiness_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work and its target area are clear, but the trusted state says continuation depends on missing approval or confirmation. The open question is whether the agent may act at all.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-01",
+      "interruptionClass": "multi_open_work_conflict",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "yes",
+      "nearestAlternativeClass": "focus_loss",
+      "confidence": "medium",
+      "justification": "Two named strands remain visible, and the record signals disagree about which one should govern resumed work. The boundary is record precedence over an already-identifiable work set.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-02",
+      "interruptionClass": "session_cutoff",
+      "dominantLossClass": "intent_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work is already trusted and active, but two immediate edits are both admissible. The only open layer is which concrete step to take first.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-HIS-01",
+      "interruptionClass": "dirty_done",
+      "dominantLossClass": "closure_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "A completion signal exists, but a later safeguard still governs follow-up action. The unresolved layer is whether the task is fully closed.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-03",
+      "interruptionClass": "task_switch",
+      "dominantLossClass": "focus_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The session switched from the cleanup task to the urgent bug, so current-work identity itself is unstable. The boundary is a task switch, not a blocker.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-04",
+      "interruptionClass": "blocked_waiting",
+      "dominantLossClass": "readiness_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work is settled and the fix path is known, but approval for the dependency is still missing. The remaining question is whether to act or wait.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-05",
+      "interruptionClass": "false_done",
+      "dominantLossClass": "closure_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work looks done, but the required final verification was never actually recorded. Closure itself is unresolved.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-06",
+      "interruptionClass": "multi_open_work_conflict",
+      "dominantLossClass": "focus_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "Two plausible strands are still live, so the resume point depends on which work is current. The ambiguity is at the current-work layer.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-07",
+      "interruptionClass": "environment_drift",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "A newer state surfaced during the pause and now competes with the earlier local trail. The issue is which record should govern the same work.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-08",
+      "interruptionClass": "handoff",
+      "dominantLossClass": "readiness_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The task is known, but the handoff record says ownership confirmation is still missing. The valid present mode is still to wait or ask, not act.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-09",
+      "interruptionClass": "failure_boundary",
+      "dominantLossClass": "intent_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "Recovery is allowed after the failed validation, but two concrete repairs are both plausible. The open layer is the next repair choice.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-CON-10",
+      "interruptionClass": "dirty_done",
+      "dominantLossClass": "closure_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The main implementation genuinely landed, but a residual safeguard still governs follow-up action. This is a real completion with remaining obligation.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-03",
+      "interruptionClass": "environment_drift",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "A later structured state says the earlier local path should no longer govern, even though the old trail still looks active. The unresolved layer is record precedence.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-07",
+      "interruptionClass": "blocked_waiting",
+      "dominantLossClass": "readiness_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work is known and the path is clear, but escalation is still required before safe continuation. The open question is the present action mode.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-HIS-02",
+      "interruptionClass": "blocked_waiting",
+      "dominantLossClass": "readiness_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work and its location are settled, but ownership confirmation is still missing according to the handoff note. The valid mode is wait or ask, not act.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-HIS-03",
+      "interruptionClass": "false_done",
+      "dominantLossClass": "closure_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The item was archived as finished without the required summary artifact ever being created. Closure was never actually satisfied.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-HIS-04",
+      "interruptionClass": "handoff",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "yes",
+      "nearestAlternativeClass": "focus_loss",
+      "confidence": "medium",
+      "justification": "The handoff summary and the fresher active-work signal both remain visible, so the governing source is unsettled. The dispute is over which record now rules.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-PUB-01",
+      "interruptionClass": "task_switch",
+      "dominantLossClass": "focus_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "Attention shifted from the earlier code thread to a newer public issue, so the current work itself is unstable. The boundary is a task switch across strands.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-PUB-02",
+      "interruptionClass": "multi_open_work_conflict",
+      "dominantLossClass": "focus_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "Two open-looking strands remain in view, and the visible status surfaces do not settle which one is current. The unresolved layer is current-work identity.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-PUB-03",
+      "interruptionClass": "environment_drift",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The visible environment signals disagree about whether the runtime is ready. The unresolved layer is which state source should govern.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-PUB-04",
+      "interruptionClass": "blocked_waiting",
+      "dominantLossClass": "readiness_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The workflow became stuck after a coordination step, so safe continuation depends on that stuck state clearing. The open question is whether to wait or proceed.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-PUB-05",
+      "interruptionClass": "session_cutoff",
+      "dominantLossClass": "intent_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work is stable and action is allowed, but two next commands are both plausible. The only open layer is which concrete operation to try first.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-PUB-06",
+      "interruptionClass": "failure_boundary",
+      "dominantLossClass": "intent_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The failure has already been localized, but the next repair path is still underdetermined. The open layer is the concrete recovery step.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-04",
+      "interruptionClass": "handoff",
+      "dominantLossClass": "authority_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The task crosses a handoff boundary, and the successor inherits both local trail and handoff state. The unresolved layer is which record governs next.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-05",
+      "interruptionClass": "multi_open_work_conflict",
+      "dominantLossClass": "focus_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "Two visible strands remain live, so the agent has to triage which one is current. The ambiguity is at the current-work layer.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-06",
+      "interruptionClass": "task_switch",
+      "dominantLossClass": "focus_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "A newer task has become the more relevant path, but the stale active-context record still points to the older strand. The boundary is a task switch that leaves current work unresolved.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-08",
+      "interruptionClass": "session_cutoff",
+      "dominantLossClass": "intent_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work is stable and still active, but the session ended before the next edit was chosen. The open layer is the concrete next step.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-09",
+      "interruptionClass": "dirty_done",
+      "dominantLossClass": "closure_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "A real completion signal exists, but a later follow-up obligation still governs action. The work is done-looking but not fully closed for resumption.",
+      "notes": ""
+    },
+    {
+      "episodeId": "E-SWE-10",
+      "interruptionClass": "false_done",
+      "dominantLossClass": "closure_loss",
+      "boundaryAmbiguous": "no",
+      "nearestAlternativeClass": "none",
+      "confidence": "high",
+      "justification": "The work looked complete, but the final closure condition was never actually satisfied. The issue is invalid closure, not residual follow-up after valid completion.",
+      "notes": ""
+    }
+  ]
+}

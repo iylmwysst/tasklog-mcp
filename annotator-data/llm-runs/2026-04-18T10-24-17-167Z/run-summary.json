@@ -1,0 +1,8 @@
+{
+  "runDir": "/Users/Lab/Desktop/WebWay/tasklog-mcp/annotator-data/llm-runs/2026-04-18T10-24-17-167Z",
+  "models": [
+    "gpt-5.4-mini",
+    "gpt-5.3-codex"
+  ],
+  "failures": []
+}

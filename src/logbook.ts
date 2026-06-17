@@ -380,7 +380,9 @@ export async function appendLogEntry(
     const resolvedWorkId = resolveAppendWorkId(works, activeContext, input.work_id);
     const normalizedResumeCapsule = normalizeResumeCapsule(input.resume_capsule);
     if (normalizedResumeCapsule && resolvedWorkId && normalizedResumeCapsule.current_work !== resolvedWorkId) {
-      throw new Error("resume_capsule.current_work must match the resolved work_id for this log entry.");
+      throw new Error(
+        `resume_capsule.current_work must be the exact work_id for this log entry. Expected "${resolvedWorkId}" but received "${normalizedResumeCapsule.current_work}". This field stores the work_id, not a prose work summary.`,
+      );
     }
     const entry: SessionLogEntry = {
       id: buildUniqueHumanId(new Set(currentEntries.map((item) => item.id))),
@@ -1197,7 +1199,7 @@ function renderMarkdown(entries: SessionLogEntry[]): string {
               "",
               "**Resume capsule**",
               "",
-              `- Current work: ${escapeMarkdownInline(entry.resume_capsule.current_work)}`,
+              `- Current work id: ${escapeMarkdownInline(entry.resume_capsule.current_work)}`,
               `- Governing source: ${entry.resume_capsule.governing_source
                 .map((source) => escapeMarkdownInline(source))
                 .join(", ")}`,

@@ -107,10 +107,17 @@ Tasklog now exposes resumptive decision state explicitly:
 ### Resume capsule rules
 
 - every new \`append_session_log\` call must include \`resume_capsule\`
+- \`resume_capsule.current_work\` must be the exact resolved \`work_id\` for the new log entry, not a prose work summary
 - \`readiness="act"\` and \`readiness="done"\` require both \`blocking_or_missing_fact\` and \`verification_target\` to be empty
 - \`readiness="wait"\` and \`readiness="ask"\` require \`blocking_or_missing_fact\`
-- \`readiness="revalidate"\` requires both \`blocking_or_missing_fact\` and \`verification_target\`
-- \`resume_capsule.current_work\` must match the resolved \`work_id\` for the new log entry
+- \`readiness="revalidate"\` requires \`verification_target\` and may also include \`blocking_or_missing_fact\`
+- when \`active_work\` is stale, invalid, or mismatched, pass \`work_id\` explicitly instead of relying on implicit attachment
+
+### Status vocabulary cheat sheet
+
+- \`append_session_log.status\` accepts only \`WIP\`, \`Done\`, or \`Blocked\`
+- \`set_work_status.status\` accepts only \`active\`, \`blocked\`, or \`done\`
+- \`list_works(status="open")\` is a read-time filter for unfinished work discovery, not a valid write value
 
 ### Create artifacts by intent
 
@@ -154,6 +161,13 @@ Use \`append_session_log\` when:
 The log should summarize what happened in this session. It should not replace work docs.
 
 Every new \`append_session_log\` should attach a \`resume_capsule\` so the next session does not need to infer authority and readiness from scratch.
+
+Before calling \`append_session_log\`, do this quick check:
+
+- confirm whether \`active_work\` is still \`fresh\`; if not, resolve the work explicitly first
+- pass the same work id in both \`work_id\` and \`resume_capsule.current_work\`
+- choose log status from \`WIP | Done | Blocked\`
+- choose readiness first, then satisfy its required companion fields
 
 ## Do / Don't
 
@@ -407,6 +421,12 @@ This starts one work inside a shared workspace root while keeping the scope limi
   }
 }
 \`\`\`
+
+Why this is safe:
+
+- \`work_id\` and \`resume_capsule.current_work\` match exactly
+- the log status uses the appendable log vocabulary, not work status or list filter vocabulary
+- \`readiness="act"\` leaves both optional companion fields empty
 
 ## Good Example: Append a Session Log That Needs Revalidation
 

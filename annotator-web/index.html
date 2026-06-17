@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Validation Annotator</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Internal Research Tool</p>
+          <h1>Validation Annotator</h1>
+          <p class="subtle">ตอบทีละ episode และส่งคำตอบเป็นรายบุคคล</p>
+        </div>
+
+        <section class="identity-card">
+          <label class="field-label" for="respondent-tag">เลือก Annotator</label>
+          <select id="respondent-tag">
+            <option value="">เลือกผู้ตอบ</option>
+            <option value="HUM-01">HUM-01</option>
+            <option value="HUM-02">HUM-02</option>
+            <option value="HUM-03">HUM-03</option>
+            <option value="HUM-04">HUM-04</option>
+            <option value="HUM-05">HUM-05</option>
+          </select>
+
+          <label class="field-label" for="respondent-name">ชื่อผู้ตอบ</label>
+          <input id="respondent-name" type="text" placeholder="กรอกชื่อใต้รหัสที่เลือก" />
+          <p class="subtle identity-note">draft จะแยกตามรหัส annotator ที่เลือก</p>
+        </section>
+
+        <section class="progress-card">
+          <div class="progress-row">
+            <span>ความคืบหน้า</span>
+            <strong id="progress-text">0 / 30</strong>
+          </div>
+          <div class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p class="subtle" id="save-state">Draft จะถูกเก็บไว้ในเครื่องอัตโนมัติ</p>
+        </section>
+
+        <nav id="episode-nav" class="episode-nav" aria-label="Episode navigation"></nav>
+      </aside>
+
+      <main class="main">
+        <section class="hero">
+          <p class="eyebrow">Taxonomy Validation</p>
+          <h2 id="packet-title">Loading…</h2>
+          <p id="packet-description" class="hero-copy"></p>
+          <div class="hero-notes">
+            <p>ใช้ label ที่แสดงในฟอร์มนี้ได้เลย ระบบจะเก็บ canonical values ให้อัตโนมัติ</p>
+            <p>ถ้า `Boundary Ambiguous = No` ระบบจะบังคับให้ `Nearest Alternative = None`</p>
+          </div>
+        </section>
+
+        <section id="episode-panel" class="episode-panel" aria-live="polite"></section>
+
+        <section class="actions">
+          <button id="autofill-button" class="secondary-button" type="button">Auto Fill Test Data</button>
+          <button id="prev-button" class="secondary-button" type="button">ตอนก่อนหน้า</button>
+          <button id="next-button" class="secondary-button" type="button">ตอนถัดไป</button>
+          <button id="submit-button" class="primary-button" type="button">ส่งคำตอบทั้งหมด</button>
+        </section>
+      </main>
+    </div>
+
+    <template id="episode-template">
+      <article class="episode-card">
+        <header class="episode-header">
+          <div>
+            <p class="eyebrow episode-index"></p>
+            <h3 class="episode-title"></h3>
+          </div>
+          <span class="episode-status"></span>
+        </header>
+
+        <section class="episode-copy"></section>
+
+        <section class="response-grid">
+          <label class="control">
+            <span>Interruption Class</span>
+            <select data-field="interruptionClass"></select>
+          </label>
+
+          <label class="control">
+            <span>Dominant Loss Class</span>
+            <select data-field="dominantLossClass"></select>
+          </label>
+
+          <label class="control">
+            <span>Boundary Ambiguous</span>
+            <select data-field="boundaryAmbiguous"></select>
+          </label>
+
+          <label class="control">
+            <span>Nearest Alternative</span>
+            <select data-field="nearestAlternativeClass"></select>
+          </label>
+
+          <label class="control">
+            <span>Confidence</span>
+            <select data-field="confidence"></select>
+          </label>
+        </section>
+
+        <label class="control">
+          <span>Justification</span>
+          <textarea data-field="justification" rows="6" placeholder="อธิบายแบบสั้นและอิงโครงสร้าง"></textarea>
+        </label>
+
+        <label class="control">
+          <span>Notes</span>
+          <textarea data-field="notes" rows="4" placeholder="ใส่เฉพาะเมื่อมีข้อสังเกตเพิ่มเติม"></textarea>
+        </label>
+      </article>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

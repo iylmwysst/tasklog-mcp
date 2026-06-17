@@ -368,6 +368,7 @@ rule of thumb:
 เลือก `authority_loss` เมื่อ:
 
 - ระบบยังไม่รู้ว่า record ไหนมีสิทธิ์กำหนด current state ของงาน
+- สถานะที่ blocked, waiting หรือ pending approval ปรากฏอยู่ใน record ที่ยัง disputed อยู่เพียงบางตัว ทำให้ยังต้อง resolve เรื่อง record precedence ก่อนจะไปตัดสิน mode
 
 เลือก `readiness_loss` เมื่อ:
 
@@ -377,6 +378,10 @@ rule of thumb:
 rule of thumb:
 
 > record selection มาก่อน mode selection
+
+ข้อสรุปย่อย:
+
+> ถ้า later record บอกว่า "งานนี้ blocked" แต่ใน episode ยังเถียงกันอยู่ว่า later record นั้นควร govern ตั้งแต่แรกหรือไม่ ให้เอน `authority_loss` มากกว่า `readiness_loss`
 
 ### `readiness_loss` vs `intent_loss`
 
@@ -392,6 +397,10 @@ rule of thumb:
 rule of thumb:
 
 > ถ้า `act` ยังไม่ justified อย่างมั่นคง อย่าเพิ่ง assign `intent_loss`
+
+ข้อสรุปย่อย:
+
+> ถ้า governing record คงที่แล้ว และ `act` ถูก justify แล้ว การมี next edits ที่ plausible มากกว่าหนึ่งทางภายใน work strand เดียวกันเป็น pattern ของ `intent_loss` ไม่ใช่ `authority_loss`
 
 ### `false_done` vs `dirty_done`
 

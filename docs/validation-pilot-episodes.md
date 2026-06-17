@@ -26,6 +26,7 @@ Visible records at resume time:
 - a recent local note describing the next edit in the entrypoint wrapper
 - an open work item still associated with the same subsystem
 - a newer structured state record indicating that the original strand is blocked pending approval and that a neighboring work strand now governs
+- no newer record that independently confirms whether the blocked-status record should outrank the local thread
 
 What happened before or during the interrupted attempt:
 The agent had already oriented itself around the entrypoint path and left enough local context that the earlier strand still looks easy to continue.
@@ -34,7 +35,7 @@ Decision pressure:
 The obvious move is to keep implementing the entrypoint work that already has a visible local trail.
 
 Complication:
-The visible records do not fully agree about what currently governs. One record favors local continuity, while another later record changes the status of that work and points to a different governing strand.
+The visible records do not fully agree about what currently governs. One record favors local continuity, while another later record changes the status of that work and points to a different governing strand. The key uncertainty is not yet whether the agent should wait for approval; it is whether that later blocked-status record should outrank the local thread in the first place.
 
 ---
 
@@ -98,6 +99,7 @@ Visible records at resume time:
 - a stable current work item with no newer superseding record
 - notes showing that action should continue now rather than wait or escalate
 - repository evidence that leaves two immediate next edits plausible
+- no competing tracker, handoff, or later state record suggesting that a different governing source should be trusted instead
 
 What happened before or during the interrupted attempt:
 The interrupted attempt already resolved the higher-level question of whether to continue. What remained unsettled was the order of the next concrete implementation move.
@@ -106,7 +108,7 @@ Decision pressure:
 The agent needs to resume by choosing the next admissible edit and continuing execution.
 
 Complication:
-The agent already knows it should keep working. What it does not know is which of two plausible edits to make first.
+The agent already knows it should keep working, and it is not choosing among competing records. What it does not know is which of two plausible edits to make first inside the same already-governing work strand.
 
 ---
 

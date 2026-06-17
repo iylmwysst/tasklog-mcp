@@ -59,6 +59,7 @@
     "bench:llm": "tsx scripts/benchmark-llm-reentry.ts",
     "bench:reentry": "tsx scripts/benchmark-reentry.ts",
     "bench:validate-meta": "tsx scripts/validate-benchmark-runner-metadata.ts",
+    "annotator:web": "node --import tsx scripts/serve-validation-annotator.ts",
     "test": "tsx --test src/*.test.ts",
     "start": "node dist/index.js",
     "prepack": "npm run build"

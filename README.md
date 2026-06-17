@@ -139,6 +139,16 @@ Tasklog now exposes an explicit resumptive decision layer.
 - `resume_capsule` remains authoritative on write paths and summary frontmatter, but default read surfaces now center the returned `work_state`
 - `get_recent_logs` should be treated as a raw-evidence tool, not as a second re-entry brief
 
+Important write-time reminders:
+
+- `resume_capsule.current_work` must be the resolved `work_id` string for the log entry, not a prose summary of the work
+- `append_session_log.status` accepts only `WIP`, `Done`, or `Blocked`
+- `set_work_status.status` accepts only `active`, `blocked`, or `done`
+- `list_works(status="open")` is a filter value for work discovery, not a valid write value for either tool above
+- `readiness="act"` and `readiness="done"` require `blocking_or_missing_fact=""` and `verification_target=""`
+- `readiness="wait"` and `readiness="ask"` require `blocking_or_missing_fact`
+- `readiness="revalidate"` requires `verification_target` and may also include `blocking_or_missing_fact` when that helps explain the missing confirmation
+
 ## Typical Flow
 
 1. Start with `get_active_context`
@@ -157,6 +167,13 @@ Recommended tool choices:
 - note something down: `append_work_note`
 - record a session handoff: `append_session_log`
   include the required `resume_capsule` so the next session can recover authority/readiness without re-inferring them
+
+Minimal safe mental model before calling `append_session_log`:
+
+1. Resolve the work first with `resume_work` or an explicit `work_id` if `active_work` is not fresh.
+2. Copy that exact `work_id` into both `work_id` and `resume_capsule.current_work`.
+3. Pick the log status from `WIP | Done | Blocked`, not from the work-status or list filter vocabularies.
+4. Pick the readiness mode and then satisfy its required companion fields before sending the write.
 
 ## Benchmark
 
@@ -367,6 +384,9 @@ Tasklog is intentionally small, so some cleanup still stays explicit.
 
 - if a session ends abruptly, a work item may still be marked `active` until the next session closes or updates it
 - that is usually cheap to fix with `list_works` plus `set_work_status`, but it is still manual state cleanup today
+- the write path currently uses three similar but different status vocabularies: log status (`WIP | Done | Blocked`), work status (`active | blocked | done`), and list filter status (`open | active | blocked | done | all`)
+- `resume_capsule.current_work` is currently a work-id field despite its name, so callers must pass the exact `work_id` rather than a natural-language description
+- readiness-specific fields are validated conditionally, so `act`, `ask`, `wait`, `revalidate`, and `done` do not accept the same payload shape
 - if your workflow needs automatic long-term memory, semantic retrieval, or project-wide reasoning, pair Tasklog with docs, code search, and architecture tools instead of stretching Tasklog beyond its scope
 
 ## Reliability Notes

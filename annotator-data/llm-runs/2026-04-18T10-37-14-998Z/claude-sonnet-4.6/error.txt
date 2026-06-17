@@ -1,0 +1,801 @@
+Command failed: claude -p --output-format json --json-schema {"type":"object","additionalProperties":false,"required":["responses"],"properties":{"responses":{"type":"array","minItems":10,"maxItems":10,"items":{"type":"object","additionalProperties":false,"required":["episodeId","interruptionClass","dominantLossClass","boundaryAmbiguous","nearestAlternativeClass","confidence","justification","notes"],"properties":{"episodeId":{"type":"string","enum":["E-SWE-01","E-SWE-02","E-CON-01","E-CON-02","E-HIS-01","E-CON-03","E-CON-04","E-CON-05","E-CON-06","E-CON-07"]},"interruptionClass":{"type":"string","enum":["session_cutoff","task_switch","blocked_waiting","environment_drift","failure_boundary","handoff","multi_open_work_conflict","false_done","dirty_done"]},"dominantLossClass":{"type":"string","enum":["focus_loss","authority_loss","readiness_loss","intent_loss","closure_loss"]},"boundaryAmbiguous":{"type":"string","enum":["yes","no"]},"nearestAlternativeClass":{"type":"string","enum":["focus_loss","authority_loss","readiness_loss","intent_loss","closure_loss","none"]},"confidence":{"type":"string","enum":["high","medium","low"]},"justification":{"type":"string","minLength":4},"notes":{"type":"string"}}}}}} --permission-mode dontAsk --tools  --no-session-persistence --model claude-sonnet-4-6 You are an auxiliary LLM annotator for the Interrupted Coding Work Taxonomy validation round.
+Use only the materials below. Do not invent hidden facts or rely on external knowledge.
+Classify the episode as written, not the imagined raw session behind it.
+
+Output requirements:
+- Return exactly 10 responses in JSON under the top-level key "responses".
+- Each response must include: episodeId, interruptionClass, dominantLossClass, boundaryAmbiguous, nearestAlternativeClass, confidence, justification, notes.
+- interruptionClass must be one of: session_cutoff, task_switch, blocked_waiting, environment_drift, failure_boundary, handoff, multi_open_work_conflict, false_done, dirty_done.
+- dominantLossClass must be one of: focus_loss, authority_loss, readiness_loss, intent_loss, closure_loss.
+- boundaryAmbiguous must be either yes or no.
+- If boundaryAmbiguous is no, nearestAlternativeClass must be none.
+- confidence must be one of: high, medium, low.
+- justification should be brief and structural, usually 1-3 sentences.
+- notes should be an empty string unless a short note is necessary.
+- Preserve the packet episode IDs exactly.
+
+Materials begin below.
+
+===== VALIDATION CODEBOOK =====
+# Validation Codebook for the Interrupted Coding Work Taxonomy
+
+## Purpose
+
+This codebook defines how annotators should classify `episode descriptions` in the interrupted coding work validation study.
+
+It is designed for use by:
+
+- `human annotators` in the claim-bearing validation layer
+- `LLM annotators` in the auxiliary annotation layer
+
+The codebook applies to normalized `episode descriptions`, not to raw logs, raw traces, or full transcripts.
+
+---
+
+## What Annotators Must Produce
+
+For each episode, annotators must assign:
+
+1. one `interruption class`
+2. one `dominant loss class`
+3. a short justification
+4. an uncertainty flag if the case feels boundary-ambiguous
+
+Annotators should classify the episode as written.
+They should not infer hidden facts that are not supported by the episode description.
+
+---
+
+## Unit of Analysis
+
+The unit of analysis is:
+
+> one resumptive decision episode at one interruption boundary
+
+Do not classify the whole project, the whole session history, or the general quality of the system.
+Classify the specific interruption and resumption situation described in the episode.
+
+---
+
+## Annotation Procedure
+
+Annotators should use the same four-step procedure for every episode.
+
+### Step 1: Identify the Interruption Boundary
+
+Ask:
+
+> What kind of boundary event created this resume point?
+
+Choose the interruption class that best describes what happened at the boundary.
+
+### Step 2: Identify the Earliest Broken Governing Object
+
+Ask the dominant-assignment questions in order:
+
+1. `Which work is truly current?`
+2. `Why should this state be trusted over competing signals?`
+3. `Which action mode is currently valid: act, ask, wait, escalate, or abstain?`
+4. `Given the fixed action mode, what concrete next step should be taken?`
+5. `Is this work actually done or still active?`
+
+Assign the dominant loss at the earliest unresolved layer.
+
+### Step 3: Check the Nearest Boundary Confusion
+
+Before finalizing, compare the selected class against its nearest alternatives:
+
+- `focus_loss` vs `authority_loss`
+- `authority_loss` vs `readiness_loss`
+- `readiness_loss` vs `intent_loss`
+- `false_done` vs `dirty_done`
+
+If the alternative seems equally plausible, mark the episode as `boundary-ambiguous` and explain why.
+
+### Step 4: Record a Brief Justification
+
+The justification should be short and structural.
+
+Good justification:
+
+> The work is known, but competing records disagree about whether it is blocked, so the earliest unresolved object is which record governs.
+
+Bad justification:
+
+> This feels like authority because it reminds me of another case.
+
+---
+
+## Interruption Classes
+
+Interruption classes describe the `boundary event`, not the dominant failure object.
+
+### `session_cutoff`
+
+Use when:
+
+- the prior working session ends before local trajectory is fully externalized or resumed locally
+- the key difficulty comes from abrupt pause, terminal closure, token/context exhaustion, or overnight return
+
+Do not use when:
+
+- the key event is actor transfer across people or models
+- the main boundary is a change in environment or dependency state rather than session termination itself
+
+### `task_switch`
+
+Use when:
+
+- attention or priority is redirected across works
+- the resume point is shaped by a switch to or from another work item
+
+Do not use when:
+
+- the boundary event is not a deliberate or system-driven priority redirect
+- multiple works are visible only because tracker or closure state left them ambiguously open
+  (`multi_open_work_conflict`, `false_done`, or `dirty_done` may fit better there)
+
+### `blocked_waiting`
+
+Use when:
+
+- the work remains identifiable
+- safe continuation depends on missing input, approval, ownership confirmation, or dependency resolution
+
+Do not use when:
+
+- the previous session ended at a failed step and the uncertainty is mainly about recovery from that failure event
+
+### `environment_drift`
+
+Use when:
+
+- live world state changed during the interruption
+- previously recorded state may no longer be trustworthy because the environment moved
+
+Do not use when:
+
+- the main issue is only session interruption without a meaningful world-state change
+
+A world-state change counts as meaningful when it could invalidate a previously recorded fact that the agent would otherwise act on at resume time.
+
+### `failure_boundary`
+
+Use when:
+
+- the previous attempt ended at a failed command, tool invocation, validation step, or permission boundary
+- the recovery mode is itself part of the difficulty
+
+Do not use when:
+
+- the work is merely blocked pending external input without a salient failed attempt ending the prior episode
+
+### `handoff`
+
+Use when:
+
+- the episode crosses model, operator, or role boundary
+- tacit rationale is lost even though durable artifacts remain
+
+Do not use when:
+
+- the interruption is plain session termination without meaningful actor transfer
+
+### `multi_open_work_conflict`
+
+Use when:
+
+- more than one open work candidate remains visible
+- resume-time triage across works is part of the boundary event itself
+
+Do not use when:
+
+- the work is known but record precedence for that work is the main unresolved issue
+
+### `false_done`
+
+Use when:
+
+- a closure-looking assertion or state appears
+- required closure evidence was never actually satisfied
+
+Do not use when:
+
+- a real completion marker exists but follow-up obligations remain visible
+
+### `dirty_done`
+
+Use when:
+
+- a valid completion marker exists
+- separately visible residual obligations still govern follow-up action
+
+Do not use when:
+
+- the apparent done-state was never validly earned in the first place
+
+---
+
+## Dominant Loss Classes
+
+Loss classes describe the earliest unresolved governing object.
+
+### `focus_loss`
+
+Core question:
+
+> Which work is truly current?
+
+Use when:
+
+- current-work identity is unresolved
+- the system cannot reliably determine which work item governs resumed action
+
+Do not use when:
+
+- the current work is known but the system cannot decide which record governs that work
+
+Typical signs:
+
+- multiple plausible current works
+- closure failure hid the true active work
+- priority redirection makes current-work identity itself unstable
+
+### `authority_loss`
+
+Core question:
+
+> Why should this state be trusted over competing signals?
+
+Use when:
+
+- the work is known
+- plausible records, cues, or state sources compete
+- the unresolved issue is which one is entitled to govern
+
+Do not use when:
+
+- the dominant uncertainty is whether the agent should act, wait, ask, escalate, or abstain
+
+Typical signs:
+
+- stale but locally rich context wins over fresher state
+- structured tracker view conflicts with newer engineering-side state
+- multiple persisted records disagree about blocked/active/current status
+
+### `readiness_loss`
+
+Core question:
+
+> Which action mode is currently valid: act, ask, wait, escalate, or abstain?
+
+Use when:
+
+- the work is known
+- the governing record is trusted
+- the dominant uncertainty is whether action is currently permissible
+
+Do not use when:
+
+- the action mode is already fixed and only the concrete next step is unresolved
+
+Typical signs:
+
+- the valid present output may be non-action
+- the work is blocked, pending review, or waiting on missing input
+- escalation is required before more implementation
+
+### `intent_loss`
+
+Core question:
+
+> Given the fixed action mode, what concrete next step should be taken?
+
+Use when:
+
+- the action mode is already determined
+- the remaining uncertainty concerns concrete next-step content
+
+Do not use when:
+
+- the deeper problem is still whether the agent should act at all
+
+Typical signs:
+
+- `act` is clearly valid, but file/order/operation choice is underdetermined
+- one missing fact decides between otherwise plausible next steps
+
+### `closure_loss`
+
+Core question:
+
+> Is this work actually done or still active?
+
+Use when:
+
+- closure status is the main unresolved object
+- apparent completion may be false or incomplete
+
+Do not use when:
+
+- the work is clearly still active but blocked
+
+Typical signs:
+
+- done-looking trail suppresses still-governing follow-up work
+- a completion marker exists but does not settle the resume boundary cleanly
+
+---
+
+## Dominant-Assignment Rule
+
+Use the following order strictly:
+
+1. `focus_loss`
+2. `authority_loss`
+3. `readiness_loss`
+4. `intent_loss`
+5. `closure_loss`
+
+Interpretation:
+
+- if `focus` is unresolved, assign `focus_loss`
+- if focus is resolved but record precedence is unresolved, assign `authority_loss`
+- if focus and authority are resolved but valid action mode is unresolved, assign `readiness_loss`
+- if mode is resolved but the concrete next step is unresolved, assign `intent_loss`
+- if the remaining unresolved object is whether the work is actually done, assign `closure_loss`
+
+Later uncertainty does not outrank an earlier unresolved layer.
+
+---
+
+## Tie-Break Notes
+
+### `focus_loss` vs `authority_loss`
+
+Choose `focus_loss` when:
+
+- the current work itself is unresolved
+- the agent cannot tell which work item governs resumed action
+
+Choose `authority_loss` when:
+
+- the current work is known
+- the dispute is over which record or cue governs that work
+
+Rule of thumb:
+
+> If you can name the work confidently but not the governing record, prefer `authority_loss`.
+
+### `focus_loss` vs `closure_loss`
+
+Choose `focus_loss` when:
+
+- the agent genuinely cannot determine which work is current
+- current-work identity is unresolved, regardless of why that happened
+
+Choose `closure_loss` when:
+
+- the work can still be identified
+- the unresolved issue is whether it is truly done or still action-governing
+
+Rule of thumb:
+
+> If a false or misleading done-signal is the reason the wrong work looks current, the triggering condition is closure, but the dominant assignment depends on whether current-work identity is itself unresolved (`focus_loss`) or whether the work is identifiable and only its completion status remains unresolved (`closure_loss`).
+
+### `authority_loss` vs `readiness_loss`
+
+Choose `authority_loss` when:
+
+- the system still does not know which record is entitled to define the work's current state
+- a blocked, waiting, or approval-dependent status appears only inside one disputed record, so record precedence is still unresolved before mode selection can even begin
+
+Choose `readiness_loss` when:
+
+- the trusted state is already fixed
+- the remaining question is whether present action should be act/ask/wait/escalate/abstain
+
+Rule of thumb:
+
+> Record selection comes before mode selection.
+
+Corollary:
+
+> If a later record says "this work is blocked" but the episode is still asking whether that later record should govern at all, prefer `authority_loss` over `readiness_loss`.
+
+### `readiness_loss` vs `intent_loss`
+
+Choose `readiness_loss` when:
+
+- the valid present mode is still uncertain
+
+Choose `intent_loss` when:
+
+- the mode is fixed
+- only the concrete next step remains unclear
+
+Rule of thumb:
+
+> If `act` is not yet securely justified, do not assign `intent_loss`.
+
+Corollary:
+
+> If the governing record is stable and `act` is already justified, multiple plausible next edits inside that same work strand are an `intent_loss` pattern, not an `authority_loss` pattern.
+
+### `false_done` vs `dirty_done`
+
+Choose `false_done` when:
+
+- closure was never actually satisfied
+
+Choose `dirty_done` when:
+
+- a real completion marker exists
+- follow-up obligations still govern action
+
+Rule of thumb:
+
+> `false_done` means the done signal was invalid; `dirty_done` means the done signal was real but incomplete for resumptive purposes.
+
+---
+
+## Handling Ambiguous Cases
+
+Some episodes will remain genuinely difficult.
+When that happens:
+
+- still choose the best-fitting interruption class
+- still choose the best-fitting dominant loss class
+- mark the episode as `boundary-ambiguous`
+- explain which rival class was strongest and why
+
+Disagreement is useful study output.
+Do not force false certainty if the episode truly straddles a boundary.
+
+---
+
+## Output Format
+
+For each episode, record:
+
+- `episode_id`
+- `interruption_class`
+- `dominant_loss_class`
+- `boundary_ambiguous` (`yes` / `no`)
+- `nearest_alternative_class`
+- `justification` (`1–3` sentences)
+
+Suggested compact form:
+
+```md
+Episode: E-CON-03
+Interruption class: blocked_waiting
+Dominant loss class: readiness_loss
+Boundary-ambiguous: no
+Nearest alternative: intent_loss
+Justification: The work and governing state are clear, but safe continuation depends on approval that has not yet arrived. The unresolved object is therefore the valid present action mode, not the next concrete implementation step.
+```
+
+---
+
+## Worked Micro-Examples
+
+### Example 1
+
+Episode sketch:
+
+Two unfinished works remain visible after an overnight return. One has richer recent local context, but a separate newer state record shows the other now governs. The agent resumes the richer-looking strand.
+
+Classification:
+
+- interruption class: `multi_open_work_conflict`
+- dominant loss class: `authority_loss`
+
+Why:
+
+- multiple work candidates remain visible at the boundary
+- the key failure is not total ignorance of plausible work items, but choosing the wrong governing record among competing visible signals
+
+### Example 2
+
+Episode sketch:
+
+The current work is clear and the trusted record shows that implementation is blocked pending approval. The agent continues coding instead of surfacing the blocker.
+
+Classification:
+
+- interruption class: `blocked_waiting`
+- dominant loss class: `readiness_loss`
+
+Why:
+
+- the work and trusted state are known
+- the unresolved object is which present mode is valid
+
+### Example 3
+
+Episode sketch:
+
+The work is clearly active and `act` is the right present mode, but one missing implementation detail determines whether the next step should be patch file A or file B first. The agent guesses.
+
+Classification:
+
+- interruption class: `session_cutoff` or `failure_boundary`, depending on the described boundary
+- dominant loss class: `intent_loss`
+
+Why:
+
+- the action mode is already fixed
+- only concrete next-step content remains unresolved
+
+### Example 4
+
+Episode sketch:
+
+An agent returns to a repo where two feature branches remain open. One branch has a recent commit and an open PR. The other has a tracker card marked `in progress` and a newer team message saying to focus there first. The agent resumes the branch with the open PR.
+
+Classification:
+
+- interruption class: `multi_open_work_conflict`
+- dominant loss class: `authority_loss`
+- boundary-ambiguous: `yes`
+- nearest alternative: `focus_loss`
+
+Why:
+
+- both works are visible and nameable, which weighs against pure `focus_loss`
+- the main dispute is over which visible signal should govern resumed action
+- `focus_loss` remains a defensible alternative because the current work may still feel unresolved at the boundary
+
+---
+
+## What This Codebook Does Not Do
+
+This codebook does not:
+
+- prove the taxonomy correct in advance
+- eliminate all ambiguity
+- replace later taxonomy revision if disagreement reveals weak boundaries
+
+Its job is narrower:
+
+> make the taxonomy usable enough for an independent classification study.
+
+
+===== 30-EPISODE SEND PACK =====
+# Validation Episode Subset
+
+Annotate only the episodes below.
+
+## Episode E-SWE-01
+Setting:
+A coding agent returns to an evaluation harness repository after a pause in work on the modal execution entrypoint. The earlier local thread of work still looks coherent: a note says to continue wiring the entrypoint flow, and the open work item still appears active.
+
+Interruption boundary:
+The prior session ended after partial progress on the entrypoint path, with the expectation that implementation would continue in the same area when the session resumed.
+
+Visible records at resume time:
+- a recent local note describing the next edit in the entrypoint wrapper
+- an open work item still associated with the same subsystem
+- a newer structured state record indicating that the original strand is blocked pending approval and that a neighboring work strand now governs
+- no newer record that independently confirms whether the blocked-status record should outrank the local thread
+
+What happened before or during the interrupted attempt:
+The agent had already oriented itself around the entrypoint path and left enough local context that the earlier strand still looks easy to continue.
+
+Decision pressure:
+The obvious move is to keep implementing the entrypoint work that already has a visible local trail.
+
+Complication:
+The visible records do not fully agree about what currently governs. One record favors local continuity, while another later record changes the status of that work and points to a different governing strand. The key uncertainty is not yet whether the agent should wait for approval; it is whether that later blocked-status record should outrank the local thread in the first place.
+
+---
+
+## Episode E-SWE-02
+Setting:
+A coding agent returns to work on a modal evaluation runner in a repository where the target work item is clear and the latest repository-facing state still points to the same runner area.
+
+Interruption boundary:
+The previous session paused after the agent identified the next relevant runner changes but before it executed them.
+
+Visible records at resume time:
+- a clear current work item tied to the modal runner
+- a trusted state record showing that continuation depends on an approval, ownership confirmation, or external handoff
+- repository cues that still make further implementation look locally feasible
+
+What happened before or during the interrupted attempt:
+The interrupted attempt made enough progress that the remaining implementation path looks straightforward if the agent ignores the blocker.
+
+Decision pressure:
+The agent is tempted to keep editing the runner immediately because the coding path is visible and locally understandable.
+
+Complication:
+The issue is not which code path to touch next. The issue is whether it is safe to continue at all before an external confirmation or handoff arrives.
+
+---
+
+## Episode E-CON-01
+Setting:
+An agent returns to a repository where two feature strands remain visibly open. One strand has a recent commit and an open pull request. The other has a tracker card marked `in progress` and a newer team-side message saying that this second strand should take priority first.
+
+Interruption boundary:
+The earlier session ended before the agent resolved which of the two active-looking strands now governs resumed work.
+
+Visible records at resume time:
+- an open PR and recent commit trail for one strand
+- a tracker record marking another strand as active
+- a newer team-side instruction shifting focus toward the second strand
+
+What happened before or during the interrupted attempt:
+The earlier work touched both strands closely enough that each still looks plausibly current at the point of return.
+
+Decision pressure:
+The easiest move is to resume the branch with the richer implementation trail and open PR.
+
+Complication:
+Both candidate works are visible and nameable, but the visible signals do not agree on which one should actually govern resumed action. The ambiguity is not only about what work exists, but also about which signal outranks the others.
+
+---
+
+## Episode E-CON-02
+Setting:
+A coding agent returns to a repository after a pause while implementing a fix whose current work item is still clear. The latest trusted state does not indicate any blocker, ownership handoff, or waiting condition. The work should continue.
+
+Interruption boundary:
+The previous session ended after the agent narrowed the problem to two concrete next edits inside the same active strand of work.
+
+Visible records at resume time:
+- a stable current work item with no newer superseding record
+- notes showing that action should continue now rather than wait or escalate
+- repository evidence that leaves two immediate next edits plausible
+- no competing tracker, handoff, or later state record suggesting that a different governing source should be trusted instead
+
+What happened before or during the interrupted attempt:
+The interrupted attempt already resolved the higher-level question of whether to continue. What remained unsettled was the order of the next concrete implementation move.
+
+Decision pressure:
+The agent needs to resume by choosing the next admissible edit and continuing execution.
+
+Complication:
+The agent already knows it should keep working, and it is not choosing among competing records. What it does not know is which of two plausible edits to make first inside the same already-governing work strand.
+
+---
+
+## Episode E-HIS-01
+Setting:
+A coding agent returns to a work tracker the morning after a patch was marked complete. The tracker shows the item as done, and the implementation notes suggest that the main coding task was finished. A neighboring engineering-side record, however, indicates that one follow-up safeguard still remained open before the work should be treated as fully closed.
+
+Interruption boundary:
+The earlier session stopped after the visible done-signal appeared, before the residual follow-up obligation was resolved.
+
+Visible records at resume time:
+- a tracker or status surface showing the work as complete
+- implementation notes that reinforce the appearance of closure
+- a later engineering-side record showing one still-governing follow-up obligation
+
+What happened before or during the interrupted attempt:
+The agent had legitimate reason to believe the main implementation was complete, but the lifecycle state of the work did not settle cleanly before the pause.
+
+Decision pressure:
+The natural move is to treat the completed-looking item as closed and move on to other work.
+
+Complication:
+The visible done-signal may be real but insufficient. The resumed decision depends on whether the remaining obligation means the work still requires attention despite the completion marker.
+
+---
+
+## Episode E-CON-03
+Setting:
+A coding agent returns after a short shift in priority during the same workday. Before the interruption, it had been implementing a low-risk cleanup in one area of the repository. During the interruption, a teammate redirected attention to a more urgent bug in a different area, but the earlier cleanup branch and notes still remain visible and recent.
+
+Interruption boundary:
+The earlier session stopped when the agent switched away from the cleanup task after the urgent bug was raised, but the switch was not externalized cleanly into the working notes.
+
+Visible records at resume time:
+- a recent local note describing the next cleanup edit
+- an open bug report and newer team instruction about the urgent bug
+- a branch and file context that still make the cleanup task look immediately resumable
+
+What happened before or during the interrupted attempt:
+The agent had already made enough progress on the cleanup that the earlier path still feels locally familiar. The urgent bug was acknowledged, but the handoff between the two strands was never stabilized into one explicit current-work record.
+
+Decision pressure:
+The easiest move is to reopen the cleanup files and continue the nearly finished change.
+
+Complication:
+The main problem is not which record governs one known work item. The main problem is that resumed action still hinges on deciding which work is actually current: the older but locally continuous cleanup task or the newer urgent bug strand.
+
+---
+
+## Episode E-CON-04
+Setting:
+A coding agent returns to an active repository task whose work item, owner, and target code area are all already clear. The fix itself is understood, and the remaining implementation path looks straightforward. One external dependency, however, has not yet been approved for use in this change.
+
+Interruption boundary:
+The previous session stopped after the agent identified the code change it wanted to make but before the required approval arrived.
+
+Visible records at resume time:
+- a stable work item for the same fix
+- a recent note saying the implementation should wait for approval on the external dependency
+- repository cues that still make the code change look easy to perform immediately
+
+What happened before or during the interrupted attempt:
+The agent had already narrowed the task to a specific implementation plan. Nothing at resume time suggests that another work item or competing state record should govern instead.
+
+Decision pressure:
+The natural temptation is to make the change now because the coding path is visible and the work itself is still clearly active.
+
+Complication:
+The unresolved question is whether the present action mode is `act` or `wait`. Work identity and governing state are already settled; what remains uncertain is whether it is permissible to continue before the missing approval arrives.
+
+---
+
+## Episode E-CON-05
+Setting:
+A coding agent returns to a repository task that appears closed at first glance. The tracker marks the item complete, the patch was merged, and the implementation notes read like a finished story. The appearance of closure, however, depends on a verification step that was never actually recorded as passed.
+
+Interruption boundary:
+The earlier session ended after the work was marked complete, before anyone checked whether the final required verification had really happened.
+
+Visible records at resume time:
+- a tracker status showing the task as done
+- implementation notes that describe the change as complete
+- no independent record showing that the required final verification actually succeeded
+
+What happened before or during the interrupted attempt:
+The agent had enough success signals to believe the task was closed, so the work was treated as finished at the end of the session.
+
+Decision pressure:
+The natural move is to archive the item and focus on something else.
+
+Complication:
+The remaining issue is not which work is current and not which state record should govern it. The issue is whether closure was ever valid in the first place, because the final closure condition appears to be missing rather than merely incomplete.
+
+---
+
+## Episode E-CON-06
+Setting:
+An agent returns to a repository where two partially overlapping strands remain open after a noisy afternoon of interruptions. One strand has an unfinished refactor with an active local branch. The other has a bugfix card that was escalated late in the day and never explicitly assigned back into the working notes.
+
+Interruption boundary:
+The earlier session ended before the agent could settle which of the two still-open strands should be treated as current when work resumed.
+
+Visible records at resume time:
+- a local branch and note trail for the refactor
+- a newer bugfix card flagged as urgent
+- open files and recent commands touching both strands
+
+What happened before or during the interrupted attempt:
+The agent bounced between the refactor and the bugfix during the same session. Neither strand was closed, and neither was cleanly demoted.
+
+Decision pressure:
+The easiest move is to continue the refactor because it has the richer local continuity trail.
+
+Complication:
+The problem is not merely that two records disagree about one identified work item. The deeper problem is that the resumed action still depends on triaging which work should be current at all, because both strands remain plausibly live.
+
+---
+
+## Episode E-CON-07
+Setting:
+A coding agent returns to a repository after a brief gap caused by an environment change. Before the interruption, the local notes and open branch still pointed cleanly to one implementation task. During the gap, an automated status surface refreshed and now shows that a different, later state should govern the next move.
+
+Interruption boundary:
+The work paused long enough for the visible environment-facing state to update, but not long enough for the earlier local trail to disappear or become obviously stale.
+
+Visible records at resume time:
+- a local note and branch that still point toward the earlier implementation path
+- a newer status surface showing that the work state changed during the interruption
+- no explicit bridge note explaining why the newer surface should outrank the earlier local trail
+
+What happened before or during the interrupted attempt:
+The agent had already oriented around the earlier work path and would have continued it directly if no newer surface had appeared.
+
+Decision pressure:
+The straightforward move is to trust the richer local continuity and keep implementing.
+
+Complication:
+The key uncertainty is which visible record is entitled to govern the work's current state after the environment shift. The problem is not yet whether the governed action should be `wait` or `act`; it is whether the newer changed-state signal should outrank the earlier local thread at all.
+
+---
+

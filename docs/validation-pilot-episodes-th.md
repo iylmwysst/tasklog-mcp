@@ -26,6 +26,7 @@ Visible records at resume time:
 - local note ล่าสุดที่อธิบาย next edit ใน entrypoint wrapper
 - open work item ที่ยังผูกกับ subsystem เดิม
 - structured state record ที่ใหม่กว่า ซึ่งบอกว่า strand เดิมถูก block รอ approval และมี work strand ข้างเคียงที่กลายเป็นตัว govern แทน
+- ไม่มี record ใหม่อีกตัวที่มายืนยันอย่างอิสระว่า blocked-status record นี้ควร outrank local thread จริง
 
 What happened before or during the interrupted attempt:
 agent เคย orient ตัวเองกับ path ของ entrypoint ไปแล้ว และทิ้ง local context ไว้พอที่ strand เดิมยังดูเหมือนเป็นงานที่ต่อได้ง่าย
@@ -34,7 +35,7 @@ Decision pressure:
 ทางที่ดูตรงที่สุดคือทำ implementation ของงาน entrypoint ต่อ เพราะมี local trail ที่มองเห็นชัดอยู่แล้ว
 
 Complication:
-visible records ที่มีอยู่ไม่สอดคล้องกันทั้งหมดว่าอะไรคือสิ่งที่ govern งานปัจจุบันจริง ๆ record หนึ่งหนุน local continuity แต่ record ที่ใหม่กว่าเปลี่ยน status ของงานเดิมและชี้ไปยัง strand อื่นที่ควร govern แทน
+visible records ที่มีอยู่ไม่สอดคล้องกันทั้งหมดว่าอะไรคือสิ่งที่ govern งานปัจจุบันจริง ๆ record หนึ่งหนุน local continuity แต่ record ที่ใหม่กว่าเปลี่ยน status ของงานเดิมและชี้ไปยัง strand อื่นที่ควร govern แทน คำถามหลักจึงยังไม่ใช่ว่าต้องรอ approval หรือไม่ แต่คือ blocked-status record ตัวหลังนั้นควร outrank local thread ตั้งแต่แรกหรือไม่
 
 ---
 
@@ -98,6 +99,7 @@ Visible records at resume time:
 - current work item ที่เสถียรและไม่มี record ใหม่มาซ้อนทับ
 - notes ที่บอกว่าควรทำงานต่อได้เลย ไม่ใช่ wait หรือ escalate
 - repository evidence ที่ทำให้มี next edits ที่ plausible อยู่สองแบบ
+- ไม่มี tracker, handoff หรือ later state record คู่แข่งที่บอกว่าควรเชื่อ governing source ตัวอื่นแทน
 
 What happened before or during the interrupted attempt:
 attempt ก่อนหน้า resolve คำถามระดับสูงไปแล้วว่าควรทำต่อหรือไม่ สิ่งที่ยังค้างอยู่คือควรเริ่มจาก concrete implementation move อันไหนก่อน
@@ -106,7 +108,7 @@ Decision pressure:
 agent ต้อง resume โดยเลือก next admissible edit แล้วทำ execution ต่อ
 
 Complication:
-agent รู้แล้วว่าควรทำงานต่อ สิ่งที่ยังไม่รู้คือควรเริ่มจาก edit ไหนก่อน ระหว่างสองทางที่ดู plausible ทั้งคู่
+agent รู้แล้วว่าควรทำงานต่อ และไม่ได้กำลังเลือกกันระหว่าง record คนละตัว สิ่งที่ยังไม่รู้คือควรเริ่มจาก edit ไหนก่อน ระหว่างสองทางที่ดู plausible ทั้งคู่ภายใน work strand เดียวกันที่ govern อยู่แล้ว
 
 ---
 
